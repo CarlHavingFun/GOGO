@@ -13,7 +13,8 @@ const MAX_COLOR: Color = Color("ff5f6d")
 
 var _weapon_controller: WeaponController
 var _hit_mark_remaining_seconds: float = 0.0
-var _cursor_was_hidden: bool = false
+var _previous_mouse_mode: int = Input.MOUSE_MODE_VISIBLE
+var _mouse_mode_was_overridden: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -24,13 +25,15 @@ func _ready() -> void:
 		return
 	_weapon_controller.hit_confirmed.connect(_on_hit_confirmed)
 	if DisplayServer.get_name() != "headless":
-		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
-		_cursor_was_hidden = true
+		_previous_mouse_mode = Input.mouse_mode
+		if _previous_mouse_mode != Input.MOUSE_MODE_HIDDEN:
+			Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+			_mouse_mode_was_overridden = true
 	queue_redraw()
 
 func _exit_tree() -> void:
-	if _cursor_was_hidden:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if _mouse_mode_was_overridden:
+		Input.mouse_mode = _previous_mouse_mode
 
 func _process(delta_seconds: float) -> void:
 	_hit_mark_remaining_seconds = maxf(0.0, _hit_mark_remaining_seconds - delta_seconds)

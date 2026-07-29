@@ -7,16 +7,26 @@ Validated with Godot `4.7.1.stable.official.a13da4feb`.
 From the repository root:
 
 ```bash
-/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --editor --path .
-/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --headless --audio-driver Dummy -s res://tests/test_runner.gd
-/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --headless --audio-driver Dummy --quit-after 600
+# Uses `godot` on PATH by default. Set this to an app-bundle executable if needed.
+GODOT_BIN="${GODOT_BIN:-godot}"
+# Example: export GODOT_BIN="/Applications/Godot.app/Contents/MacOS/Godot"
+
+# Start the project or open it in the editor.
+"$GODOT_BIN" --path .
+"$GODOT_BIN" --editor --path .
+
+# Run the complete test runner and a 600-frame headless main-scene smoke test.
+"$GODOT_BIN" --headless --audio-driver Dummy --path . -s res://tests/test_runner.gd
+"$GODOT_BIN" --headless --audio-driver Dummy --path . --quit-after 600
 ```
 
 Directly start the playable scene with:
 
 ```bash
-/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --path . scenes/run/m0_ak_lab.tscn
+"$GODOT_BIN" --path . --scene res://scenes/run/m0_ak_lab.tscn
 ```
+
+This review used `GODOT_BIN=/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot`; that is a recorded verification environment, not a required install location.
 
 Controls: `WASD` moves, left mouse fires, and `R` reloads.
 
