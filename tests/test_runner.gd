@@ -4,6 +4,7 @@ const TEST_PATHS: Array[String] = [
 	"res://tests/unit/test_weapon_runtime.gd",
 	"res://tests/unit/test_spread_sampler.gd",
 	"res://tests/integration/test_playable_scene.gd",
+	"res://tests/integration/test_m0_acceptance.gd",
 ]
 
 func _initialize() -> void:
