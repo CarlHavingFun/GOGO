@@ -59,8 +59,7 @@ func _test_manual_reload_refills_a_partially_empty_magazine(runtime_script: Scri
 func _test_empty_magazine_starts_automatic_reload(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
 	var runtime: Variant = runtime_script.new(ak_definition)
 	_fire_entire_magazine(runtime, failures)
-	_assert_true(not runtime.call("try_fire"), "An empty magazine cannot fire the requested shot.", failures)
-	_assert_true(runtime.get("is_reloading"), "An empty fire request should start automatic reload.", failures)
+	_assert_true(runtime.get("is_reloading"), "The final successful shot should immediately start automatic reload.", failures)
 	runtime.call("tick", 2.20)
 	_assert_equal(runtime.get("current_ammo"), 30, "Automatic reload must refill the magazine.", failures)
 

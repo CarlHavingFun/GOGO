@@ -23,3 +23,39 @@ Ran the same headless command after implementation. Godot 4.7.1 reported `TESTS 
 ## Scope checks
 
 Only the task files are staged for the task commit. Existing untracked `.DS_Store` files and all protected documents remain untouched.
+
+## Fix round 1 — immediate automatic reload
+
+### RED
+
+Command:
+
+```text
+/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --headless --path . -s res://tests/test_runner.gd
+```
+
+Output:
+
+```text
+ERROR: The final successful shot should immediately start automatic reload.
+ERROR: Automatic reload must refill the magazine. Expected 30, got 0.
+TESTS FAILED: 2
+```
+
+The regression test now observes `is_reloading` immediately after the 30th successful shot, without issuing an additional fire request. The complete RED output is `/tmp/gogo-task1-fix-round1-red.log`.
+
+### GREEN
+
+Command:
+
+```text
+/tmp/gogo-godot-4.7.1/Godot.app/Contents/MacOS/Godot --headless --path . -s res://tests/test_runner.gd
+```
+
+Output:
+
+```text
+TESTS PASSED
+```
+
+`WeaponRuntime.try_fire()` now starts reload immediately when its successful shot empties the magazine. The complete GREEN output is `/tmp/gogo-task1-fix-round1-green.log`.

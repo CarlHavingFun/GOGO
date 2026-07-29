@@ -27,6 +27,8 @@ func try_fire() -> bool:
 	current_ammo -= 1
 	recoil = minf(recoil + _recoil_per_shot(), 100.0)
 	_shot_cooldown_remaining = 1.0 / _shots_per_second()
+	if current_ammo == 0:
+		start_reload()
 	return true
 
 func start_reload() -> bool:
