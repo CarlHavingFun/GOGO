@@ -50,11 +50,13 @@ func _physics_process(delta_seconds: float) -> void:
 	if _runtime == null:
 		return
 	var was_reloading: bool = _runtime.is_reloading
-	_runtime.tick(delta_seconds)
+	var fire_is_held: bool = Input.is_action_pressed("fire")
+	_runtime.tick(delta_seconds, fire_is_held)
 	if Input.is_action_just_pressed("reload"):
 		_runtime.start_reload()
-	if Input.is_action_pressed("fire"):
-		_attempt_fire()
+	if fire_is_held:
+		while _attempt_fire():
+			pass
 	_emit_reload_transition(was_reloading, _runtime.is_reloading)
 	_emit_state_if_changed()
 
@@ -95,9 +97,9 @@ func get_weapon_state() -> Dictionary:
 		"spread_degrees": get_current_spread_degrees(),
 	}
 
-func _attempt_fire() -> void:
+func _attempt_fire() -> bool:
 	if not _runtime.try_fire():
-		return
+		return false
 	var aim_direction: Vector2 = _shooter.get_aim_direction()
 	var origin: Vector2 = _shooter.global_position + aim_direction * MUZZLE_OFFSET_PIXELS
 	var shot_direction: Vector2 = _sample_shot_direction(aim_direction, _shooter.is_moving())
@@ -113,10 +115,12 @@ func _attempt_fire() -> void:
 		end_position = result.get("position", maximum_end_position) as Vector2
 		var dummy: TrainingDummy = result.get("collider") as TrainingDummy
 		if dummy != null:
-			dummy.take_hit(weapon_definition.damage, end_position)
-			hit_confirmed.emit(dummy, weapon_definition.damage, end_position)
+			var applied_damage: int = dummy.take_hit(weapon_definition.damage, end_position)
+			if applied_damage > 0:
+				hit_confirmed.emit(dummy, applied_damage, end_position)
 	_feedback.present_shot(origin, end_position, did_hit)
 	shot_fired.emit(origin, end_position, did_hit)
+	return true
 
 func _sample_shot_direction(aim_direction: Vector2, is_shooter_moving: bool) -> Vector2:
 	var safe_aim_direction: Vector2 = Vector2.RIGHT if aim_direction.is_zero_approx() else aim_direction.normalized()

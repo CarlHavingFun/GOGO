@@ -26,7 +26,7 @@ func try_fire() -> bool:
 		return false
 	current_ammo -= 1
 	recoil = minf(recoil + _recoil_per_shot(), 100.0)
-	_shot_cooldown_remaining = 1.0 / _shots_per_second()
+	_shot_cooldown_remaining += 1.0 / _shots_per_second()
 	if current_ammo == 0:
 		start_reload()
 	return true
@@ -38,8 +38,11 @@ func start_reload() -> bool:
 	_reload_remaining = _reload_duration()
 	return true
 
-func tick(delta_seconds: float) -> void:
-	_shot_cooldown_remaining = maxf(0.0, _shot_cooldown_remaining - delta_seconds)
+func tick(delta_seconds: float, preserve_fire_cooldown_overflow: bool = false) -> void:
+	if preserve_fire_cooldown_overflow and current_ammo > 0 and not is_reloading:
+		_shot_cooldown_remaining -= delta_seconds
+	else:
+		_shot_cooldown_remaining = maxf(0.0, _shot_cooldown_remaining - delta_seconds)
 	recoil = maxf(0.0, recoil - _recoil_recovery_per_second() * delta_seconds)
 	if not is_reloading:
 		return

@@ -7,6 +7,9 @@ const TEST_PATHS: Array[String] = [
 ]
 
 func _initialize() -> void:
+	_run_all_tests.call_deferred()
+
+func _run_all_tests() -> void:
 	var failures: Array[String] = []
 	for test_path: String in TEST_PATHS:
 		var test_script: Script = load(test_path) as Script
@@ -14,7 +17,11 @@ func _initialize() -> void:
 			failures.append("Unable to load test script: %s" % test_path)
 			continue
 		var test_instance: Variant = test_script.new()
-		var test_failures: Array[String] = test_instance.run()
+		var test_failures: Array[String] = []
+		if test_instance.has_method("run_async"):
+			test_failures = await test_instance.run_async()
+		else:
+			test_failures = test_instance.run()
 		failures.append_array(test_failures)
 	if failures.is_empty():
 		print("TESTS PASSED")

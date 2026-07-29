@@ -28,11 +28,13 @@ func _process(delta_seconds: float) -> void:
 			_reset_dummy()
 	queue_redraw()
 
-func take_hit(damage: int, hit_position: Vector2) -> void:
+func take_hit(damage: int, hit_position: Vector2) -> int:
 	if is_knocked_down:
-		return
-	var applied_damage: int = maxi(0, damage)
-	current_health = maxi(0, current_health - applied_damage)
+		return 0
+	var applied_damage: int = mini(current_health, maxi(0, damage))
+	if applied_damage == 0:
+		return 0
+	current_health -= applied_damage
 	_last_hit_local_position = to_local(hit_position)
 	_hit_flash_remaining_seconds = HIT_FLASH_DURATION_SECONDS
 	hit_taken.emit(applied_damage, hit_position, current_health)
@@ -41,6 +43,7 @@ func take_hit(damage: int, hit_position: Vector2) -> void:
 		_reset_remaining_seconds = reset_delay_seconds
 		knocked_down.emit()
 	queue_redraw()
+	return applied_damage
 
 func get_current_health() -> int:
 	return current_health
