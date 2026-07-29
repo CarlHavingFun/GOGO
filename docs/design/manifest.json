@@ -1,0 +1,73 @@
+{
+  "project": "GOGO",
+  "version": "0.1",
+  "date": "2026-07-29",
+  "documents": [
+    {
+      "file": "README_设计文档索引.md",
+      "bytes": 4506,
+      "sha256": "c1f49ee307945ba07126ae6452457319d6a46022a650513a06cdb648d7120b32"
+    },
+    {
+      "file": "00_产品宪法.md",
+      "bytes": 11656,
+      "sha256": "254e2f1bcb6ee535a14f455636584e1c3a6578e35fea9d5195fa428a66067e8f"
+    },
+    {
+      "file": "01_核心循环与20波流程.md",
+      "bytes": 13957,
+      "sha256": "08ae1f438934f73ad116e5056272465fed64b1307da8417f141e00d9598bc478"
+    },
+    {
+      "file": "02_战斗与枪械系统.md",
+      "bytes": 14220,
+      "sha256": "1622856a7a2ada1d708cc0ade14472e14e931837852a9ed71b8d281b34d2f03a"
+    },
+    {
+      "file": "03_投掷物与状态系统.md",
+      "bytes": 12485,
+      "sha256": "8bc4241caad86e4e53206d0fbc83becd124cd995e2838488ec666930d2358df0"
+    },
+    {
+      "file": "04_角色与流派设计.md",
+      "bytes": 24419,
+      "sha256": "3208d99b6f336df992e0f4474a85531d5fce7117b92ae8495265b48621c8792c"
+    },
+    {
+      "file": "05_技能与奖励池.md",
+      "bytes": 20610,
+      "sha256": "6a2d5dee45526790f818077c4c2359e529794d3ce96d89b3e90bda44496154da"
+    },
+    {
+      "file": "06_怪物与波次设计.md",
+      "bytes": 17772,
+      "sha256": "7ce54a2cc7b16822d64ec54c9a3d42cb837a77ead056583299596c214313cc27"
+    },
+    {
+      "file": "07_经济与局外成长.md",
+      "bytes": 12377,
+      "sha256": "cbfa5eeb4f2189ca2ce6277486284485f63160a3479ba9052fad5f0ae4ccff4d"
+    },
+    {
+      "file": "08_UI美术音频规范.md",
+      "bytes": 16668,
+      "sha256": "178de202fc9f46201b3931a5514d7d1a87d55476fe796f697f9748566336cf5d"
+    },
+    {
+      "file": "09_Godot技术架构.md",
+      "bytes": 19764,
+      "sha256": "3e5341fb68fcf41769a84eaedd98744e07d1bf69041ed1f57a94445f8a6feee9"
+    },
+    {
+      "file": "10_平衡测试规范.md",
+      "bytes": 14744,
+      "sha256": "4d79653a9f83f20fd3bd100dc192e373f1533cad129e5e40e9071ad2a6af7ebb"
+    },
+    {
+      "file": "11_开发里程碑.md",
+      "bytes": 17756,
+      "sha256": "39a314fd099952c3113b341d326e024ccd3de18722f98c9406a587651ea2336a"
+    }
+  ],
+  "upgrade_count": 47
+}
