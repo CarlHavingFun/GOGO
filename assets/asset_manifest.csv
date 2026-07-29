@@ -1,0 +1,58 @@
+asset_id,phase,category,subject,state,path,logical_canvas,pivot,frames,fps,prompt_section,status,notes
+weapon_ak_base,A1,weapon,ak,base,assets/weapons/ak/weapon_ak_base.png,160x96,grip_point,1,0,8.3,planned,default muzzle points right
+fx_muzzle_rifle,A1,effect,muzzle_rifle,burst,assets/effects/fx_muzzle_rifle.png,64x64,muzzle_origin,6,18,11.1,planned,transparent sprite sheet
+fx_tracer_rifle,A1,effect,tracer_rifle,base,assets/effects/fx_tracer_rifle.png,32x8,left_center,1,0,11,planned,stretch or trail by engine
+fx_hit_spark_small,A1,effect,hit_spark,small,assets/effects/fx_hit_spark_small.png,64x64,impact_center,6,20,11.2,planned,no blood
+fx_dummy_hit,A1,effect,dummy_hit,base,assets/effects/fx_dummy_hit.png,64x64,center,4,12,11.2,planned,graybox-compatible
+character_nini_idle,A2,character,nini,idle,assets/characters/nini/character_nini_idle.png,128x128,feet_center,4,5,6.1,planned,no weapon
+character_nini_walk,A2,character,nini,walk,assets/characters/nini/character_nini_walk.png,128x128,feet_center,8,10,7,planned,no weapon
+character_nini_hit,A2,character,nini,hit,assets/characters/nini/character_nini_hit.png,128x128,feet_center,2,12,7,planned,no weapon
+character_nini_death,A2,character,nini,death,assets/characters/nini/character_nini_death.png,128x128,feet_center,6,10,7,planned,non-gory
+portrait_nini,A2,ui,nini,portrait,assets/ui/portraits/portrait_nini.png,128x128,center,1,0,6.1,planned,no frame
+weapon_deagle_base,A2,weapon,deagle,base,assets/weapons/deagle/weapon_deagle_base.png,160x96,grip_point,1,0,8.1,planned,original fictional design
+enemy_chaser_idle,A2,enemy,chaser,idle,assets/enemies/chaser/enemy_chaser_idle.png,96x96,feet_center,4,5,10.1,planned,melee pursuit
+enemy_chaser_walk,A2,enemy,chaser,walk,assets/enemies/chaser/enemy_chaser_walk.png,96x96,feet_center,8,10,10.1,planned,
+enemy_chaser_attack,A2,enemy,chaser,attack,assets/enemies/chaser/enemy_chaser_attack.png,96x96,feet_center,5,12,10.1,planned,clear anticipation
+enemy_rusher_idle,A2,enemy,rusher,idle,assets/enemies/rusher/enemy_rusher_idle.png,96x96,feet_center,4,6,10.2,planned,
+enemy_rusher_walk,A2,enemy,rusher,walk,assets/enemies/rusher/enemy_rusher_walk.png,96x96,feet_center,8,14,10.2,planned,
+enemy_ranged_idle,A2,enemy,ranged,idle,assets/enemies/ranged/enemy_ranged_idle.png,96x96,feet_center,4,5,10.3,planned,base sprite contains no laser
+fx_enemy_line_warning,A2,effect,ranged_warning,line,assets/effects/fx_enemy_line_warning.png,64x16,left_center,4,8,11.8,planned,engine shape preferred
+projectile_enemy_basic,A2,projectile,enemy_basic,base,assets/projectiles/projectile_enemy_basic.png,16x16,center,2,12,10.3,planned,
+pickup_bounty,A2,pickup,bounty,base,assets/ui/pickups/pickup_bounty.png,32x32,center,4,8,12,planned,no text
+arena_floor_base,A2,arena,floor,base,assets/arena/tiles/arena_floor_base.png,64x64,top_left,1,0,13,planned,seamless
+arena_floor_variant_01,A2,arena,floor,variant_01,assets/arena/tiles/arena_floor_variant_01.png,64x64,top_left,1,0,13,planned,seamless low contrast
+arena_wall_base,A2,arena,wall,base,assets/arena/tiles/arena_wall_base.png,64x64,top_left,1,0,13,planned,
+ui_icon_health,A2,ui,health,icon,assets/ui/icons/ui_icon_health.png,32x32,center,1,0,12,planned,
+ui_icon_ammo,A2,ui,ammo,icon,assets/ui/icons/ui_icon_ammo.png,32x32,center,1,0,12,planned,
+ui_icon_reload,A2,ui,reload,icon,assets/ui/icons/ui_icon_reload.png,32x32,center,1,0,12,planned,
+ui_icon_wave,A2,ui,wave,icon,assets/ui/icons/ui_icon_wave.png,32x32,center,1,0,12,planned,
+character_dabiaoge_idle,A3,character,dabiaoge,idle,assets/characters/dabiaoge/character_dabiaoge_idle.png,128x128,feet_center,4,5,6.5,planned,no weapon or smoke
+character_dabiaoge_walk,A3,character,dabiaoge,walk,assets/characters/dabiaoge/character_dabiaoge_walk.png,128x128,feet_center,8,10,7,planned,
+portrait_dabiaoge,A3,ui,dabiaoge,portrait,assets/ui/portraits/portrait_dabiaoge.png,128x128,center,1,0,6.5,planned,
+throwable_smoke_base,A3,throwable,smoke,base,assets/throwables/smoke/throwable_smoke_base.png,64x64,center,1,0,9.2,planned,no smoke cloud
+fx_smoke_puff,A3,effect,smoke,puff,assets/effects/fx_smoke_puff.png,64x64,center,6,6,11.4,planned,layered by engine
+fx_smoke_boundary,A3,effect,smoke,boundary,assets/effects/fx_smoke_boundary.png,128x128,center,8,8,11.4,planned,readable zone edge
+fx_smoke_end,A3,effect,smoke,end,assets/effects/fx_smoke_end.png,128x128,center,8,12,11.4,planned,
+enemy_backturn_idle,A3,enemy,backturn,idle,assets/enemies/backturn/enemy_backturn_idle.png,96x96,feet_center,4,5,10.6,planned,front/back readable
+enemy_backturn_turn,A3,enemy,backturn,turn,assets/enemies/backturn/enemy_backturn_turn.png,96x96,feet_center,6,10,10.6,planned,clear telegraph
+enemy_smokehound_idle,A3,enemy,smokehound,idle,assets/enemies/smokehound/enemy_smokehound_idle.png,96x96,feet_center,4,6,10.8,planned,
+enemy_smokehound_walk,A3,enemy,smokehound,walk,assets/enemies/smokehound/enemy_smokehound_walk.png,96x96,feet_center,8,12,10.8,planned,
+character_shebei_idle,A4,character,shebei,idle,assets/characters/shebei/character_shebei_idle.png,128x128,feet_center,4,5,6.3,planned,no weapon
+portrait_shebei,A4,ui,shebei,portrait,assets/ui/portraits/portrait_shebei.png,128x128,center,1,0,6.3,planned,
+weapon_awp_base,A4,weapon,awp,base,assets/weapons/awp/weapon_awp_base.png,192x96,grip_point,1,0,8.5,planned,no laser in sprite
+throwable_flash_base,A4,throwable,flash,base,assets/throwables/flash/throwable_flash_base.png,64x64,center,1,0,9.3,planned,
+throwable_he_base,A4,throwable,he,base,assets/throwables/he/throwable_he_base.png,64x64,center,1,0,9.1,planned,
+throwable_fire_base,A4,throwable,fire,base,assets/throwables/fire/throwable_fire_base.png,64x64,center,1,0,9.4,planned,unlit wick
+fx_flash_burst,A4,effect,flash,burst,assets/effects/fx_flash_burst.png,128x128,center,6,18,11.5,planned,no fullscreen white
+fx_he_explosion,A4,effect,he,explosion,assets/effects/fx_he_explosion.png,128x128,center,10,20,11.6,planned,non-gory
+fx_fire_cluster,A4,effect,fire,cluster,assets/effects/fx_fire_cluster.png,64x64,bottom_center,8,12,11.7,planned,
+enemy_shield_idle,A4,enemy,shield,idle,assets/enemies/shield/enemy_shield_idle.png,128x128,feet_center,4,5,10.4,planned,directional front shield
+enemy_repair_idle,A4,enemy,repair,idle,assets/enemies/repair/enemy_repair_idle.png,96x96,feet_center,4,5,10.5,planned,
+character_xiaodong_idle,A5,character,xiaodong,idle,assets/characters/xiaodong/character_xiaodong_idle.png,128x128,feet_center,4,5,6.2,planned,no weapon
+portrait_xiaodong,A5,ui,xiaodong,portrait,assets/ui/portraits/portrait_xiaodong.png,128x128,center,1,0,6.2,planned,
+character_shangdi_idle,A5,character,shangdi,idle,assets/characters/shangdi/character_shangdi_idle.png,128x128,feet_center,4,5,6.4,planned,no weapon
+portrait_shangdi,A5,ui,shangdi,portrait,assets/ui/portraits/portrait_shangdi.png,128x128,center,1,0,6.4,planned,
+weapon_usp_base,A5,weapon,usp,base,assets/weapons/usp/weapon_usp_base.png,160x96,grip_point,1,0,8.2,planned,
+weapon_m4_base,A5,weapon,m4,base,assets/weapons/m4/weapon_m4_base.png,160x96,grip_point,1,0,8.4,planned,
+enemy_lootdecoy_idle,A5,enemy,lootdecoy,idle,assets/enemies/lootdecoy/enemy_lootdecoy_idle.png,96x96,feet_center,4,5,10.7,planned,
+boss_command_core_idle,A5,boss,command_core,idle,assets/enemies/boss_command_core/boss_command_core_idle.png,256x256,feet_center,6,5,10.10,planned,modular phase parts
