@@ -4,12 +4,14 @@ const PLAYABLE_SCENE_PATH: String = "res://scenes/run/m0_ak_lab.tscn"
 const PHYSICS_FPS: int = 60
 const MAGAZINE_SIZE: int = 30
 const RELOAD_DURATION_SECONDS: float = 2.2
+const RELOAD_DURATION_PHYSICS_TICKS: int = 132
 const DETERMINISM_SHOT_COUNT: int = 6
-const FLOAT_TOLERANCE: float = 0.0001
+const EXPECTED_COMBAT_SEED: int = 24680
 
 var _recorded_endpoints: Array[Vector2] = []
 var _recorded_biases: Array[float] = []
 var _recorded_spreads: Array[float] = []
+var _recorded_draw_indices: Array[int] = []
 var _recorded_damages: Array[int] = []
 
 func run_async() -> Array[String]:
@@ -44,11 +46,14 @@ func _test_empty_magazine_auto_reload_hud(playable_scene: PackedScene, failures:
 	_assert_equal(hud.get_ammo_text(), "0 / ∞", "HUD must visibly show the empty magazine during auto reload.", failures)
 	_assert_equal(hud.get_status_text(), "AUTO RELOAD", "HUD must visibly identify automatic reload.", failures)
 	_assert_equal(hud.get_feedback_text(), "AUTO RELOAD", "HUD feedback must announce automatic reload.", failures)
-	for _physics_frame: int in range(ceili(RELOAD_DURATION_SECONDS * PHYSICS_FPS) + 2):
-		await _physics_frame()
-	await _process_frame()
-	_assert_equal(weapon.get_current_ammo(), MAGAZINE_SIZE, "Auto reload must refill the magazine after 2.2 seconds.", failures)
-	_assert_true(not weapon.get_is_reloading(), "Auto reload must finish after 2.2 seconds.", failures)
+	await _advance_physics_ticks(RELOAD_DURATION_PHYSICS_TICKS - 2)
+	_assert_equal(weapon.get_current_ammo(), 0, "Auto reload must remain empty one physics tick before the 2.2-second boundary.", failures)
+	_assert_true(weapon.get_is_reloading(), "Auto reload must still be active one physics tick before the 2.2-second boundary.", failures)
+	_assert_equal(hud.get_status_text(), "AUTO RELOAD", "HUD must remain on automatic reload one tick before completion.", failures)
+	await _advance_physics_ticks(1)
+	_assert_equal(weapon.get_current_ammo(), MAGAZINE_SIZE, "Auto reload must refill exactly at the 2.2-second physics boundary.", failures)
+	_assert_true(not weapon.get_is_reloading(), "Auto reload must finish exactly at the 2.2-second physics boundary.", failures)
+	await _physics_frame()
 	_assert_equal(hud.get_ammo_text(), "30 / ∞", "HUD must show a refilled magazine after auto reload.", failures)
 	_assert_equal(hud.get_feedback_text(), "RELOAD COMPLETE", "HUD must confirm completed auto reload.", failures)
 	await _cleanup_scene(scene_instance)
@@ -108,14 +113,21 @@ func _test_fresh_scene_seed_determinism(playable_scene: PackedScene, failures: A
 	var second_biases: Array[float] = second_sequence["biases"] as Array[float]
 	var first_spreads: Array[float] = first_sequence["spreads"] as Array[float]
 	var second_spreads: Array[float] = second_sequence["spreads"] as Array[float]
+	var first_draw_indices: Array[int] = first_sequence["draw_indices"] as Array[int]
+	var second_draw_indices: Array[int] = second_sequence["draw_indices"] as Array[int]
+	var expected_draw_indices: Array[int] = [1, 2, 3, 4, 5, 6]
+	_assert_equal(first_sequence["combat_seed"], EXPECTED_COMBAT_SEED, "The first fresh scene must use the required combat seed.", failures)
+	_assert_equal(second_sequence["combat_seed"], EXPECTED_COMBAT_SEED, "The second fresh scene must use the required combat seed.", failures)
 	_assert_equal(first_endpoints.size(), DETERMINISM_SHOT_COUNT, "The first fresh scene must record the requested deterministic shot count.", failures)
 	_assert_equal(second_endpoints.size(), DETERMINISM_SHOT_COUNT, "The second fresh scene must record the requested deterministic shot count.", failures)
 	_assert_equal(first_sequence["draw_index"], DETERMINISM_SHOT_COUNT, "The first sequence must consume one RNG draw per shot.", failures)
 	_assert_equal(second_sequence["draw_index"], DETERMINISM_SHOT_COUNT, "The second sequence must consume one RNG draw per shot.", failures)
+	_assert_equal(first_draw_indices, expected_draw_indices, "The first sequence must consume exactly one RNG draw per shot.", failures)
+	_assert_equal(second_draw_indices, expected_draw_indices, "The second sequence must consume exactly one RNG draw per shot.", failures)
 	for shot_index: int in range(mini(first_endpoints.size(), second_endpoints.size())):
-		_assert_vector_equal(first_endpoints[shot_index], second_endpoints[shot_index], "Matching seed and input must reproduce endpoint %d." % (shot_index + 1), failures)
-		_assert_float_equal(first_biases[shot_index], second_biases[shot_index], "Matching seed and input must reproduce last-shot bias %d." % (shot_index + 1), failures)
-		_assert_float_equal(first_spreads[shot_index], second_spreads[shot_index], "Matching seed and input must reproduce last-shot spread %d." % (shot_index + 1), failures)
+		_assert_equal(first_endpoints[shot_index], second_endpoints[shot_index], "Matching seed and input must exactly reproduce endpoint %d." % (shot_index + 1), failures)
+		_assert_equal(first_biases[shot_index], second_biases[shot_index], "Matching seed and input must exactly reproduce last-shot bias %d." % (shot_index + 1), failures)
+		_assert_equal(first_spreads[shot_index], second_spreads[shot_index], "Matching seed and input must exactly reproduce last-shot spread %d." % (shot_index + 1), failures)
 
 func _record_seeded_sequence(playable_scene: PackedScene) -> Dictionary:
 	var scene_instance: Node = await _spawn_scene(playable_scene)
@@ -125,6 +137,7 @@ func _record_seeded_sequence(playable_scene: PackedScene) -> Dictionary:
 	_recorded_endpoints.clear()
 	_recorded_biases.clear()
 	_recorded_spreads.clear()
+	_recorded_draw_indices.clear()
 	weapon.shot_fired.connect(_record_seeded_shot.bind(weapon))
 	Input.action_press("fire")
 	for _physics_frame: int in range(PHYSICS_FPS):
@@ -136,6 +149,8 @@ func _record_seeded_sequence(playable_scene: PackedScene) -> Dictionary:
 		"endpoints": _recorded_endpoints.duplicate(),
 		"biases": _recorded_biases.duplicate(),
 		"spreads": _recorded_spreads.duplicate(),
+		"draw_indices": _recorded_draw_indices.duplicate(),
+		"combat_seed": weapon.get_combat_seed(),
 		"draw_index": weapon.get_draw_index(),
 	}
 	await _cleanup_scene(scene_instance)
@@ -148,6 +163,7 @@ func _record_seeded_shot(_origin: Vector2, endpoint: Vector2, _did_hit: bool, we
 	_recorded_endpoints.append(endpoint)
 	_recorded_biases.append(weapon.get_last_shot_bias_degrees())
 	_recorded_spreads.append(weapon.get_last_shot_spread_degrees())
+	_recorded_draw_indices.append(weapon.get_draw_index())
 
 func _spawn_scene(playable_scene: PackedScene) -> Node:
 	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
@@ -178,6 +194,11 @@ func _process_frame() -> void:
 	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
 	await scene_tree.process_frame
 
+func _advance_physics_ticks(tick_count: int) -> void:
+	for _physics_tick: int in range(tick_count):
+		await _physics_frame()
+		await _process_frame()
+
 func _tap_action(action_name: StringName) -> void:
 	Input.action_press(action_name)
 	await _physics_frame()
@@ -191,12 +212,4 @@ func _assert_true(condition: bool, message: String, failures: Array[String]) -> 
 
 func _assert_equal(actual: Variant, expected: Variant, message: String, failures: Array[String]) -> void:
 	if actual != expected:
-		failures.append("%s Expected %s, got %s." % [message, str(expected), str(actual)])
-
-func _assert_float_equal(actual: float, expected: float, message: String, failures: Array[String]) -> void:
-	if absf(actual - expected) > FLOAT_TOLERANCE:
-		failures.append("%s Expected %.4f, got %.4f." % [message, expected, actual])
-
-func _assert_vector_equal(actual: Vector2, expected: Vector2, message: String, failures: Array[String]) -> void:
-	if not actual.is_equal_approx(expected):
 		failures.append("%s Expected %s, got %s." % [message, str(expected), str(actual)])
