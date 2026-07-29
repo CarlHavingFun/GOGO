@@ -29,6 +29,8 @@ var _last_draw_index: int = -1
 var _last_spread_degrees: float = -1.0
 var _last_reload_progress: float = -1.0
 var _last_reload_is_automatic: bool = false
+var _last_shot_bias_degrees: float = 0.0
+var _last_shot_spread_degrees: float = 0.0
 
 func _ready() -> void:
 	if weapon_definition == null:
@@ -99,9 +101,18 @@ func get_current_spread_degrees() -> float:
 	return _runtime.get_current_spread_degrees(_shooter != null and _shooter.is_moving())
 
 func get_recoil_bias_degrees() -> float:
+	return _get_recoil_bias_degrees_for_recoil(get_recoil())
+
+func get_last_shot_bias_degrees() -> float:
+	return _last_shot_bias_degrees
+
+func get_last_shot_spread_degrees() -> float:
+	return _last_shot_spread_degrees
+
+func _get_recoil_bias_degrees_for_recoil(recoil_value: float) -> float:
 	if weapon_definition == null:
 		return 0.0
-	return -weapon_definition.maximum_recoil_bias_degrees * get_recoil() / 100.0
+	return -weapon_definition.maximum_recoil_bias_degrees * recoil_value / 100.0
 
 func get_visual_aim_direction() -> Vector2:
 	if _shooter == null:
@@ -142,13 +153,26 @@ func get_weapon_state() -> Dictionary:
 func _attempt_fire() -> bool:
 	var was_reloading: bool = _runtime.is_reloading
 	var was_reload_automatic: bool = _runtime.reload_is_automatic
+	var is_shooter_moving: bool = _shooter.is_moving()
+	var pre_shot_recoil: float = _runtime.recoil
+	var shot_bias_degrees: float = _get_recoil_bias_degrees_for_recoil(pre_shot_recoil)
+	var shot_spread_degrees: float = _runtime.get_spread_degrees_for_recoil(
+		pre_shot_recoil,
+		is_shooter_moving
+	)
 	if not _runtime.try_fire():
 		_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 		return false
 	var aim_direction: Vector2 = _shooter.get_aim_direction()
-	var visible_aim_direction: Vector2 = get_visual_aim_direction()
+	var visible_aim_direction: Vector2 = aim_direction.rotated(deg_to_rad(shot_bias_degrees)).normalized()
 	var origin: Vector2 = _shooter.global_position + visible_aim_direction * MUZZLE_OFFSET_PIXELS
-	var shot_direction: Vector2 = _sample_shot_direction(aim_direction, _shooter.is_moving())
+	var shot_direction: Vector2 = _sample_shot_direction(
+		aim_direction,
+		shot_bias_degrees,
+		shot_spread_degrees
+	)
+	_last_shot_bias_degrees = shot_bias_degrees
+	_last_shot_spread_degrees = shot_spread_degrees
 	var maximum_end_position: Vector2 = origin + shot_direction * weapon_definition.range_pixels
 	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(origin, maximum_end_position)
 	var excluded_rids: Array[RID] = [_shooter.get_rid()]
@@ -169,14 +193,18 @@ func _attempt_fire() -> bool:
 	_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 	return true
 
-func _sample_shot_direction(aim_direction: Vector2, is_shooter_moving: bool) -> Vector2:
+func _sample_shot_direction(
+	aim_direction: Vector2,
+	shot_bias_degrees: float,
+	shot_spread_degrees: float
+) -> Vector2:
 	var safe_aim_direction: Vector2 = Vector2.RIGHT if aim_direction.is_zero_approx() else aim_direction.normalized()
 	var spread_offset_degrees: float = _spread_sampler.sample_spread(
-		_runtime.get_current_spread_degrees(is_shooter_moving),
+		shot_spread_degrees,
 		0.0,
 		false
 	)
-	var final_offset_degrees: float = get_recoil_bias_degrees() + spread_offset_degrees
+	var final_offset_degrees: float = shot_bias_degrees + spread_offset_degrees
 	return safe_aim_direction.rotated(deg_to_rad(final_offset_degrees))
 
 func _emit_reload_transition(was_reloading: bool, is_reloading: bool, was_automatic: bool) -> void:

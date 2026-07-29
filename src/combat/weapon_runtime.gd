@@ -40,12 +40,15 @@ func start_reload(is_automatic: bool = false) -> bool:
 	_reload_remaining = _reload_duration()
 	return true
 
-func tick(delta_seconds: float, preserve_fire_cooldown_overflow: bool = false) -> void:
-	if preserve_fire_cooldown_overflow and current_ammo > 0 and not is_reloading:
+func tick(delta_seconds: float, trigger_is_held: bool = false) -> void:
+	var can_preserve_cooldown_overflow: bool = trigger_is_held and current_ammo > 0 and not is_reloading
+	if can_preserve_cooldown_overflow:
 		_shot_cooldown_remaining -= delta_seconds
 	else:
 		_shot_cooldown_remaining = maxf(0.0, _shot_cooldown_remaining - delta_seconds)
-	recoil = maxf(0.0, recoil - _recoil_recovery_per_second() * delta_seconds)
+	var should_recover_recoil: bool = not trigger_is_held or current_ammo == 0 or is_reloading
+	if should_recover_recoil:
+		recoil = maxf(0.0, recoil - _recoil_recovery_per_second() * delta_seconds)
 	if not is_reloading:
 		return
 	_reload_remaining -= delta_seconds
@@ -61,10 +64,13 @@ func get_reload_progress() -> float:
 	return clampf(1.0 - _reload_remaining / _reload_duration(), 0.0, 1.0)
 
 func get_current_spread_degrees(is_moving: bool) -> float:
+	return get_spread_degrees_for_recoil(recoil, is_moving)
+
+func get_spread_degrees_for_recoil(recoil_value: float, is_moving: bool) -> float:
 	var movement_adjusted_spread: float = _base_spread_degrees()
 	if is_moving:
 		movement_adjusted_spread += _moving_spread_addition_degrees()
-	var recoil_multiplier: float = 1.0 + recoil / 100.0 * _recoil_spread_coefficient()
+	var recoil_multiplier: float = 1.0 + recoil_value / 100.0 * _recoil_spread_coefficient()
 	return movement_adjusted_spread * recoil_multiplier
 
 func _cancel_reload() -> void:
