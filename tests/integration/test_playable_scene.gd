@@ -29,6 +29,7 @@ func run_async() -> Array[String]:
 	if not failures.is_empty():
 		return failures
 	_test_diagonal_movement_is_normalized(player_script, failures)
+	await _test_feedback_presentation_nodes_and_state(playable_scene, failures)
 	await _test_held_fire_in_real_scene(playable_scene, failures)
 	return failures
 
@@ -39,6 +40,48 @@ func _test_diagonal_movement_is_normalized(player_script: Script, failures: Arra
 	_assert_float_equal(direction.y, DIAGONAL_COMPONENT, "Diagonal movement Y must be normalized.", failures)
 	_assert_float_equal(direction.length(), 1.0, "Diagonal movement must not exceed unit length.", failures)
 	player.free()
+
+func _test_feedback_presentation_nodes_and_state(playable_scene: PackedScene, failures: Array[String]) -> void:
+	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var scene_instance: Node = playable_scene.instantiate()
+	scene_tree.root.add_child(scene_instance)
+	await scene_tree.process_frame
+	var weapon: WeaponController = scene_instance.get_node("Player/WeaponController") as WeaponController
+	var crosshair: Node = scene_instance.get_node_or_null("Interface/Crosshair")
+	var combat_hud: Node = scene_instance.get_node_or_null("Interface/CombatHUD")
+	var weapon_view: Node = scene_instance.get_node_or_null("Player/PlayerWeaponView")
+	var audio_feedback: Node = scene_instance.get_node_or_null("AudioFeedback")
+	_assert_true(crosshair != null, "The real scene must assemble a dedicated Crosshair.", failures)
+	_assert_true(combat_hud != null, "The real scene must assemble a dedicated CombatHUD.", failures)
+	_assert_true(weapon_view != null, "The real scene must assemble a dedicated PlayerWeaponView.", failures)
+	_assert_true(audio_feedback != null, "The real scene must assemble dedicated AudioFeedback.", failures)
+	if combat_hud != null:
+		_assert_true(combat_hud.has_method("get_ammo_text"), "CombatHUD must expose its rendered ammo state.", failures)
+		_assert_true(combat_hud.has_method("get_status_text"), "CombatHUD must expose its rendered combat status.", failures)
+		if combat_hud.has_method("get_ammo_text"):
+			_assert_equal(combat_hud.call("get_ammo_text"), "30 / ∞", "HUD must render magazine ammo with infinite reserve.", failures)
+		if combat_hud.has_method("get_status_text"):
+			_assert_equal(combat_hud.call("get_status_text"), "READY", "A loaded idle AK must present READY.", failures)
+	if crosshair != null:
+		_assert_true(
+			crosshair.has_method("get_displayed_spread_degrees"),
+			"Crosshair must expose the same final spread used by combat.",
+			failures
+		)
+		if crosshair.has_method("get_displayed_spread_degrees"):
+			_assert_float_equal(
+				crosshair.call("get_displayed_spread_degrees") as float,
+				weapon.get_current_spread_degrees(),
+				"Crosshair spread must match WeaponController final spread.",
+				failures
+			)
+	var state: Dictionary = weapon.get_weapon_state()
+	_assert_true(state.has("reload_progress"), "Weapon state must expose reload progress to presentation.", failures)
+	_assert_true(state.has("reload_is_automatic"), "Weapon state must expose reload source to presentation.", failures)
+	_assert_true(state.has("recoil_bias_degrees"), "Weapon state must expose deterministic recoil bias.", failures)
+	_assert_true(state.has("recoil_state"), "Weapon state must expose a readable recoil state.", failures)
+	scene_instance.queue_free()
+	await scene_tree.process_frame
 
 func _test_held_fire_in_real_scene(playable_scene: PackedScene, failures: Array[String]) -> void:
 	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
@@ -140,6 +183,8 @@ func _test_held_fire_in_real_scene(playable_scene: PackedScene, failures: Array[
 	_assert_true(not weapon.get_is_reloading(), "Cancelling fire must leave reload state.", failures)
 	Input.action_release("fire")
 	Input.action_release("reload")
+	for _audio_cleanup_frame: int in range(15):
+		await scene_tree.physics_frame
 	scene_instance.queue_free()
 	await scene_tree.process_frame
 

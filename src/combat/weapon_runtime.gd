@@ -6,6 +6,7 @@ const RELOAD_COMPLETION_EPSILON: float = 0.0001
 var weapon_definition: Resource
 var current_ammo: int
 var is_reloading: bool = false
+var reload_is_automatic: bool = false
 var recoil: float = 0.0
 var _reload_remaining: float = 0.0
 var _shot_cooldown_remaining: float = 0.0
@@ -20,7 +21,7 @@ func try_fire() -> bool:
 			return false
 		_cancel_reload()
 	if current_ammo == 0:
-		start_reload()
+		start_reload(true)
 		return false
 	if _shot_cooldown_remaining > 0.0:
 		return false
@@ -28,13 +29,14 @@ func try_fire() -> bool:
 	recoil = minf(recoil + _recoil_per_shot(), 100.0)
 	_shot_cooldown_remaining += 1.0 / _shots_per_second()
 	if current_ammo == 0:
-		start_reload()
+		start_reload(true)
 	return true
 
-func start_reload() -> bool:
+func start_reload(is_automatic: bool = false) -> bool:
 	if is_reloading or current_ammo >= _magazine_size():
 		return false
 	is_reloading = true
+	reload_is_automatic = is_automatic
 	_reload_remaining = _reload_duration()
 	return true
 
@@ -50,10 +52,24 @@ func tick(delta_seconds: float, preserve_fire_cooldown_overflow: bool = false) -
 	if _reload_remaining <= RELOAD_COMPLETION_EPSILON:
 		current_ammo = _magazine_size()
 		is_reloading = false
+		reload_is_automatic = false
 		_reload_remaining = 0.0
+
+func get_reload_progress() -> float:
+	if not is_reloading:
+		return 0.0
+	return clampf(1.0 - _reload_remaining / _reload_duration(), 0.0, 1.0)
+
+func get_current_spread_degrees(is_moving: bool) -> float:
+	var movement_adjusted_spread: float = _base_spread_degrees()
+	if is_moving:
+		movement_adjusted_spread += _moving_spread_addition_degrees()
+	var recoil_multiplier: float = 1.0 + recoil / 100.0 * _recoil_spread_coefficient()
+	return movement_adjusted_spread * recoil_multiplier
 
 func _cancel_reload() -> void:
 	is_reloading = false
+	reload_is_automatic = false
 	_reload_remaining = 0.0
 
 func _magazine_size() -> int:
@@ -70,3 +86,12 @@ func _recoil_per_shot() -> float:
 
 func _recoil_recovery_per_second() -> float:
 	return weapon_definition.get("recoil_recovery_per_second") as float
+
+func _base_spread_degrees() -> float:
+	return weapon_definition.get("base_spread_degrees") as float
+
+func _moving_spread_addition_degrees() -> float:
+	return weapon_definition.get("moving_spread_addition_degrees") as float
+
+func _recoil_spread_coefficient() -> float:
+	return weapon_definition.get("recoil_spread_coefficient") as float

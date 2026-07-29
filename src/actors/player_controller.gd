@@ -34,4 +34,3 @@ func _update_aim_direction() -> void:
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, BODY_RADIUS, Color("55b7ff"))
 	draw_arc(Vector2.ZERO, BODY_RADIUS, 0.0, TAU, 32, Color("d9f2ff"), 2.0, true)
-	draw_line(Vector2.ZERO, _aim_direction * 34.0, Color("f2f7ff"), 7.0, true)

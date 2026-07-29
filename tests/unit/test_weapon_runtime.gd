@@ -27,6 +27,8 @@ func run() -> Array[String]:
 	_test_firing_cancels_reload_when_magazine_is_not_empty(runtime_script, ak_definition, failures)
 	_test_firing_does_not_cancel_reload_when_magazine_is_empty(runtime_script, ak_definition, failures)
 	_test_recoil_is_clamped_and_recovers_during_tick(runtime_script, ak_definition, failures)
+	_test_continuous_fire_expands_spread_and_stopping_recovers(runtime_script, ak_definition, failures)
+	_test_reload_progress_and_source_are_observable(runtime_script, ak_definition, failures)
 	return failures
 
 func _test_ak_design_values(ak_definition: Resource, failures: Array[String]) -> void:
@@ -38,6 +40,9 @@ func _test_ak_design_values(ak_definition: Resource, failures: Array[String]) ->
 	_assert_equal(ak_definition.get("moving_spread_addition_degrees"), 1.3, "AK moving spread addition must be 1.3 degrees.", failures)
 	_assert_equal(ak_definition.get("recoil_per_shot"), 9.0, "AK recoil must be 9 per shot.", failures)
 	_assert_equal(ak_definition.get("recoil_recovery_per_second"), 38.0, "AK recoil recovery must be 38 per sec.", failures)
+	_assert_equal(ak_definition.get("recoil_spread_coefficient"), 2.4, "AK recoil spread coefficient must be 2.4.", failures)
+	_assert_equal(ak_definition.get("maximum_recoil_bias_degrees"), 4.5, "AK maximum recoil bias must be 4.5 degrees.", failures)
+	_assert_equal(ak_definition.get("maximum_visual_kick_pixels"), 12.0, "AK maximum visual kick must be 12px.", failures)
 	_assert_equal(ak_definition.get("range_pixels"), 1400.0, "AK range must be 1400px.", failures)
 
 func _test_successful_fire_consumes_one_round(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
@@ -86,6 +91,68 @@ func _test_recoil_is_clamped_and_recovers_during_tick(runtime_script: Script, ak
 	_assert_true(runtime.get("recoil") <= 100.0, "Recoil must never exceed 100.", failures)
 	runtime.call("tick", 100.0)
 	_assert_float_equal(runtime.get("recoil"), 0.0, "Recoil should recover to zero during tick.", failures)
+
+func _test_continuous_fire_expands_spread_and_stopping_recovers(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	if not runtime.has_method("get_current_spread_degrees"):
+		failures.append("WeaponRuntime must expose final spread for combat and presentation.")
+		return
+	var base_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	for shot_index: int in range(3):
+		_assert_true(runtime.call("try_fire"), "Short burst shot %d should fire." % (shot_index + 1), failures)
+		if shot_index < 2:
+			runtime.call("tick", 1.0 / 8.5)
+	var short_burst_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	for shot_index: int in range(9):
+		runtime.call("tick", 1.0 / 8.5)
+		_assert_true(runtime.call("try_fire"), "Continuous-fire shot %d should fire." % (shot_index + 4), failures)
+	var continuous_fire_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	_assert_float_equal(base_spread, 1.4, "Base spread should match the AK definition at zero recoil.", failures)
+	_assert_true(short_burst_spread > base_spread, "A short burst should begin building spread.", failures)
+	_assert_true(
+		continuous_fire_spread > short_burst_spread * 1.35,
+		"Continuous fire must spread substantially wider than a short burst.",
+		failures
+	)
+	runtime.call("tick", 3.0)
+	_assert_float_equal(
+		runtime.call("get_current_spread_degrees", false) as float,
+		base_spread,
+		"Stopping fire must recover final spread to the base value.",
+		failures
+	)
+
+func _test_reload_progress_and_source_are_observable(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var manual_runtime: Variant = runtime_script.new(ak_definition)
+	if not manual_runtime.has_method("get_reload_progress"):
+		failures.append("WeaponRuntime must expose reload progress.")
+		return
+	_assert_true(manual_runtime.call("try_fire"), "A round should be spent before manual reload.", failures)
+	_assert_true(manual_runtime.call("start_reload"), "Manual reload should start.", failures)
+	_assert_true(not (manual_runtime.get("reload_is_automatic") as bool), "R reload must be marked manual.", failures)
+	_assert_float_equal(
+		manual_runtime.call("get_reload_progress") as float,
+		0.0,
+		"Reload progress must start at zero.",
+		failures
+	)
+	manual_runtime.call("tick", 1.1)
+	_assert_float_equal(
+		manual_runtime.call("get_reload_progress") as float,
+		0.5,
+		"Reload progress must expose elapsed reload fraction.",
+		failures
+	)
+	var automatic_runtime: Variant = runtime_script.new(ak_definition)
+	_fire_entire_magazine(automatic_runtime, failures)
+	_assert_true(automatic_runtime.get("reload_is_automatic") as bool, "The last round must mark reload automatic.", failures)
+	automatic_runtime.call("tick", 0.55)
+	_assert_float_equal(
+		automatic_runtime.call("get_reload_progress") as float,
+		0.25,
+		"Automatic reload progress must be observable.",
+		failures
+	)
 
 func _fire_entire_magazine(runtime: Variant, failures: Array[String]) -> void:
 	for shot_index: int in range(30):

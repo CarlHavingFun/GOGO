@@ -3,9 +3,10 @@ extends Node2D
 
 signal shot_fired(origin: Vector2, end_position: Vector2, did_hit: bool)
 signal hit_confirmed(target: TrainingDummy, damage: int, hit_position: Vector2)
+signal empty_triggered()
 signal ammo_changed(current_ammo: int, magazine_size: int)
-signal reload_started(duration_seconds: float)
-signal reload_ended(completed: bool)
+signal reload_started(duration_seconds: float, is_automatic: bool)
+signal reload_ended(completed: bool, was_automatic: bool)
 signal reload_state_changed(is_reloading: bool)
 signal state_changed()
 
@@ -26,6 +27,8 @@ var _last_is_reloading: bool = false
 var _last_recoil: float = -1.0
 var _last_draw_index: int = -1
 var _last_spread_degrees: float = -1.0
+var _last_reload_progress: float = -1.0
+var _last_reload_is_automatic: bool = false
 
 func _ready() -> void:
 	if weapon_definition == null:
@@ -50,14 +53,20 @@ func _physics_process(delta_seconds: float) -> void:
 	if _runtime == null:
 		return
 	var was_reloading: bool = _runtime.is_reloading
+	var was_reload_automatic: bool = _runtime.reload_is_automatic
 	var fire_is_held: bool = Input.is_action_pressed("fire")
 	_runtime.tick(delta_seconds, fire_is_held)
+	_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 	if Input.is_action_just_pressed("reload"):
-		_runtime.start_reload()
+		was_reloading = _runtime.is_reloading
+		was_reload_automatic = _runtime.reload_is_automatic
+		_runtime.start_reload(false)
+		_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
+	if Input.is_action_just_pressed("fire") and get_current_ammo() == 0:
+		empty_triggered.emit()
 	if fire_is_held:
 		while _attempt_fire():
 			pass
-	_emit_reload_transition(was_reloading, _runtime.is_reloading)
 	_emit_state_if_changed()
 
 func get_current_ammo() -> int:
@@ -69,6 +78,12 @@ func get_magazine_size() -> int:
 func get_is_reloading() -> bool:
 	return false if _runtime == null else _runtime.is_reloading
 
+func get_reload_progress() -> float:
+	return 0.0 if _runtime == null else _runtime.get_reload_progress()
+
+func get_reload_is_automatic() -> bool:
+	return false if _runtime == null else _runtime.reload_is_automatic
+
 func get_recoil() -> float:
 	return 0.0 if _runtime == null else _runtime.recoil
 
@@ -79,29 +94,60 @@ func get_draw_index() -> int:
 	return 0 if _spread_sampler == null else _spread_sampler.draw_index
 
 func get_current_spread_degrees() -> float:
+	if _runtime == null:
+		return 0.0
+	return _runtime.get_current_spread_degrees(_shooter != null and _shooter.is_moving())
+
+func get_recoil_bias_degrees() -> float:
 	if weapon_definition == null:
 		return 0.0
-	var spread_degrees: float = weapon_definition.base_spread_degrees
-	if _shooter != null and _shooter.is_moving():
-		spread_degrees += weapon_definition.moving_spread_addition_degrees
-	return spread_degrees
+	return -weapon_definition.maximum_recoil_bias_degrees * get_recoil() / 100.0
+
+func get_visual_aim_direction() -> Vector2:
+	if _shooter == null:
+		return Vector2.RIGHT
+	return _shooter.get_aim_direction().rotated(deg_to_rad(get_recoil_bias_degrees())).normalized()
+
+func get_visual_kickback_pixels() -> float:
+	if weapon_definition == null:
+		return 0.0
+	return weapon_definition.maximum_visual_kick_pixels * get_recoil() / 100.0
+
+func get_maximum_visual_kick_pixels() -> float:
+	return 0.0 if weapon_definition == null else weapon_definition.maximum_visual_kick_pixels
+
+func get_recoil_state() -> String:
+	var current_recoil: float = get_recoil()
+	if current_recoil < 20.0:
+		return "STABLE"
+	if current_recoil < 99.5:
+		return "BUILDING"
+	return "MAX"
 
 func get_weapon_state() -> Dictionary:
 	return {
 		"ammo": get_current_ammo(),
 		"magazine_size": get_magazine_size(),
 		"is_reloading": get_is_reloading(),
+		"reload_progress": get_reload_progress(),
+		"reload_is_automatic": get_reload_is_automatic(),
 		"recoil": get_recoil(),
+		"recoil_bias_degrees": get_recoil_bias_degrees(),
+		"recoil_state": get_recoil_state(),
 		"combat_seed": get_combat_seed(),
 		"draw_index": get_draw_index(),
 		"spread_degrees": get_current_spread_degrees(),
 	}
 
 func _attempt_fire() -> bool:
+	var was_reloading: bool = _runtime.is_reloading
+	var was_reload_automatic: bool = _runtime.reload_is_automatic
 	if not _runtime.try_fire():
+		_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 		return false
 	var aim_direction: Vector2 = _shooter.get_aim_direction()
-	var origin: Vector2 = _shooter.global_position + aim_direction * MUZZLE_OFFSET_PIXELS
+	var visible_aim_direction: Vector2 = get_visual_aim_direction()
+	var origin: Vector2 = _shooter.global_position + visible_aim_direction * MUZZLE_OFFSET_PIXELS
 	var shot_direction: Vector2 = _sample_shot_direction(aim_direction, _shooter.is_moving())
 	var maximum_end_position: Vector2 = origin + shot_direction * weapon_definition.range_pixels
 	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(origin, maximum_end_position)
@@ -120,25 +166,33 @@ func _attempt_fire() -> bool:
 				hit_confirmed.emit(dummy, applied_damage, end_position)
 	_feedback.present_shot(origin, end_position, did_hit)
 	shot_fired.emit(origin, end_position, did_hit)
+	_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 	return true
 
 func _sample_shot_direction(aim_direction: Vector2, is_shooter_moving: bool) -> Vector2:
 	var safe_aim_direction: Vector2 = Vector2.RIGHT if aim_direction.is_zero_approx() else aim_direction.normalized()
 	var spread_offset_degrees: float = _spread_sampler.sample_spread(
-		weapon_definition.base_spread_degrees,
-		weapon_definition.moving_spread_addition_degrees,
-		is_shooter_moving
+		_runtime.get_current_spread_degrees(is_shooter_moving),
+		0.0,
+		false
 	)
-	return safe_aim_direction.rotated(deg_to_rad(spread_offset_degrees))
+	var final_offset_degrees: float = get_recoil_bias_degrees() + spread_offset_degrees
+	return safe_aim_direction.rotated(deg_to_rad(final_offset_degrees))
 
-func _emit_reload_transition(was_reloading: bool, is_reloading: bool) -> void:
-	if was_reloading == is_reloading:
+func _emit_reload_transition(was_reloading: bool, is_reloading: bool, was_automatic: bool) -> void:
+	var source_did_change: bool = (
+		was_reloading
+		and is_reloading
+		and was_automatic != get_reload_is_automatic()
+	)
+	if was_reloading == is_reloading and not source_did_change:
 		return
-	reload_state_changed.emit(is_reloading)
+	if was_reloading:
+		reload_state_changed.emit(false)
+		reload_ended.emit(not source_did_change and get_current_ammo() == get_magazine_size(), was_automatic)
 	if is_reloading:
-		reload_started.emit(weapon_definition.reload_duration)
-	else:
-		reload_ended.emit(get_current_ammo() == get_magazine_size())
+		reload_state_changed.emit(true)
+		reload_started.emit(weapon_definition.reload_duration, get_reload_is_automatic())
 
 func _emit_state_if_changed(force: bool = false) -> void:
 	var current_ammo: int = get_current_ammo()
@@ -146,6 +200,8 @@ func _emit_state_if_changed(force: bool = false) -> void:
 	var recoil: float = get_recoil()
 	var draw_index: int = get_draw_index()
 	var spread_degrees: float = get_current_spread_degrees()
+	var reload_progress: float = get_reload_progress()
+	var reload_is_automatic: bool = get_reload_is_automatic()
 	var ammo_did_change: bool = current_ammo != _last_ammo
 	var state_did_change: bool = (
 		force
@@ -154,6 +210,8 @@ func _emit_state_if_changed(force: bool = false) -> void:
 		or not is_equal_approx(recoil, _last_recoil)
 		or draw_index != _last_draw_index
 		or not is_equal_approx(spread_degrees, _last_spread_degrees)
+		or not is_equal_approx(reload_progress, _last_reload_progress)
+		or reload_is_automatic != _last_reload_is_automatic
 	)
 	if ammo_did_change or force:
 		ammo_changed.emit(current_ammo, get_magazine_size())
@@ -164,3 +222,5 @@ func _emit_state_if_changed(force: bool = false) -> void:
 	_last_recoil = recoil
 	_last_draw_index = draw_index
 	_last_spread_degrees = spread_degrees
+	_last_reload_progress = reload_progress
+	_last_reload_is_automatic = reload_is_automatic

@@ -10,4 +10,7 @@ extends Resource
 @export var moving_spread_addition_degrees: float = 0.0
 @export var recoil_per_shot: float = 0.0
 @export var recoil_recovery_per_second: float = 0.0
+@export var recoil_spread_coefficient: float = 0.0
+@export var maximum_recoil_bias_degrees: float = 0.0
+@export var maximum_visual_kick_pixels: float = 0.0
 @export var range_pixels: float = 0.0
