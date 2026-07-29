@@ -1,0 +1,109 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://src/actors/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://src/combat/weapon_controller.gd" id="2_weapon"]
+[ext_resource type="Resource" path="res://data/weapons/ak.tres" id="3_ak"]
+[ext_resource type="Script" path="res://src/actors/training_dummy.gd" id="4_dummy"]
+[ext_resource type="Script" path="res://src/presentation/combat_feedback.gd" id="5_feedback"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 18.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dummy"]
+size = Vector2(42, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horizontal_wall"]
+size = Vector2(1600, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical_wall"]
+size = Vector2(24, 900)
+
+[node name="M0AKLab" type="Node2D"]
+
+[node name="Floor" type="Polygon2D" parent="."]
+z_index = -10
+polygon = PackedVector2Array(-800, -450, 800, -450, 800, 450, -800, 450)
+color = Color(0.075, 0.09, 0.12, 1)
+
+[node name="ArenaOutline" type="Line2D" parent="."]
+z_index = -9
+points = PackedVector2Array(-788, -438, 788, -438, 788, 438, -788, 438)
+width = 3.0
+default_color = Color(0.22, 0.28, 0.36, 1)
+closed = true
+
+[node name="ArenaWalls" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 1
+
+[node name="Top" type="CollisionShape2D" parent="ArenaWalls"]
+position = Vector2(0, -450)
+shape = SubResource("RectangleShape2D_horizontal_wall")
+
+[node name="Bottom" type="CollisionShape2D" parent="ArenaWalls"]
+position = Vector2(0, 450)
+shape = SubResource("RectangleShape2D_horizontal_wall")
+
+[node name="Left" type="CollisionShape2D" parent="ArenaWalls"]
+position = Vector2(-800, 0)
+shape = SubResource("RectangleShape2D_vertical_wall")
+
+[node name="Right" type="CollisionShape2D" parent="ArenaWalls"]
+position = Vector2(800, 0)
+shape = SubResource("RectangleShape2D_vertical_wall")
+
+[node name="CombatFeedback" type="Node2D" parent="."]
+z_index = 10
+script = ExtResource("5_feedback")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(-360, 0)
+collision_layer = 1
+collision_mask = 2
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CircleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(360, 0)
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+
+[node name="WeaponController" type="Node2D" parent="Player"]
+script = ExtResource("2_weapon")
+weapon_definition = ExtResource("3_ak")
+combat_seed = 24680
+shooter_path = NodePath("..")
+feedback_path = NodePath("../../CombatFeedback")
+ray_collision_mask = 2
+
+[node name="DummyCenter" type="StaticBody2D" parent="."]
+position = Vector2(280, 0)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("4_dummy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DummyCenter"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_dummy")
+
+[node name="DummyUpper" type="StaticBody2D" parent="."]
+position = Vector2(480, -190)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("4_dummy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DummyUpper"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_dummy")
+
+[node name="DummyLower" type="StaticBody2D" parent="."]
+position = Vector2(480, 190)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("4_dummy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DummyLower"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_dummy")
