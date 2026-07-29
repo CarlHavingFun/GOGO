@@ -1,0 +1,11 @@
+; Engine configuration file.
+; Minimal M0 project metadata; tests run via tests/test_runner.gd.
+config_version=5
+
+[application]
+
+config/name="GOGO"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
