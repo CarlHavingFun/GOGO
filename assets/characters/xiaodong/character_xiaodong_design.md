@@ -2,7 +2,7 @@
 
 - 设计阶段：`C0`
 - 资产阶段：`A5`（仅登记正式生产计划）
-- artifact state：`not_generated`
+- artifact state：`generated`
 - decision：`pending_review`
 - 权威规格：`docs/superpowers/specs/2026-07-30-gogo-vnext-xiaodong-c0-design.md`
 
@@ -12,9 +12,9 @@
   "subject": "xiaodong",
   "design_stage": "C0",
   "asset_stage": "A5",
-  "artifact_state": "not_generated",
+  "artifact_state": "generated",
   "decision": "pending_review",
-  "candidate_count": 0,
+  "candidate_count": 2,
   "reference": {
     "path": "assets/source/references/characters/xiaodong/reference_01.jpg",
     "bytes": 77554,
@@ -147,8 +147,201 @@ R2 排除项不得追加 `no real-person portrait`。生成工具若支持负面
 
 | 候选 ID | 生成时间 | 生成工具 | 源文件相对路径 | 参考图 ID / SHA-256 | 目标动作 / 帧用途 | QA | 决定 / 理由 | 清理结果 / manifest |
 |---|---|---|---|---|---|---|---|---|
+| `xiaodong_c0_master_001` | `2026-07-31T02:40:53+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_001_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版 / 身份与项目转译 | 独立复核 `9/10`，QA5 失败 | `revise` / 朝向近正面偏左，不是右下 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_master_002` | `2026-07-31T02:54:02+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版定向修订 / 身份与项目转译 | 代理预检 `10/10`，独立 QA5 通过 | `pending_review` / 等待用户明确视觉决定 | `not_cleaned` / 无正式 manifest 条目 |
 
-当前候选记录数：`0`。
+当前候选记录数：`2`。
+
+### 候选 `xiaodong_c0_master_001`
+
+#### 生成与文件证据
+
+- 生成时间：`2026-07-31T02:40:53+0800`；
+- 生成工具：Codex built-in `image_gen`；工具未暴露底层模型名，因此不推定模型；
+- 参考输入：`reference_01`，稳定路径
+  `assets/source/references/characters/xiaodong/reference_01.jpg`，SHA-256
+  `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52`；
+- source：
+  `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_001_source.png`，
+  `1254×1254` RGB，`1,067,707` bytes，SHA-256
+  `e81d6be97c3cb8653b7ccf0cc88237fc438679c4b23b3106faeffdcd185ac8b3`；
+- review preview：
+  `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_001_preview.png`，
+  `1024×1024` RGBA，`207,770` bytes，SHA-256
+  `77deca370527690e60d3f54ea8970c39a70b4b5694ad083d4e42360915270a8b`；
+- source 使用平坦绿色抠像背景。review preview 仅用于本轮透明背景审阅，
+  经本地抠像和最近邻缩放把主体高度从约 `90.9%` 规范到约 `80.0%`；
+  它不代表正式 `cleaned` 状态。
+- preview 派生步骤：`remove_chroma_key.py --auto-key border --soft-matte
+  --transparent-threshold 12 --opaque-threshold 220 --despill`，边缘采样键色
+  为 `#12f70f`；随后裁取 alpha bbox，以 nearest-neighbor 把主体缩放到
+  `287×819`，并放置在 `1024×1024` 透明画布坐标 `(368, 102)`。
+
+#### 实际完整 Prompt
+
+```text
+Use case: stylized-concept
+Asset type: GOGO C0 game character visual master; one standalone identity-preserving pixel-art character candidate
+Input images: Image 1 is the user-designated R2 identity reference only, not an edit target. Preserve the recognizable overall facial relationships and calm restrained presence, the brown jaw-length medium-short naturally center-parted hair with clear side silhouettes, slim long-limbed proportions translated into compact chibi form, and the plain black clothing silhouette. Do not reproduce any background or add professional-team identity elements.
+Primary request: Create exactly one standalone R2 game character sprite of the same recognizable young professional-player character from Image 1, translated into the approved GOGO character language.
+Scene/backdrop: perfectly flat solid #00ff00 chroma-key background for local background removal. The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, lighting variation, or environment.
+Subject: slim young character; brown jaw-length medium-short hair, natural center part, clear hair silhouette; calm restrained slightly distant expression; loose plain pure-black short-sleeve shirt, black trousers, black shoes; natural standing pose; empty hands.
+Style/medium: original compact chibi pixel-art production game character; large head, small compact body, strong readable silhouette, crisp hard-edged clustered pixels, 1–2 logical-pixel dark outline, limited palette of brown hair, warm skin, black and dark-gray clothing; consistent upper-left light; no anti-aliased blurry edges.
+Composition/framing: square 1024×1024 generation canvas; elevated top-down three-quarter view; full body; character faces lower right; centered; both feet fully visible; body-bottom/feet midpoint suitable as a stable animation anchor; character occupies about 72%–82% of canvas; generous clean padding; no crop.
+Constraints: exactly one character and exactly two arms, two hands, two legs, and two feet; preserve recognizable likeness, hair length/color, slim body type, black clothing color, restrained expression, and natural stance from Image 1; no use of #00ff00 anywhere in the subject; no cast shadow, contact shadow, reflection, watermark, or text.
+Avoid: weapon, grenade, prop, extra character, extra or missing limbs, fused hands or feet, team logo, sponsor mark, platform logo, tournament logo, official team-jersey pattern, official tournament UI, trophy, stage, photography background, watermark, text, letters, UI frame, environment, floor, tactical vest, red or orange accent, exaggerated charging pose, aggressive forward lean, photorealism, smooth vector art, 3D render, copyrighted character. Do not add “no real-person portrait”; recognizable R2 likeness is required.
+```
+
+#### 目标与身份一致性
+
+- 目标：`visual_master`；帧用途：身份母版和后续头像/动作关键姿势约束；
+- 视角：俯视 3/4；方向：右下；逻辑画布目标：`128×128`；
+- 保留：棕色齐下颌中短发及自然中分、脸部整体关系和冷静气质、
+  偏瘦身形、宽松纯黑短袖、黑裤、黑鞋、自然站姿；
+- 可见差异：相对参考图进一步放大头部并压缩躯干与四肢，以形成紧凑
+  Q 版比例；脸部轮廓略圆、服装褶皱更简化；未增加职业身份元素。
+
+#### 技术 QA
+
+- source 为 `1254×1254` RGB，平坦抠像背景；review preview 为
+  `1024×1024` RGBA；
+- preview 四角 alpha 为 `0`，透明像素 `897,609 / 1,048,576`，
+  部分透明像素 `3,116 / 1,048,576`，非透明主体内未检出强绿色残留；
+- source 与 preview 均为完整单人、两手两脚，无裁切、无多余或缺失肢体；
+- preview 主体高度约 `80.0%`，双脚完整，身体底部中心可作为后续锚点；
+- 像素轮廓、色板和边缘达到概念审阅可读性；尚未完成正式
+  `128×128` 逻辑尺寸、逐像素轮廓、固定色板和动作叠帧清理，因此状态保持
+  `generated`，不记为 `cleaned`。
+
+#### 设计 QA（代理预检，用户视觉批准仍为待定）
+
+| # | 检查项 | 0/1 | 证据 |
+|---:|---|---:|---|
+| 1 | 棕色齐下颌中短发可读 | 1 | 中分与两侧发尾轮廓清楚 |
+| 2 | 偏瘦身形稳定 | 1 | 四肢修长且 Q 版比例紧凑 |
+| 3 | 纯黑宽松短袖、黑裤、黑鞋 | 1 | 三项均完整且无额外主色 |
+| 4 | 冷静克制气质 | 1 | 表情自然、无挑衅或攻击姿势 |
+| 5 | 俯视 3/4 且朝向右下 | 0 | 头部明显偏左，肩髋近正面，未建立右下轴线 |
+| 6 | 全身完整、无多余或缺失肢体 | 1 | 单人、两手、两脚、无裁切 |
+| 7 | 无 Logo、文字、赞助商和赛事元素 | 1 | 服装纯色，画面无标记 |
+| 8 | 空手，身体与武器完全分离 | 1 | 双手均为空，无道具 |
+| 9 | 像素轮廓和有限色板符合项目语言 | 1 | 深色块状轮廓，棕/肤/黑灰有限色板 |
+| 10 | 双脚和身体底部锚点适合动画 | 1 | 双脚完整、底部中心清楚 |
+
+独立复核合计：`9/10`。QA5 不能诚实通过，因此本候选不进入
+`accepted_for_concept`。
+
+#### 当前决定与下一步
+
+- artifact state：`generated`；
+- decision：`revise`；
+- 理由：身份、服装、R2 禁止项和像素语言可用，但身体近正面偏左、头与
+  视线明显偏左，未满足“俯视 3/4 且朝向右下”；
+- 下一轮只允许修改：保持身份、发型、身形、服装、色板、空手姿态和
+  R2 禁止项不变，只把头、肩髋和双脚的方向轴修正为明确右下；在母版
+  通过前不生成头像或任何动作关键姿势；
+- cleaning result：`not_cleaned`；review preview 不是正式清理结果；
+- final manifest：无；六项 A5 正式素材继续保持 `planned`，不进入 Godot。
+
+### 候选 `xiaodong_c0_master_002`
+
+#### 生成与文件证据
+
+- 生成时间：`2026-07-31T02:54:02+0800`；
+- 生成工具：Codex built-in `image_gen`；工具未暴露底层模型名，因此不推定模型；
+- edit target：`xiaodong_c0_master_001` source；本轮只定向修复朝向；
+- 身份参考：`reference_01`，稳定路径
+  `assets/source/references/characters/xiaodong/reference_01.jpg`，SHA-256
+  `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52`；
+- source：
+  `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png`，
+  `1254×1254` RGB，`1,075,553` bytes，SHA-256
+  `2c8d1f241caf81751df87b2a4959684112debe5b79c159646f7794c639c007a1`；
+- review preview：
+  `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_preview.png`，
+  `1024×1024` RGBA，`221,013` bytes，SHA-256
+  `0df03821de864e678971d103cfb1d39d79b9ea9ef446d799e0e076469f9e3fe3`；
+- source 使用平坦绿色抠像背景。review preview 仅用于本轮透明背景审阅，
+  不代表正式 `cleaned` 状态；
+- preview 派生步骤：`remove_chroma_key.py --auto-key border --soft-matte
+  --transparent-threshold 12 --opaque-threshold 220 --despill`，边缘采样键色
+  为 `#11f116`；随后裁取 alpha bbox `(458, 90)–(804, 1104)`，以
+  nearest-neighbor 把主体从 `346×1014` 缩放到 `279×819`，并放置在
+  `1024×1024` 透明画布坐标 `(372, 102)`。
+
+#### 实际完整 Prompt
+
+```text
+Use case: identity-preserve
+Asset type: GOGO C0 game character visual master, targeted revision 002
+Input images: Image 1 is the current visual-master edit target. Image 2 is the user-designated R2 identity reference. Preserve Image 1's approved pixel-art treatment and preserve the recognizable identity anchors from Image 2.
+Primary request: Change only the character's facing direction and three-quarter pose. Make the head, gaze, nose/chin, shoulders, hips, knees, and both feet read unmistakably as facing toward the SCREEN LOWER-RIGHT corner under an elevated top-down three-quarter camera. The direction vector must be diagonally down and right on the image, not frontal, not lower-left, and not ambiguous.
+Pose clarification: turn the face so nose, eyes, mouth, and chin point visibly toward image-right and slightly downward; establish a clear three-quarter shoulder and hip axis toward lower-right; align both shoes with that same lower-right travel axis, with one foot naturally leading. Keep an upright calm natural standing pose, not an attack or charging pose.
+Scene/backdrop: perfectly flat solid #00ff00 chroma-key background for local removal; one uniform color, no shadow, gradient, texture, reflection, floor plane, lighting variation, or environment.
+Invariants: keep exactly the same recognizable young character identity, brown jaw-length naturally center-parted hair and hair silhouette, facial relationships, calm restrained expression, slim compact chibi body proportions, loose plain pure-black short-sleeve shirt, black trousers, black shoes, empty hands, crisp clustered pixel art, dark pixel outline, limited brown/warm-skin/black-gray palette, and upper-left light. Keep exactly one full-body character with two arms, two hands, two legs, and two fully visible feet. Center the character on a square canvas with generous padding and about 72%–82% subject height.
+Constraints: modify only direction/three-quarter orientation; no redesign, no new garment details, no weapon, grenade, prop, text, letters, team logo, sponsor mark, platform or tournament logo, official jersey pattern, official tournament UI, trophy, stage, photography background, watermark, UI frame, floor, cast shadow, tactical vest, red or orange accent, extra or missing limbs, fused hands or feet, aggressive lean, photorealism, smooth vector art, 3D render, blurry anti-aliased edges, or copyrighted character. Do not add “no real-person portrait”; recognizable R2 likeness is required.
+```
+
+本轮实际 Prompt 使用平坦抠像背景而非模型原生透明输出，是 built-in
+`image_gen` 工作流的工具约束。设计卡继续保留批准 Prompt 中的透明背景
+要求，并把 source 与派生 alpha preview 分开记录；在正式清理前不把该
+偏差描述为已解决。
+
+#### 目标与身份一致性
+
+- 目标：`visual_master` 定向修订；帧用途：身份母版和后续头像/动作关键姿势约束；
+- 视角：俯视 3/4；方向：右下；逻辑画布目标：`128×128`；
+- 保留：棕色齐下颌中短发、脸部整体关系和冷静气质、偏瘦身形、宽松
+  纯黑短袖、黑裤、黑鞋、自然空手站姿；
+- 相对候选 001 的唯一目标变化：头、视线、肩髋、膝盖和双脚共同建立
+  明确右下轴线；
+- 相对参考图的可见差异：Q 版头身比更紧凑；右下转向使一侧刘海与面部
+  遮挡关系更强；服装褶皱进一步简化；未增加职业身份元素。
+
+#### 技术 QA
+
+- source 为 `1254×1254` RGB，平坦抠像背景；review preview 为
+  `1024×1024` RGBA；
+- preview alpha bbox 为 `(372, 102)–(651, 921)`，主体高度约 `80.0%`；
+- preview 四角 alpha 为 `0`，透明像素 `898,062 / 1,048,576`，
+  部分透明像素 `3,414 / 1,048,576`，不透明像素
+  `147,100 / 1,048,576`；
+- 非透明主体内未检出强绿色残留；非零 alpha 只有一个连通主体；
+- source 与 preview 均为完整单人、两手两脚，无裁切、无多余或缺失肢体；
+- 双脚完整，身体底部中心可作为后续锚点；
+- 像素轮廓、色板和边缘达到概念审阅可读性；尚未完成正式
+  `128×128` 逻辑尺寸、逐像素轮廓、固定色板和动作叠帧清理，因此状态保持
+  `generated`，不记为 `cleaned`。
+
+#### 设计 QA（代理预检，用户视觉批准仍为待定）
+
+| # | 检查项 | 0/1 | 证据 |
+|---:|---|---:|---|
+| 1 | 棕色齐下颌中短发可读 | 1 | 棕色中分与两侧齐颌轮廓清楚 |
+| 2 | 偏瘦身形稳定 | 1 | 四肢修长且 Q 版比例紧凑 |
+| 3 | 纯黑宽松短袖、黑裤、黑鞋 | 1 | 三项均完整且无额外主色 |
+| 4 | 冷静克制气质 | 1 | 表情自然、无挑衅或攻击姿势 |
+| 5 | 俯视 3/4 且朝向右下 | 1 | 独立方向复核通过；头身与双脚建立右下轴线 |
+| 6 | 全身完整、无多余或缺失肢体 | 1 | 单人、两手、两脚、无裁切 |
+| 7 | 无 Logo、文字、赞助商和赛事元素 | 1 | 服装纯色，画面无标记 |
+| 8 | 空手，身体与武器完全分离 | 1 | 双手均为空，无道具 |
+| 9 | 像素轮廓和有限色板符合项目语言 | 1 | 深色块状轮廓，棕/肤/黑灰有限色板 |
+| 10 | 双脚和身体底部锚点适合动画 | 1 | 双脚完整、底部中心清楚 |
+
+代理预检合计：`10/10`；QA5 另经独立方向复核，以约 `90%` 置信度通过。
+这只是进入用户审阅的必要预检，不构成 `accepted_for_concept`；最终视觉
+决定仍由用户明确给出。
+
+#### 当前决定与下一步
+
+- artifact state：`generated`；
+- decision：`pending_review`；
+- 理由：已修复候选 001 的朝向问题，并形成可追溯、通过代理预检的视觉
+  母版候选，等待用户判断神似与项目转译是否可接受；
+- 下一轮只允许修改：以用户明确意见为准；在用户批准母版前，不生成头像
+  或任何动作关键姿势；
+- cleaning result：`not_cleaned`；review preview 不是正式清理结果；
+- final manifest：无；六项 A5 正式素材继续保持 `planned`，不进入 Godot。
 
 ## 7. C0 / A5 / Godot 边界
 
