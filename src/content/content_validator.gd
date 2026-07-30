@@ -444,8 +444,13 @@ static func _validate_references(
 		if not record.has(field) or String(record.get(field, "")).is_empty():
 			continue
 		var target_dataset: String = reference_targets[field]
+		if not datasets.has(target_dataset):
+			continue
+		var target_config_value: Variant = datasets[target_dataset]
+		if not target_config_value is Dictionary or not _dataset_config_is_runtime_safe(target_dataset, target_config_value):
+			continue
+		var target_config: Dictionary = target_config_value
 		var target_records: Array = gameplay.get(target_dataset, [])
-		var target_config: Dictionary = datasets[target_dataset]
 		var expected_id: String = String(record[field])
 		if target_records.is_empty():
 			issues.append(_not_ready_issue("REF001", record.get("source_path", source_config["path"]), String(record.get("id", "")), "Reference target dataset %s is not present." % target_dataset, expected_id, 0, target_config["target_gate"]))

@@ -42,6 +42,8 @@ func run() -> Array[String]:
 	_test_malformed_config_types_return_cfg001_instead_of_crashing(failures)
 	_test_cfg001_requires_exact_config_and_dataset_key_sets(failures)
 	_test_cfg001_requires_exact_dataset_fields_and_metadata(failures)
+	_test_reference_validation_skips_a_missing_target_config(failures)
+	_test_reference_validation_skips_a_non_dictionary_target_config(failures)
 	_test_cfg001_rejects_unknown_state_and_dishonest_not_implemented(failures)
 	_test_not_implemented_assets_and_design_use_absent_or_empty_preflight(failures)
 	_test_doc_rules_cover_paths_registration_bytes_and_hashes(failures)
@@ -169,6 +171,40 @@ func _test_cfg001_requires_exact_dataset_fields_and_metadata(failures: Array[Str
 	invalid_range["config"]["datasets"]["waves"]["expected_range"] = [1, "20"]
 	var range_report: Dictionary = _validate(invalid_range, &"g0")
 	_assert_true(_has_issue(range_report, "CFG001", "waves", "expected_range"), "Wave range metadata must contain two integral numbers.", failures)
+
+func _test_reference_validation_skips_a_missing_target_config(failures: Array[String]) -> void:
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["config"]["datasets"]["weapons"]["state"] = "partial"
+	snapshot["config"]["datasets"].erase("characters")
+	snapshot["gameplay"]["weapons"] = [_valid_weapon_with_character_reference()]
+	var report: Dictionary = _validate(snapshot, &"g0")
+	_assert_true(
+		_has_issue(report, "CFG001", "characters", "object"),
+		"A missing reference target config must return CFG001 instead of aborting validation.",
+		failures
+	)
+	_assert_true(
+		_has_issue(report, "REF001", "weapon_one", "upgrades is not present"),
+		"A missing target config must not abort processing of later valid references.",
+		failures
+	)
+
+func _test_reference_validation_skips_a_non_dictionary_target_config(failures: Array[String]) -> void:
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["config"]["datasets"]["weapons"]["state"] = "partial"
+	snapshot["config"]["datasets"]["characters"] = []
+	snapshot["gameplay"]["weapons"] = [_valid_weapon_with_character_reference()]
+	var report: Dictionary = _validate(snapshot, &"g0")
+	_assert_true(
+		_has_issue(report, "CFG001", "characters", "object"),
+		"A non-Dictionary reference target config must return CFG001 instead of aborting validation.",
+		failures
+	)
+	_assert_true(
+		_has_issue(report, "REF001", "weapon_one", "upgrades is not present"),
+		"A non-Dictionary target config must not abort processing of later valid references.",
+		failures
+	)
 
 func _test_cfg001_rejects_unknown_state_and_dishonest_not_implemented(failures: Array[String]) -> void:
 	var unknown_snapshot: Dictionary = _base_snapshot()
@@ -486,6 +522,20 @@ func _base_snapshot() -> Dictionary:
 			"weapons": [], "throwables": [], "characters": [], "upgrades": [],
 			"enemies": [], "waves": [], "unlocks": [],
 		},
+	}
+
+func _valid_weapon_with_character_reference() -> Dictionary:
+	return {
+		"id": "weapon_one",
+		"character_id": "character_one",
+		"upgrade_id": "upgrade_one",
+		"damage": 1.0,
+		"shots_per_second": 1.0,
+		"magazine_size": 1,
+		"reload_duration": 1.0,
+		"range_pixels": 100.0,
+		"source_path": "res://data/weapons/weapon_one.tres",
+		"source_line": 0,
 	}
 
 func _valid_asset_row() -> Dictionary:
