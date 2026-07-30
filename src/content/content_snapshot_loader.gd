@@ -12,6 +12,7 @@ const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xia
 const XIAODONG_REFERENCE_BYTES: int = 77554
 const XIAODONG_REFERENCE_SHA256: String = "fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52"
 const GOVERNANCE_FENCE: String = "```gogo-governance+json"
+const RAW_HTML_PARSE_ERROR: String = "raw HTML before gogo-governance+json block is not supported"
 
 static func load_project(
 	project_root: String = "res://",
@@ -302,6 +303,14 @@ static func _normalize_governance_machine_block(markdown: String, card: Dictiona
 			outer_fence_length = opening_fence["length"]
 			continue
 
+		var top_level_content: String = _markdown_top_level_content(line)
+		if top_level_content.begins_with("<!--"):
+			in_html_comment = _html_comment_state_after_line(line, false)
+			continue
+		if machine_blocks.is_empty() and top_level_content.begins_with("<"):
+			card["parse_error"] = RAW_HTML_PARSE_ERROR
+			break
+
 		in_html_comment = _html_comment_state_after_line(line, false)
 	card["machine_block_count"] = machine_blocks.size()
 	if in_machine_block:
@@ -334,11 +343,22 @@ static func _markdown_fence(line: String) -> Dictionary:
 	var marker_length: int = marker_end - marker_start
 	if marker_length < 3:
 		return {}
+	var suffix: String = line.substr(marker_end)
+	if marker_character == "`" and suffix.contains("`"):
+		return {}
 	return {
 		"character": marker_character,
 		"length": marker_length,
-		"suffix": line.substr(marker_end),
+		"suffix": suffix,
 	}
+
+static func _markdown_top_level_content(line: String) -> String:
+	var content_start: int = 0
+	while content_start < line.length() and content_start < 4 and line.substr(content_start, 1) == " ":
+		content_start += 1
+	if content_start > 3:
+		return ""
+	return line.substr(content_start)
 
 static func _html_comment_state_after_line(line: String, starts_inside: bool) -> bool:
 	var in_comment: bool = starts_inside
