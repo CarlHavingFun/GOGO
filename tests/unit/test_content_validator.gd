@@ -50,6 +50,7 @@ func run() -> Array[String]:
 	_test_loader_fails_closed_on_raw_html_before_governance_block(failures)
 	_test_loader_fails_closed_on_raw_html_after_governance_block(failures)
 	_test_loader_ignores_indented_html_comment_literals(failures)
+	_test_loader_preserves_governance_blocks_after_prose_comments(failures)
 	_test_loader_does_not_treat_invalid_backtick_info_as_a_fence(failures)
 	_test_loader_normalizes_missing_and_corrupt_references_without_throwing(failures)
 	_test_loader_reads_real_gameplay_resources_without_inventing_rows(failures)
@@ -323,6 +324,26 @@ func _test_loader_ignores_indented_html_comment_literals(failures: Array[String]
 	var snapshot: Dictionary = _base_snapshot()
 	snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
 	_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 0, "A valid block after an indented comment literal must satisfy AST007.", failures)
+
+func _test_loader_preserves_governance_blocks_after_prose_comments(failures: Array[String]) -> void:
+	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]
+	var exact_block: String = "```gogo-governance+json\n%s\n```\n" % JSON.stringify(valid_record)
+	var card: Dictionary = {
+		"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+		"exists": true,
+		"machine_block_count": 0,
+		"parse_error": "",
+		"record": {},
+	}
+	_loader_script.call(
+		"_normalize_governance_machine_block",
+		exact_block + "prose <!--\n" + exact_block + "-->\n",
+		card
+	)
+	_assert_equal(card.get("machine_block_count"), 2, "An inline comment marker in prose must not hide a later top-level machine block.", failures)
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
+	_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 1, "Two active blocks separated by prose with an inline comment marker must produce exactly one AST007.", failures)
 
 func _test_loader_does_not_treat_invalid_backtick_info_as_a_fence(failures: Array[String]) -> void:
 	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]

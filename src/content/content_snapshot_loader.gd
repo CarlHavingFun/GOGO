@@ -310,9 +310,6 @@ static func _normalize_governance_machine_block(markdown: String, card: Dictiona
 		if top_level_content.begins_with("<"):
 			card["parse_error"] = RAW_HTML_PARSE_ERROR
 			break
-
-		if not top_level_content.is_empty():
-			in_html_comment = _html_comment_state_after_line(top_level_content, false)
 	card["machine_block_count"] = machine_blocks.size()
 	if in_machine_block:
 		card["parse_error"] = "unterminated gogo-governance+json block"
