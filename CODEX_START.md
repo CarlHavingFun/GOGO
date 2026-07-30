@@ -75,6 +75,19 @@ docs/design/
 
 第一版不做：多人、PvP、随机迷宫、皮肤交易、复杂背包、多主武器自动攻击、真实队伍素材。角色外观默认原创；仅用户指定参考图的职业选手角色适用 `00_产品宪法.md` 的 R2，且发布选择留到 M5 人工门。
 
+### 4.1 `ContentValidator` 双 profile 契约
+
+G0 只接受以下并列结果：
+
+```text
+G0 gate: PASS
+Full catalog: NOT_READY
+```
+
+`ContentValidator --profile=g0` 只校验当前 G0 必需的文档、manifest、稳定参考、设计卡和状态契约，成功时退出 0 并报告 `gate_status=pass`。
+
+`ContentValidator --profile=full` 校验 47 升级、五角色、五武器、1～20 波和解锁图；真实生产数据落地前必须退出 1 并报告 `catalog_status=not_ready`。G0 中“ContentValidator 全部通过”只能表示 `g0` profile 通过，绝不表示完整目录已就绪。
+
 ---
 
 ## 5. 推荐仓库结构
@@ -150,6 +163,10 @@ GOGO/
 > “实现 AK 灰盒射击闭环：移动、鼠标瞄准、按住射击、后坐力、弹匣、换弹、命中假人、伤害反馈，并提供固定测试场景。”
 
 ### 6.2 数据与逻辑分离
+
+运行时内容 ID 使用小写命名空间（`char_*`、`wpn_*`、`throw_*`、`upgrade_*`、`enemy_*`），显示名独立；旧大写升级代号只供 v0.1 设计追溯。不要新建平行生产玩法目录。
+
+状态所有权固定为：`RunConfig` 只读 seed/难度/角色/武器/起始投掷物；`RunState` 管阶段、波次、时间、RNG 流、事件序号和子状态引用；`EconomyState` 管钱包/经验/等级/待选升级；`UpgradeState` 管升级/合同/叠层。不得复制可变字段。
 
 应数据化：
 

@@ -356,6 +356,15 @@ M1 前增加最小 `ContentValidator`，检查：
 - 每个生成资产都有 Prompt 和排除项；
 - 设计文档 manifest 的文件列表和哈希与实际一致。
 
+校验结果必须按 profile 分开：
+
+```text
+G0 gate: PASS
+Full catalog: NOT_READY
+```
+
+`--profile=g0` 只验证 G0 必需数据，通过时退出 0 并输出 `gate_status=pass`。`--profile=full` 检查 47 升级、五角色、五武器、1～20 波和解锁图；真实生产数据落地前必须退出 1 并输出 `catalog_status=not_ready`。
+
 ### 12.2 玩法样本
 
 - M0：自动化 + 目标 Windows 手工清单 + 至少 3 名测试者；
@@ -419,6 +428,7 @@ M1 前增加最小 `ContentValidator`，检查：
 - “小洞大人”完整动作清单已进入 manifest，C0 与 A5 状态无混淆；
 - 每个 C0 输出在 Markdown 设计卡中可追溯到参考图、Prompt、QA 和决定；
 - C0 母版与关键姿势通过第 12.3 节检查；
-- ContentValidator 全部通过；
+- `ContentValidator --profile=g0` 通过；此处“全部通过”只指 G0 必需数据，不能替代完整目录状态；
+- `ContentValidator --profile=full` 在真实生产数据尚未落地时明确返回 `Full catalog: NOT_READY`，不得假报完整内容通过；
 - M0 自动测试仍通过，且没有把未完成的手工验收标成已完成；
 - 用户现有未提交改动不被覆盖或混入本设计提交。

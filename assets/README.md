@@ -35,6 +35,17 @@ planned -> generated -> cleaned -> approved -> in_game
 - `in_game`：通过 Godot 实机场景验证；
 - `rejected`：不进入正式项目，保留原因。
 
+## 校验 profile
+
+G0 的合法并列状态是：
+
+```text
+G0 gate: PASS
+Full catalog: NOT_READY
+```
+
+`--profile=g0` 通过只说明 G0 所需文档、正式 manifest、稳定参考与设计卡满足门禁；`--profile=full` 在 47 升级、五角色、五武器、1～20 波和解锁图的真实生产数据落地前必须保持 `NOT_READY`。素材状态不得用 `g0` 结果冒充完整内容状态。
+
 ## Godot 导入基线
 
 - Filter：Off；
