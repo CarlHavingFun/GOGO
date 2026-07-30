@@ -3,12 +3,12 @@
   "current_gate": "G0",
   "datasets": {
     "assets": {
-      "state": "legacy",
+      "state": "ready",
       "path": "res://assets/asset_manifest.csv",
       "target_gate": "G0"
     },
     "design_documents": {
-      "state": "legacy",
+      "state": "ready",
       "path": "res://docs/design/manifest.json",
       "target_gate": "G0"
     },
