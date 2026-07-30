@@ -48,6 +48,8 @@ func run() -> Array[String]:
 	_test_loader_normalizes_xiaodong_card_and_original_jpeg_bytes(failures)
 	_test_loader_rejects_inactive_governance_machine_blocks(failures)
 	_test_loader_fails_closed_on_raw_html_before_governance_block(failures)
+	_test_loader_fails_closed_on_raw_html_after_governance_block(failures)
+	_test_loader_ignores_indented_html_comment_literals(failures)
 	_test_loader_does_not_treat_invalid_backtick_info_as_a_fence(failures)
 	_test_loader_normalizes_missing_and_corrupt_references_without_throwing(failures)
 	_test_loader_reads_real_gameplay_resources_without_inventing_rows(failures)
@@ -275,6 +277,52 @@ func _test_loader_fails_closed_on_raw_html_before_governance_block(failures: Arr
 		var snapshot: Dictionary = _base_snapshot()
 		snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
 		_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 0, "A valid block after a %s must satisfy AST007." % case["label"], failures)
+
+func _test_loader_fails_closed_on_raw_html_after_governance_block(failures: Array[String]) -> void:
+	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]
+	var exact_block: String = "```gogo-governance+json\n%s\n```\n" % JSON.stringify(valid_record)
+	var card: Dictionary = {
+		"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+		"exists": true,
+		"machine_block_count": 0,
+		"parse_error": "",
+		"record": {},
+	}
+	_loader_script.call(
+		"_normalize_governance_machine_block",
+		exact_block + "<pre>\n```\n</pre>\n" + exact_block,
+		card
+	)
+	_assert_equal(card.get("machine_block_count"), 1, "Raw HTML ordering pollution must not manufacture a second parsed machine block.", failures)
+	_assert_equal(
+		card.get("parse_error"),
+		"raw HTML before gogo-governance+json block is not supported",
+		"Top-level raw HTML after the first active block must retain deterministic fail-closed evidence.",
+		failures
+	)
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
+	_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 1, "Top-level raw HTML after the first active block must produce exactly one AST007.", failures)
+
+func _test_loader_ignores_indented_html_comment_literals(failures: Array[String]) -> void:
+	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]
+	var card: Dictionary = {
+		"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+		"exists": true,
+		"machine_block_count": 0,
+		"parse_error": "",
+		"record": {},
+	}
+	_loader_script.call(
+		"_normalize_governance_machine_block",
+		"    <!-- literal\n```gogo-governance+json\n%s\n```\n" % JSON.stringify(valid_record),
+		card
+	)
+	_assert_equal(card.get("machine_block_count"), 1, "A four-space indented comment literal must not hide a later top-level machine block.", failures)
+	_assert_equal(card.get("parse_error"), "", "Indented code containing a comment literal must not create parse evidence.", failures)
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
+	_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 0, "A valid block after an indented comment literal must satisfy AST007.", failures)
 
 func _test_loader_does_not_treat_invalid_backtick_info_as_a_fence(failures: Array[String]) -> void:
 	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]
