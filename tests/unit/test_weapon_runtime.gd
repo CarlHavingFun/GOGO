@@ -14,8 +14,8 @@ func run() -> Array[String]:
 	_test_definition_validation()
 	return _failures
 
-func _make_definition() -> Resource:
-	var definition: Resource = WeaponDefinitionScript.new()
+func _make_definition() -> Variant:
+	var definition: Variant = WeaponDefinitionScript.new()
 	definition.id = &"ak_m0"
 	definition.display_name = "AK"
 	definition.base_damage = 24.0
@@ -30,13 +30,13 @@ func _make_definition() -> Resource:
 	definition.max_range_px = 1400.0
 	return definition
 
-func _make_runtime() -> RefCounted:
-	var runtime: RefCounted = WeaponRuntimeScript.new()
+func _make_runtime() -> Variant:
+	var runtime: Variant = WeaponRuntimeScript.new()
 	runtime.configure(_make_definition())
 	return runtime
 
 func _test_magazine_and_cooldown() -> void:
-	var runtime: RefCounted = _make_runtime()
+	var runtime: Variant = _make_runtime()
 	_assert_true(runtime.fire(), "first shot should fire")
 	_assert_equal(runtime.ammo_in_mag, 29, "first shot should consume one round")
 	_assert_false(runtime.fire(), "cooldown should reject an immediate second shot")
@@ -51,7 +51,7 @@ func _test_magazine_and_cooldown() -> void:
 	_assert_false(runtime.fire(), "the thirty-first shot should be rejected")
 
 func _test_reload_completion() -> void:
-	var runtime: RefCounted = _make_runtime()
+	var runtime: Variant = _make_runtime()
 	_assert_true(runtime.fire(), "setup shot should fire")
 	_assert_true(runtime.start_reload(), "partial magazine should start reload")
 	runtime.tick(2.19)
@@ -62,7 +62,7 @@ func _test_reload_completion() -> void:
 	_assert_equal(runtime.ammo_in_mag, 30, "completed reload should refill magazine")
 
 func _test_non_empty_reload_can_be_cancelled_by_fire() -> void:
-	var runtime: RefCounted = _make_runtime()
+	var runtime: Variant = _make_runtime()
 	_assert_true(runtime.fire(), "setup shot should fire")
 	runtime.tick(1.0)
 	_assert_true(runtime.start_reload(), "partial magazine should start reload")
@@ -73,7 +73,7 @@ func _test_non_empty_reload_can_be_cancelled_by_fire() -> void:
 	_assert_equal(runtime.ammo_in_mag, 28, "cancelled reload shot should consume ammunition")
 
 func _test_empty_reload_cannot_be_cancelled_by_fire() -> void:
-	var runtime: RefCounted = _make_runtime()
+	var runtime: Variant = _make_runtime()
 	for _index: int in range(30):
 		_assert_true(runtime.fire(), "setup should empty magazine")
 		runtime.tick(1.0 / 8.5)
@@ -83,7 +83,7 @@ func _test_empty_reload_cannot_be_cancelled_by_fire() -> void:
 	_assert_false(runtime.fire(), "empty reload cannot fire")
 
 func _test_definition_validation() -> void:
-	var definition: Resource = _make_definition()
+	var definition: Variant = _make_definition()
 	_assert_equal(definition.validate().size(), 0, "valid AK definition should pass validation")
 	definition.shots_per_sec = 0.0
 	definition.magazine_size = 0

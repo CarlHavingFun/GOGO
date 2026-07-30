@@ -1,0 +1,142 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://run/m0_run_root.gd" id="1_run_root"]
+[ext_resource type="Script" path="res://entities/player/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://entities/player/weapon_controller.gd" id="3_weapon"]
+[ext_resource type="Resource" path="res://data/weapons/ak_m0.tres" id="4_ak"]
+[ext_resource type="Script" path="res://entities/enemies/target_dummy.gd" id="5_dummy"]
+[ext_resource type="Script" path="res://vfx/m0_presentation.gd" id="6_presentation"]
+[ext_resource type="Script" path="res://ui/hud/m0_hud.gd" id="7_hud"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 18.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dummy"]
+size = Vector2(56, 88)
+
+[node name="M0RunRoot" type="Node2D"]
+script = ExtResource("1_run_root")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(260, 360)
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CircleShape2D_player")
+
+[node name="WeaponController" type="Node2D" parent="Player"]
+position = Vector2(32, 0)
+script = ExtResource("3_weapon")
+weapon_definition = ExtResource("4_ak")
+
+[node name="TargetDummy" type="StaticBody2D" parent="."]
+position = Vector2(950, 360)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("5_dummy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TargetDummy"]
+shape = SubResource("RectangleShape2D_dummy")
+
+[node name="Presentation" type="Node2D" parent="."]
+script = ExtResource("6_presentation")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("7_hud")
+
+[node name="DebugPanel" type="Panel" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 350.0
+offset_bottom = 226.0
+
+[node name="VBox" type="VBoxContainer" parent="HUD/DebugPanel"]
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 320.0
+offset_bottom = 198.0
+theme_override_constants/separation = 5
+
+[node name="TitleLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.827451, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "GOGO M0 — AK SHOOTING TOY"
+
+[node name="FPSLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "FPS: --"
+
+[node name="SeedLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "Seed: 424242"
+
+[node name="AmmoLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "Ammo: 30 / 30"
+
+[node name="ReloadLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "Reload: READY"
+
+[node name="RecoilLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "Recoil: 0 / 100"
+
+[node name="SpreadLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+text = "Spread: 1.40°"
+
+[node name="ControlLabel" type="Label" parent="HUD/DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.8, 0.9, 1)
+text = "WASD move | LMB fire | R reload | T seed reset"
+
+[node name="StatusLabel" type="Label" parent="HUD"]
+offset_left = 420.0
+offset_top = 24.0
+offset_right = 860.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(1, 0.827451, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "M0 READY"
+horizontal_alignment = 1
+
+[node name="Crosshair" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="Top" type="ColorRect" parent="HUD/Crosshair"]
+offset_left = -1.0
+offset_top = -18.0
+offset_right = 1.0
+offset_bottom = -10.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.95)
+
+[node name="Bottom" type="ColorRect" parent="HUD/Crosshair"]
+offset_left = -1.0
+offset_top = 10.0
+offset_right = 1.0
+offset_bottom = 18.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.95)
+
+[node name="Left" type="ColorRect" parent="HUD/Crosshair"]
+offset_left = -18.0
+offset_top = -1.0
+offset_right = -10.0
+offset_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.95)
+
+[node name="Right" type="ColorRect" parent="HUD/Crosshair"]
+offset_left = 10.0
+offset_top = -1.0
+offset_right = 18.0
+offset_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.95)

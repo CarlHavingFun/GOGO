@@ -10,13 +10,14 @@ func _ready() -> void:
 	var failures: Array[String] = []
 	var executed: int = 0
 	for suite_script: Script in SUITES:
-		var suite: RefCounted = suite_script.new()
+		var suite: Variant = suite_script.new()
 		if not suite.has_method("run"):
 			failures.append("%s does not expose run()" % suite_script.resource_path)
 			continue
-		var suite_failures: Array[String] = suite.run()
+		var raw_failures: Variant = suite.call("run")
 		executed += int(suite.get("test_count"))
-		failures.append_array(suite_failures)
+		for failure: Variant in raw_failures:
+			failures.append(str(failure))
 
 	if failures.is_empty():
 		print("M0 TESTS PASS: %d assertions" % executed)

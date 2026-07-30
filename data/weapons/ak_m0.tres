@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/combat/weapon_definition.gd" id="1_weapon_definition"]
+
+[resource]
+script = ExtResource("1_weapon_definition")
+id = &"ak_m0"
+display_name = "AK"
+base_damage = 24.0
+shots_per_sec = 8.5
+magazine_size = 30
+reload_sec = 2.2
+base_spread_deg = 1.4
+move_spread_deg = 1.3
+recoil_per_shot = 9.0
+recoil_recovery_per_sec = 38.0
+recoil_spread_factor = 1.0
+max_range_px = 1400.0
