@@ -76,8 +76,12 @@ func _fire_hitscan() -> void:
 	if not runtime.fire():
 		return
 
-	var shot_direction: Vector2 = _player.get_aim_direction().rotated(deg_to_rad(spread_offset_deg)).normalized()
 	var origin: Vector2 = global_position
+	var aim_delta: Vector2 = get_global_mouse_position() - origin
+	var base_direction: Vector2 = _player.get_aim_direction()
+	if aim_delta.length_squared() > 0.0001:
+		base_direction = aim_delta.normalized()
+	var shot_direction: Vector2 = base_direction.rotated(deg_to_rad(spread_offset_deg)).normalized()
 	var intended_end: Vector2 = origin + shot_direction * weapon_definition.max_range_px
 	var query := PhysicsRayQueryParameters2D.create(origin, intended_end, target_collision_mask)
 	query.exclude = [_player.get_rid()]
@@ -86,10 +90,14 @@ func _fire_hitscan() -> void:
 	var result: Dictionary = {}
 	var did_hit: bool = not hit_data.is_empty()
 	if did_hit:
-		actual_end = hit_data.get("position", intended_end)
-		var collider: Object = hit_data.get("collider")
+		var hit_position: Variant = hit_data.get("position", intended_end)
+		if hit_position is Vector2:
+			actual_end = hit_position
+		var collider: Object = hit_data.get("collider") as Object
 		if collider != null and collider.has_method("apply_damage"):
-			result = collider.call("apply_damage", weapon_definition.base_damage, actual_end)
+			var damage_result: Variant = collider.call("apply_damage", weapon_definition.base_damage, actual_end)
+			if damage_result is Dictionary:
+				result = damage_result
 
 	shot_resolved.emit(origin, actual_end, did_hit, result)
 	if runtime.ammo_in_mag == 0:
