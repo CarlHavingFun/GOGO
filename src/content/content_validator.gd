@@ -850,7 +850,7 @@ static func _is_integral_number(value: Variant) -> bool:
 	if value is int:
 		return true
 	if value is float:
-		return is_finite(value) and is_equal_approx(value, floorf(value))
+		return is_finite(value) and value == floorf(value)
 	return false
 
 static func _validate_expected_categories(

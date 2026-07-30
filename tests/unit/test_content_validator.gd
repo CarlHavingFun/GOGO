@@ -600,6 +600,13 @@ func _test_wave001_requires_exact_numbers_and_enemy_references(failures: Array[S
 	_record_by_id(out_of_range, "waves", "wave_20")["wave"] = 21
 	_assert_issue_fields(_validate(out_of_range, &"full"), "WAVE001", "wave_20", [1, 20], 21, "WAVE001 must reject an out-of-range wave number.", failures)
 
+	var near_integer: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(near_integer, "waves", "wave_01")["wave"] = 1.000001
+	near_integer["config"]["datasets"]["waves"]["state"] = "partial"
+	var near_integer_report: Dictionary = _validate(near_integer, &"g0")
+	_assert_issue_fields(near_integer_report, "WAVE001", "wave_01", [1, 20], 1.000001, "WAVE001 must reject a near-integer fractional wave number instead of truncating it.", failures)
+	_assert_equal((near_integer_report.get("counts", {}) as Dictionary).get("error"), 1, "The isolated near-integer mutation must produce exactly one ERROR issue.", failures)
+
 	var missing_enemy: Dictionary = _full_valid_snapshot(failures)
 	_record_by_id(missing_enemy, "waves", "wave_01")["enemy_ids"] = ["enemy_missing"]
 	_assert_issue_fields(_validate(missing_enemy, &"full"), "WAVE001", "wave_01", "enemy_missing", null, "WAVE001 must reject an unresolved enemy_ids entry.", failures)
