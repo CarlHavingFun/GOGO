@@ -32,6 +32,15 @@ func run() -> Array[String]:
 	return failures
 
 func _test_ak_design_values(ak_definition: Resource, failures: Array[String]) -> void:
+	var expected_tags: Array[StringName] = [&"rifle", &"automatic", &"recoil"]
+	_assert_equal(ak_definition.get(&"id"), &"wpn_ak", "AK must use the canonical gameplay ID.", failures)
+	_assert_equal(ak_definition.get(&"tags"), expected_tags, "AK tags must be stable.", failures)
+	_assert_equal(ak_definition.get(&"pierce_count"), 0, "M0 AK must preserve zero base pierce.", failures)
+	_assert_equal(ak_definition.get(&"pierce_decay"), 1.0, "Zero-pierce AK must use a neutral decay.", failures)
+	_assert_equal(ak_definition.get(&"weakpoint_multiplier"), 1.0, "M0 behavior must remain unchanged.", failures)
+	_assert_true(not _has_property(ak_definition, &"base_damage"), "WeaponDef must not expose base_damage beside damage.", failures)
+	_assert_true(not _has_property(ak_definition, &"reload_sec"), "WeaponDef must not expose reload_sec beside reload_duration.", failures)
+	_assert_true(not _has_property(ak_definition, &"max_range_px"), "WeaponDef must not expose max_range_px beside range_pixels.", failures)
 	_assert_equal(ak_definition.get("damage"), 24, "AK damage must be 24.", failures)
 	_assert_equal(ak_definition.get("shots_per_second"), 8.5, "AK fire rate must be 8.5 shots/sec.", failures)
 	_assert_equal(ak_definition.get("magazine_size"), 30, "AK magazine must hold 30 rounds.", failures)
@@ -164,6 +173,12 @@ func _fire_entire_magazine(runtime: Variant, failures: Array[String]) -> void:
 func _assert_true(condition: bool, message: String, failures: Array[String]) -> void:
 	if not condition:
 		failures.append(message)
+
+func _has_property(object: Object, property_name: StringName) -> bool:
+	for property: Dictionary in object.get_property_list():
+		if StringName(property.get("name", "")) == property_name:
+			return true
+	return false
 
 func _assert_equal(actual: Variant, expected: Variant, message: String, failures: Array[String]) -> void:
 	if actual != expected:

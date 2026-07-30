@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_weapon_def")
+id = &"wpn_ak"
+tags = [&"rifle", &"automatic", &"recoil"]
 display_name = "AK"
 damage = 24
 shots_per_second = 8.5
@@ -17,3 +19,6 @@ recoil_spread_coefficient = 2.4
 maximum_recoil_bias_degrees = 4.5
 maximum_visual_kick_pixels = 12.0
 range_pixels = 1400.0
+pierce_count = 0
+pierce_decay = 1.0
+weakpoint_multiplier = 1.0

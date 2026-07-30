@@ -1,6 +1,8 @@
 class_name WeaponDef
 extends Resource
 
+@export var id: StringName = &""
+@export var tags: Array[StringName] = []
 @export var display_name: String = ""
 @export var damage: int = 0
 @export var shots_per_second: float = 0.0
@@ -14,3 +16,6 @@ extends Resource
 @export var maximum_recoil_bias_degrees: float = 0.0
 @export var maximum_visual_kick_pixels: float = 0.0
 @export var range_pixels: float = 0.0
+@export var pierce_count: int = 0
+@export_range(0.0, 1.0, 0.01) var pierce_decay: float = 1.0
+@export_range(1.0, 10.0, 0.01) var weakpoint_multiplier: float = 1.0

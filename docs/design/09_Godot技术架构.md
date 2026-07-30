@@ -350,18 +350,22 @@ extends Resource
 
 @export var id: StringName
 @export var tags: Array[StringName]
-@export var base_damage: float
-@export var shots_per_sec: float
+@export var display_name: String
+@export var damage: int
+@export var shots_per_second: float
 @export var magazine_size: int
-@export var reload_sec: float
-@export var base_spread_deg: float
-@export var move_spread_deg: float
+@export var reload_duration: float
+@export var base_spread_degrees: float
+@export var moving_spread_addition_degrees: float
 @export var recoil_per_shot: float
-@export var recoil_recovery_per_sec: float
+@export var recoil_recovery_per_second: float
+@export var recoil_spread_coefficient: float
+@export var maximum_recoil_bias_degrees: float
+@export var maximum_visual_kick_pixels: float
 @export var weakpoint_multiplier: float
 @export var pierce_count: int
 @export var pierce_decay: float
-@export var max_range_px: float
+@export var range_pixels: float
 ```
 
 ### 9.2 `UpgradeDef`
@@ -851,22 +855,44 @@ cancel
 
 ## 26. 数据字段
 
-### 26.1 `RunState`
+### 26.1 `RunConfig`
+
+`RunConfig` is read-only and owns seed, difficulty, character, weapon, and starting throwables.
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `seed` | int | 主种子 |
-| `rng_stream_states` | Dictionary | 子流状态 |
+| `run_seed` | int | 本局主随机种子 |
+| `difficulty_id` | StringName | 难度 |
+| `character_id` | StringName | 角色 |
+| `weapon_id` | StringName | 主武器 |
+| `starting_throwable_ids` | Array[StringName] | 开局投掷物，不随运行时槽位变化 |
+
+### 26.2 `RunState`
+
+`RunState` owns phase, wave, time, RNG streams, event sequence, and references to child state.
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
 | `phase` | enum | 当前流程 |
 | `wave_index` | int | 波次 |
+| `elapsed_combat_time` | float | 战斗时间 |
+| `elapsed_total_time` | float | 含商店总时间 |
+| `rng_streams` | Dictionary | 子流状态 |
+| `event_sequence` | int | 事件序号 |
 | `player_state` | Resource | 玩家运行状态 |
 | `economy_state` | Resource | 经济 |
 | `upgrade_state` | Resource | 升级 |
-| `difficulty_id` | StringName | 难度 |
-| `content_version` | int | 内容版本 |
-| `event_sequence` | int | 事件序号 |
+| `throwable_state` | Resource | 运行时投掷物槽位与充能 |
 
-### 26.2 `GameplayEventContext`
+### 26.3 `EconomyState`
+
+`EconomyState` owns wallet, experience, level, and pending upgrade count.
+
+### 26.4 `UpgradeState`
+
+`UpgradeState` owns acquired upgrades, contracts, and stacks.
+
+### 26.5 `GameplayEventContext`
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
