@@ -5,7 +5,9 @@ on:
     branches:
       - foundation/topdown-kit-evaluation
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - foundation/topdown-kit-evaluation
   workflow_dispatch:
 
 permissions:
