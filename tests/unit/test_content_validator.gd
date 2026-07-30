@@ -7,6 +7,8 @@ const VALID_ROOT: String = "res://tests/fixtures/content_validator/g0_valid/"
 const VALID_CONFIG: String = VALID_ROOT + "data/content_validation.json"
 const INVALID_ROOT: String = "res://tests/fixtures/content_validator/g0_invalid/"
 const INVALID_CONFIG: String = INVALID_ROOT + "data/content_validation.json"
+const NOT_IMPLEMENTED_ABSENT_CONFIG: String = INVALID_ROOT + "data/not_implemented_absent.json"
+const NOT_IMPLEMENTED_PRESENT_CONFIG: String = INVALID_ROOT + "data/not_implemented_present.json"
 const DESIGN_FIXTURE_SHA256: String = "559f2884854bd2335f027facfa19a2b4e181a44b3ad74ba55cb8c2366419486e"
 const ASSET_HEADER: PackedStringArray = [
 	"asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
@@ -37,7 +39,11 @@ func run() -> Array[String]:
 	_test_loader_normalizes_real_json_csv_and_markdown(failures)
 	_test_loader_reads_real_gameplay_resources_without_inventing_rows(failures)
 	_test_loader_returns_content_issues_instead_of_throwing(failures)
+	_test_malformed_config_types_return_cfg001_instead_of_crashing(failures)
+	_test_cfg001_requires_exact_config_and_dataset_key_sets(failures)
+	_test_cfg001_requires_exact_dataset_fields_and_metadata(failures)
 	_test_cfg001_rejects_unknown_state_and_dishonest_not_implemented(failures)
+	_test_not_implemented_assets_and_design_use_absent_or_empty_preflight(failures)
 	_test_doc_rules_cover_paths_registration_bytes_and_hashes(failures)
 	_test_ast001_requires_exact_header_and_full_rows(failures)
 	_test_ast002_checks_ids_enums_dimensions_timing_and_paths(failures)
@@ -45,6 +51,7 @@ func run() -> Array[String]:
 	_test_ast004_requires_generated_prompt_constraints(failures)
 	_test_ast005_requires_the_xiaodong_a5_deliverable_set(failures)
 	_test_gameplay_rules_run_for_present_partial_records(failures)
+	_test_every_partial_dataset_is_not_ready(failures)
 	_test_readiness_profiles_counts_sorting_and_exit_codes(failures)
 	_test_jsonl_and_cli_public_interfaces(failures)
 	return failures
@@ -59,8 +66,8 @@ func _test_loader_normalizes_real_json_csv_and_markdown(failures: Array[String])
 	var header: PackedStringArray = assets.get("header", PackedStringArray())
 	var rows: Array = assets.get("rows", [])
 	_assert_equal(header, ASSET_HEADER, "The loader must preserve the exact 28-column header.", failures)
-	_assert_equal(rows.size(), 1, "The valid CSV fixture must produce one record.", failures)
-	if rows.size() == 1:
+	_assert_equal(rows.size(), 6, "The valid CSV fixture must produce the six planned A5 Xiaodong records.", failures)
+	if rows.size() == 6:
 		var row: Dictionary = rows[0]
 		_assert_equal(row.get("notes"), "comma, preserved", "FileAccess CSV parsing must preserve a quoted comma.", failures)
 		_assert_equal(row.get("source_line"), 2, "The first CSV data record must preserve physical line 2.", failures)
@@ -109,6 +116,60 @@ func _test_loader_reads_real_gameplay_resources_without_inventing_rows(failures:
 	for future_dataset: String in ["throwables", "characters", "upgrades", "enemies", "waves", "unlocks"]:
 		_assert_equal(gameplay.get(future_dataset, []), [], "Missing future dataset %s must remain an empty array." % future_dataset, failures)
 
+func _test_malformed_config_types_return_cfg001_instead_of_crashing(failures: Array[String]) -> void:
+	var config_array_snapshot: Dictionary = _base_snapshot()
+	config_array_snapshot["config"] = []
+	var config_report: Dictionary = _validate(config_array_snapshot, &"g0")
+	_assert_true(_has_issue(config_report, "CFG001", "config", "object"), "A non-object snapshot config must return CFG001.", failures)
+	var datasets_array_snapshot: Dictionary = _base_snapshot()
+	datasets_array_snapshot["config"]["datasets"] = []
+	var datasets_report: Dictionary = _validate(datasets_array_snapshot, &"g0")
+	_assert_true(_has_issue(datasets_report, "CFG001", "datasets", "object"), "A non-object datasets value must return CFG001.", failures)
+
+func _test_cfg001_requires_exact_config_and_dataset_key_sets(failures: Array[String]) -> void:
+	var extra_top_level: Dictionary = _base_snapshot()
+	extra_top_level["config"]["implicit_default"] = true
+	var extra_top_report: Dictionary = _validate(extra_top_level, &"g0")
+	_assert_true(_has_issue(extra_top_report, "CFG001", "config", "exact keys"), "Config must reject extra top-level keys.", failures)
+	var missing_dataset: Dictionary = _base_snapshot()
+	missing_dataset["config"]["datasets"].erase("unlocks")
+	var missing_report: Dictionary = _validate(missing_dataset, &"g0")
+	_assert_true(_has_issue(missing_report, "CFG001", "datasets", "exact keys"), "Config must reject a missing dataset key.", failures)
+	var extra_dataset: Dictionary = _base_snapshot()
+	extra_dataset["config"]["datasets"]["invented"] = {
+		"state": "not_implemented",
+		"path": "res://data/invented",
+		"target_gate": "M5",
+	}
+	var extra_report: Dictionary = _validate(extra_dataset, &"g0")
+	_assert_true(_has_issue(extra_report, "CFG001", "datasets", "exact keys"), "Config must reject an extra dataset key.", failures)
+
+func _test_cfg001_requires_exact_dataset_fields_and_metadata(failures: Array[String]) -> void:
+	var missing_target_gate: Dictionary = _base_snapshot()
+	missing_target_gate["config"]["datasets"]["assets"].erase("target_gate")
+	var target_report: Dictionary = _validate(missing_target_gate, &"g0")
+	_assert_true(_has_issue(target_report, "CFG001", "assets", "target_gate"), "Assets must explicitly declare target_gate.", failures)
+	var extra_field: Dictionary = _base_snapshot()
+	extra_field["config"]["datasets"]["design_documents"]["default_state"] = "ready"
+	var extra_report: Dictionary = _validate(extra_field, &"g0")
+	_assert_true(_has_issue(extra_report, "CFG001", "design_documents", "exact fields"), "Dataset configs must reject implicit or extra fields.", failures)
+	var missing_count: Dictionary = _base_snapshot()
+	missing_count["config"]["datasets"]["weapons"].erase("expected_count")
+	var count_report: Dictionary = _validate(missing_count, &"g0")
+	_assert_true(_has_issue(count_report, "CFG001", "weapons", "expected_count"), "Weapons must explicitly declare expected_count.", failures)
+	var fractional_count: Dictionary = _base_snapshot()
+	fractional_count["config"]["datasets"]["characters"]["expected_count"] = 5.5
+	var fractional_report: Dictionary = _validate(fractional_count, &"g0")
+	_assert_true(_has_issue(fractional_report, "CFG001", "characters", "integer"), "Expected counts must be integral numbers.", failures)
+	var missing_categories: Dictionary = _base_snapshot()
+	missing_categories["config"]["datasets"]["upgrades"]["expected_categories"].erase("contract")
+	var category_report: Dictionary = _validate(missing_categories, &"g0")
+	_assert_true(_has_issue(category_report, "CFG001", "upgrades", "expected_categories"), "Upgrade category metadata must use the exact five-key matrix.", failures)
+	var invalid_range: Dictionary = _base_snapshot()
+	invalid_range["config"]["datasets"]["waves"]["expected_range"] = [1, "20"]
+	var range_report: Dictionary = _validate(invalid_range, &"g0")
+	_assert_true(_has_issue(range_report, "CFG001", "waves", "expected_range"), "Wave range metadata must contain two integral numbers.", failures)
+
 func _test_cfg001_rejects_unknown_state_and_dishonest_not_implemented(failures: Array[String]) -> void:
 	var unknown_snapshot: Dictionary = _base_snapshot()
 	unknown_snapshot["config"]["datasets"]["assets"]["state"] = "almost_ready"
@@ -119,6 +180,30 @@ func _test_cfg001_rejects_unknown_state_and_dishonest_not_implemented(failures: 
 	dishonest_snapshot["assets"]["rows"] = [_valid_asset_row()]
 	var dishonest_report: Dictionary = _validate(dishonest_snapshot, &"g0")
 	_assert_true(_has_issue(dishonest_report, "CFG001", "assets", "not_implemented"), "CFG001 must reject records behind not_implemented readiness.", failures)
+
+func _test_not_implemented_assets_and_design_use_absent_or_empty_preflight(failures: Array[String]) -> void:
+	var absent_result: Dictionary = _loader_script.call("load_project", INVALID_ROOT, NOT_IMPLEMENTED_ABSENT_CONFIG)
+	var absent_issues: Array = absent_result.get("load_issues", [])
+	_assert_true(not _has_load_issue(absent_issues, "AST001", "asset_manifest"), "An absent not_implemented asset path must not emit AST001.", failures)
+	_assert_true(not _has_load_issue(absent_issues, "DOC001", "manifest"), "An absent not_implemented design path must not emit DOC001.", failures)
+	var present_result: Dictionary = _loader_script.call("load_project", INVALID_ROOT, NOT_IMPLEMENTED_PRESENT_CONFIG)
+	var present_issues: Array = present_result.get("load_issues", [])
+	_assert_true(_has_load_issue(present_issues, "CFG001", "assets"), "A header-only asset CSV is dishonest not_implemented content.", failures)
+	_assert_true(_has_load_issue(present_issues, "CFG001", "design_documents"), "An empty manifest file is dishonest not_implemented content.", failures)
+	_assert_true(not _has_load_issue(present_issues, "AST001", "asset_manifest"), "Dishonest not_implemented assets must stop before AST loading.", failures)
+	_assert_true(not _has_load_issue(present_issues, "DOC001", "manifest"), "Dishonest not_implemented design must stop before DOC loading.", failures)
+	var header_snapshot: Dictionary = _base_snapshot()
+	header_snapshot["config"]["datasets"]["assets"]["state"] = "not_implemented"
+	header_snapshot["assets"]["header"] = ASSET_HEADER.duplicate()
+	header_snapshot["assets"]["rows"] = []
+	var header_report: Dictionary = _validate(header_snapshot, &"g0")
+	_assert_true(_has_issue(header_report, "CFG001", "assets", "not_implemented"), "A normalized header-only asset catalog must count as existing content.", failures)
+	var manifest_snapshot: Dictionary = _base_snapshot()
+	manifest_snapshot["config"]["datasets"]["design_documents"]["state"] = "not_implemented"
+	manifest_snapshot["design_documents"]["manifest"] = {"documents": []}
+	manifest_snapshot["design_documents"]["records"] = []
+	var manifest_report: Dictionary = _validate(manifest_snapshot, &"g0")
+	_assert_true(_has_issue(manifest_report, "CFG001", "design_documents", "not_implemented"), "A normalized empty manifest must count as existing content.", failures)
 
 func _test_doc_rules_cover_paths_registration_bytes_and_hashes(failures: Array[String]) -> void:
 	var snapshot: Dictionary = _base_snapshot()
@@ -229,6 +314,8 @@ func _test_ast004_requires_generated_prompt_constraints(failures: Array[String])
 	_assert_equal(_issue_count(report, "AST004"), 2, "AST004 must require prompt and negative constraints for generated-or-later assets.", failures)
 
 func _test_ast005_requires_the_xiaodong_a5_deliverable_set(failures: Array[String]) -> void:
+	var empty_report: Dictionary = _validate(_base_snapshot(), &"g0")
+	_assert_true(_has_issue(empty_report, "AST005", "xiaodong", "exactly"), "AST005 must reject a ready asset catalog with zero Xiaodong A5 rows.", failures)
 	var snapshot: Dictionary = _base_snapshot()
 	var states: Array[String] = ["idle", "walk", "hit", "death", "skill_breakin", "idle"]
 	var rows: Array[Dictionary] = []
@@ -308,6 +395,25 @@ func _test_gameplay_rules_run_for_present_partial_records(failures: Array[String
 	_assert_true(_has_issue(report, "CHR001", "character_one", "display_name"), "CHR001 must validate present partial character records.", failures)
 	_assert_true(_has_issue(report, "WAVE001", "wave_one", "range"), "WAVE001 must validate present partial wave numbers.", failures)
 	_assert_true(_has_issue(report, "ULK001", "unlock_one", "target_id"), "ULK001 must validate present partial unlock records.", failures)
+
+func _test_every_partial_dataset_is_not_ready(failures: Array[String]) -> void:
+	var unlock_snapshot: Dictionary = _base_snapshot()
+	unlock_snapshot["config"]["datasets"]["unlocks"]["state"] = "partial"
+	var unlock_report: Dictionary = _validate(unlock_snapshot, &"g0")
+	_assert_true(
+		_has_issue_with_severity(unlock_report, "ULK001", "unlocks", "NOT_READY"),
+		"A partial dataset without expected metadata must still emit NOT_READY.",
+		failures
+	)
+	var matched_count_snapshot: Dictionary = _base_snapshot()
+	matched_count_snapshot["config"]["datasets"]["weapons"]["state"] = "partial"
+	matched_count_snapshot["config"]["datasets"]["weapons"]["expected_count"] = 0
+	var matched_count_report: Dictionary = _validate(matched_count_snapshot, &"g0")
+	_assert_true(
+		_has_issue_with_severity(matched_count_report, "WPN001", "weapons", "NOT_READY"),
+		"A partial dataset must remain NOT_READY even when its record count matches expected_count.",
+		failures
+	)
 
 func _test_readiness_profiles_counts_sorting_and_exit_codes(failures: Array[String]) -> void:
 	var fixture_report: Dictionary = _validator_script.call("validate_project", &"g0", VALID_CONFIG)
@@ -441,6 +547,13 @@ func _has_issue(report: Dictionary, rule: String, subject: String, message_fragm
 			return true
 	return false
 
+func _has_issue_with_severity(report: Dictionary, rule: String, subject: String, severity: String) -> bool:
+	for issue_value: Variant in report.get("issues", []):
+		var issue: Dictionary = issue_value
+		if issue.get("rule") == rule and issue.get("subject") == subject and issue.get("severity") == severity:
+			return true
+	return false
+
 func _issue_count(report: Dictionary, rule: String) -> int:
 	var count: int = 0
 	for issue_value: Variant in report.get("issues", []):
@@ -456,6 +569,14 @@ func _severity_count(issues: Array, severity: String) -> int:
 		if issue.get("severity") == severity:
 			count += 1
 	return count
+
+func _has_load_issue(issues: Array, rule: String, subject: String) -> bool:
+	for issue_value: Variant in issues:
+		if issue_value is Dictionary:
+			var issue: Dictionary = issue_value
+			if issue.get("rule") == rule and issue.get("subject") == subject:
+				return true
+	return false
 
 func _assert_true(condition: bool, message: String, failures: Array[String]) -> void:
 	if not condition:

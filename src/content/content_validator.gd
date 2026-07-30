@@ -4,8 +4,16 @@ extends RefCounted
 const LOADER: Script = preload("res://src/content/content_snapshot_loader.gd")
 const VALID_PROFILES: Array[StringName] = [&"g0", &"full"]
 const DATASET_STATES: Array[String] = ["not_implemented", "legacy", "partial", "ready"]
+const CONFIG_FIELDS: Array[String] = ["schema_version", "current_gate", "datasets"]
+const DATASET_NAMES: Array[String] = [
+	"assets", "design_documents", "weapons", "throwables", "characters",
+	"upgrades", "enemies", "waves", "unlocks",
+]
 const GAMEPLAY_DATASETS: Array[String] = [
 	"weapons", "throwables", "characters", "upgrades", "enemies", "waves", "unlocks",
+]
+const EXPECTED_COUNT_DATASETS: Array[String] = [
+	"weapons", "throwables", "characters", "upgrades", "enemies",
 ]
 const GATE_ORDER: Array[String] = ["G0", "M0", "M1", "M2", "M3", "M4", "M5"]
 const ASSET_HEADER: PackedStringArray = [
@@ -44,8 +52,16 @@ static func validate_snapshot(snapshot: Dictionary, profile: StringName) -> Dict
 	if profile not in VALID_PROFILES:
 		return _argument_error_report("Unknown profile: %s" % String(profile))
 	var issues: Array[Dictionary] = []
-	var config: Dictionary = snapshot.get("config", {})
-	var datasets: Dictionary = config.get("datasets", {})
+	var config_value: Variant = snapshot.get("config", null)
+	if not config_value is Dictionary:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "config", "Config must be an object.", "Dictionary", typeof(config_value), "G0"))
+		return _build_report(String(profile), issues)
+	var config: Dictionary = config_value
+	var datasets_value: Variant = config.get("datasets", null)
+	if not datasets_value is Dictionary:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "datasets", "Config datasets must be an object.", "Dictionary", typeof(datasets_value), "G0"))
+		return _build_report(String(profile), issues)
+	var datasets: Dictionary = datasets_value
 	_validate_config(snapshot, config, datasets, issues)
 	_validate_readiness(snapshot, datasets, issues)
 	var design_state: String = _dataset_state(datasets, "design_documents")
@@ -87,57 +103,73 @@ static func _validate_config(
 	datasets: Dictionary,
 	issues: Array[Dictionary]
 ) -> void:
-	if config.get("schema_version") != 1:
-		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "schema_version", "Config schema_version must equal 1.", 1, config.get("schema_version"), "G0"))
-	if config.get("current_gate") not in GATE_ORDER:
-		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "current_gate", "Config current_gate is unknown.", GATE_ORDER, config.get("current_gate"), "G0"))
-	if not config.get("datasets", null) is Dictionary:
-		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "datasets", "Config datasets must be an object.", "Dictionary", typeof(config.get("datasets")), "G0"))
-		return
-	for dataset_name_value: Variant in datasets:
-		var dataset_name: String = String(dataset_name_value)
-		var dataset_config_value: Variant = datasets[dataset_name_value]
+	if not _has_exact_keys(config, CONFIG_FIELDS):
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "config", "Config must use the exact keys schema_version/current_gate/datasets.", CONFIG_FIELDS, config.keys(), "G0"))
+	var schema_version: Variant = config.get("schema_version", null)
+	if not _is_integral_number(schema_version) or int(schema_version) != 1:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "schema_version", "Config schema_version must be integer 1.", 1, schema_version, "G0"))
+	var current_gate: Variant = config.get("current_gate", null)
+	if not current_gate is String or String(current_gate) not in GATE_ORDER:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "current_gate", "Config current_gate must be a known gate string.", GATE_ORDER, current_gate, "G0"))
+	if not _has_exact_keys(datasets, DATASET_NAMES):
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "datasets", "Config datasets must use the exact keys from the contract.", DATASET_NAMES, datasets.keys(), "G0"))
+	for dataset_name: String in DATASET_NAMES:
+		var dataset_config_value: Variant = datasets.get(dataset_name, null)
 		if not dataset_config_value is Dictionary:
 			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset config must be an object.", "Dictionary", typeof(dataset_config_value), "G0"))
 			continue
 		var dataset_config: Dictionary = dataset_config_value
-		var state: String = dataset_config.get("state", "")
-		var target_gate: String = dataset_config.get("target_gate", "G0")
-		if state not in DATASET_STATES:
-			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset has unknown state.", DATASET_STATES, state, target_gate))
-		var path: String = dataset_config.get("path", "")
-		if not _is_safe_res_path(path):
-			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset path must be a safe res:// path.", "safe res:// path", path, target_gate))
-		if target_gate not in GATE_ORDER:
-			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset target_gate is unknown.", GATE_ORDER, target_gate, "G0"))
-		if state == "not_implemented" and _dataset_records(snapshot, dataset_name).size() > 0:
-			issues.append(_issue("ERROR", "CFG001", path, 0, dataset_name, "Dataset declared not_implemented contains existing records.", 0, _dataset_records(snapshot, dataset_name).size(), target_gate))
+		var required_fields: Array[String] = _required_dataset_fields(dataset_name)
+		if not _has_exact_keys(dataset_config, required_fields):
+			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset must use the exact fields %s." % "/".join(required_fields), required_fields, dataset_config.keys(), "G0"))
+		var state_value: Variant = dataset_config.get("state", null)
+		var path_value: Variant = dataset_config.get("path", null)
+		var target_gate_value: Variant = dataset_config.get("target_gate", null)
+		var target_gate: String = String(target_gate_value) if target_gate_value is String else ""
+		if not state_value is String or String(state_value) not in DATASET_STATES:
+			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset has unknown or non-string state.", DATASET_STATES, state_value, target_gate))
+		if not path_value is String or not _is_safe_res_path(String(path_value)):
+			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset path must be a safe res:// string.", "safe res:// path", path_value, target_gate))
+		if not target_gate_value is String or String(target_gate_value) not in GATE_ORDER:
+			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset target_gate must be a known gate string.", GATE_ORDER, target_gate_value, "G0"))
+		if dataset_name in EXPECTED_COUNT_DATASETS:
+			var expected_count: Variant = dataset_config.get("expected_count", null)
+			if not _is_integral_number(expected_count) or int(expected_count) < 0:
+				issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset expected_count must be a nonnegative integer.", "nonnegative integer", expected_count, target_gate))
+		if dataset_name == "upgrades":
+			_validate_expected_categories(dataset_config.get("expected_categories", null), target_gate, issues)
+		elif dataset_name == "waves":
+			_validate_expected_range(dataset_config.get("expected_range", null), target_gate, issues)
+		if not _dataset_config_is_runtime_safe(dataset_name, dataset_config):
+			continue
+		var state: String = dataset_config["state"]
+		var path: String = dataset_config["path"]
+		if state == "not_implemented" and _dataset_has_content(snapshot, dataset_name):
+			issues.append(_issue("ERROR", "CFG001", path, 0, dataset_name, "Dataset declared not_implemented contains existing content.", false, true, target_gate))
 
 static func _validate_readiness(snapshot: Dictionary, datasets: Dictionary, issues: Array[Dictionary]) -> void:
-	for dataset_name_value: Variant in datasets:
-		var dataset_name: String = String(dataset_name_value)
-		var dataset_config_value: Variant = datasets[dataset_name_value]
-		if not dataset_config_value is Dictionary:
+	for dataset_name: String in DATASET_NAMES:
+		var dataset_config_value: Variant = datasets.get(dataset_name, null)
+		if not _dataset_config_is_runtime_safe(dataset_name, dataset_config_value):
 			continue
 		var dataset_config: Dictionary = dataset_config_value
-		var state: String = dataset_config.get("state", "")
+		var state: String = dataset_config["state"]
 		if state not in DATASET_STATES:
 			continue
 		var records: Array = _dataset_records(snapshot, dataset_name)
-		var target_gate: String = dataset_config.get("target_gate", "G0")
+		var target_gate: String = dataset_config["target_gate"]
 		var rule: String = _readiness_rule(dataset_name)
 		if state == "not_implemented":
-			issues.append(_not_ready_issue(rule, dataset_config.get("path", ""), dataset_name, _not_implemented_message(dataset_name, dataset_config), _expected_for(dataset_config), records.size(), target_gate))
+			issues.append(_not_ready_issue(rule, dataset_config["path"], dataset_name, _not_implemented_message(dataset_name, dataset_config), _expected_for(dataset_config), records.size(), target_gate))
 		elif state == "legacy":
-			issues.append(_not_ready_issue(rule, dataset_config.get("path", ""), dataset_name, "%s is declared legacy" % dataset_name, "ready", "legacy", target_gate))
+			issues.append(_not_ready_issue(rule, dataset_config["path"], dataset_name, "%s is declared legacy" % dataset_name, "ready", "legacy", target_gate))
 		elif state == "partial":
 			var expected: Variant = _expected_for(dataset_config)
-			if expected != null and not _records_meet_expected(dataset_name, records, expected):
-				issues.append(_not_ready_issue(rule, dataset_config.get("path", ""), dataset_name, "%s catalog is partial" % dataset_name, expected, records.size(), target_gate))
+			issues.append(_not_ready_issue(rule, dataset_config["path"], dataset_name, "%s catalog is partial" % dataset_name, expected, records.size(), target_gate))
 		elif state == "ready":
 			var expected: Variant = _expected_for(dataset_config)
 			if expected != null and not _records_meet_expected(dataset_name, records, expected):
-				issues.append(_issue("ERROR", rule, dataset_config.get("path", ""), 0, dataset_name, "Ready dataset does not meet declared completeness.", expected, records.size(), target_gate))
+				issues.append(_issue("ERROR", rule, dataset_config["path"], 0, dataset_name, "Ready dataset does not meet declared completeness.", expected, records.size(), target_gate))
 
 static func _validate_design_documents(documents: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
 	var records: Array = documents.get("records", [])
@@ -148,42 +180,41 @@ static func _validate_design_documents(documents: Dictionary, dataset_config: Di
 			continue
 		var record: Dictionary = record_value
 		var file_name: String = record.get("file", "")
-		var path: String = record.get("source_path", dataset_config.get("path", ""))
+		var path: String = record.get("source_path", dataset_config["path"])
 		if not _is_safe_relative_path(file_name):
-			issues.append(_issue("ERROR", "DOC001", path, record.get("source_line", 0), file_name, "Manifest path is missing or unsafe.", "safe relative Markdown path", file_name, dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC001", path, record.get("source_line", 0), file_name, "Manifest path is missing or unsafe.", "safe relative Markdown path", file_name, dataset_config["target_gate"]))
 			continue
 		if registered_files.has(file_name):
-			issues.append(_issue("ERROR", "DOC001", path, record.get("source_line", 0), file_name, "Manifest path is duplicated.", "unique path", file_name, dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC001", path, record.get("source_line", 0), file_name, "Manifest path is duplicated.", "unique path", file_name, dataset_config["target_gate"]))
 		else:
 			registered_files[file_name] = true
 		if not record.get("exists", false):
-			issues.append(_issue("ERROR", "DOC002", path, record.get("source_line", 0), file_name, "Registered Markdown file does not exist.", true, false, dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC002", path, record.get("source_line", 0), file_name, "Registered Markdown file does not exist.", true, false, dataset_config["target_gate"]))
 			continue
 		if record.get("bytes") != record.get("actual_bytes"):
-			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown byte count does not match manifest.", record.get("bytes"), record.get("actual_bytes"), dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown byte count does not match manifest.", record.get("bytes"), record.get("actual_bytes"), dataset_config["target_gate"]))
 		if record.get("sha256") != record.get("actual_sha256"):
-			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown SHA-256 does not match manifest.", record.get("sha256"), record.get("actual_sha256"), dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown SHA-256 does not match manifest.", record.get("sha256"), record.get("actual_sha256"), dataset_config["target_gate"]))
 	for actual_file_value: Variant in actual_files:
 		var actual_file: String = String(actual_file_value)
 		var file_name: String = actual_file.get_file()
 		if not registered_files.has(file_name):
-			issues.append(_issue("ERROR", "DOC002", actual_file, 0, file_name, "Markdown file is not registered in the manifest.", "registered", "unregistered", dataset_config.get("target_gate", "G0")))
+			issues.append(_issue("ERROR", "DOC002", actual_file, 0, file_name, "Markdown file is not registered in the manifest.", "registered", "unregistered", dataset_config["target_gate"]))
 
 static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
 	var header: PackedStringArray = assets.get("header", PackedStringArray())
 	var rows: Array = assets.get("rows", [])
-	var target_gate: String = dataset_config.get("target_gate", "G0")
+	var target_gate: String = dataset_config["target_gate"]
 	if header != ASSET_HEADER:
-		issues.append(_issue("ERROR", "AST001", dataset_config.get("path", ""), 1, "asset_manifest", "Asset manifest must use the exact 28-column header.", ASSET_HEADER, header, target_gate))
+		issues.append(_issue("ERROR", "AST001", dataset_config["path"], 1, "asset_manifest", "Asset manifest must use the exact 28-column header.", ASSET_HEADER, header, target_gate))
 	var seen_ids: Dictionary = {}
 	var xiaodong_states: Array[String] = []
-	var has_xiaodong_a5: bool = false
 	for row_value: Variant in rows:
 		if not row_value is Dictionary:
 			continue
 		var row: Dictionary = row_value
 		var asset_id: String = row.get("asset_id", "")
-		var source_path: String = row.get("source_path", dataset_config.get("path", ""))
+		var source_path: String = row.get("source_path", dataset_config["path"])
 		var source_line: int = row.get("source_line", 0)
 		if row.get("_column_count", ASSET_HEADER.size()) != ASSET_HEADER.size():
 			issues.append(_issue("ERROR", "AST001", source_path, source_line, asset_id, "Asset row must contain exactly 28 columns.", 28, row.get("_column_count"), target_gate))
@@ -191,15 +222,13 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 		_validate_asset_evidence(row, source_path, source_line, target_gate, issues)
 		_validate_asset_prompt(row, source_path, source_line, target_gate, issues)
 		if row.get("phase") == "A5" and row.get("subject") == "xiaodong":
-			has_xiaodong_a5 = true
 			xiaodong_states.append(row.get("state", ""))
-	if has_xiaodong_a5:
-		var sorted_actual: Array[String] = xiaodong_states.duplicate()
-		var sorted_expected: Array[String] = XIAODONG_A5_STATES.duplicate()
-		sorted_actual.sort()
-		sorted_expected.sort()
-		if sorted_actual != sorted_expected:
-			issues.append(_issue("ERROR", "AST005", dataset_config.get("path", ""), 0, "xiaodong", "A5 Xiaodong must have exactly idle/walk/hit/death/skill_breakin/portrait.", sorted_expected, sorted_actual, target_gate))
+	var sorted_actual: Array[String] = xiaodong_states.duplicate()
+	var sorted_expected: Array[String] = XIAODONG_A5_STATES.duplicate()
+	sorted_actual.sort()
+	sorted_expected.sort()
+	if sorted_actual != sorted_expected:
+		issues.append(_issue("ERROR", "AST005", dataset_config["path"], 0, "xiaodong", "A5 Xiaodong must have exactly idle/walk/hit/death/skill_breakin/portrait.", sorted_expected, sorted_actual, target_gate))
 
 static func _validate_asset_schema(
 	row: Dictionary,
@@ -306,8 +335,11 @@ static func _validate_asset_prompt(
 
 static func _validate_gameplay(gameplay: Dictionary, datasets: Dictionary, issues: Array[Dictionary]) -> void:
 	for dataset_name: String in GAMEPLAY_DATASETS:
-		var dataset_config: Dictionary = datasets.get(dataset_name, {})
-		var state: String = dataset_config.get("state", "")
+		var dataset_config_value: Variant = datasets.get(dataset_name, null)
+		if not _dataset_config_is_runtime_safe(dataset_name, dataset_config_value):
+			continue
+		var dataset_config: Dictionary = dataset_config_value
+		var state: String = dataset_config["state"]
 		if state not in ["partial", "ready"]:
 			continue
 		var records: Array = gameplay.get(dataset_name, [])
@@ -337,8 +369,8 @@ static func _validate_gameplay_id(
 	issues: Array[Dictionary]
 ) -> void:
 	var identifier: String = String(record.get("id", ""))
-	var path: String = record.get("source_path", dataset_config.get("path", ""))
-	var target_gate: String = dataset_config.get("target_gate", "G0")
+	var path: String = record.get("source_path", dataset_config["path"])
+	var target_gate: String = dataset_config["target_gate"]
 	if not _is_snake_case(identifier):
 		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be nonempty snake_case.", "snake_case", identifier, target_gate))
 	if seen_ids.has(identifier):
@@ -379,7 +411,7 @@ static func _validate_character(record: Dictionary, dataset_config: Dictionary, 
 		issues.append(_record_issue("CHR001", record, dataset_config, "Character display_name must be nonempty when declared.", "nonempty", record.get("display_name")))
 
 static func _validate_wave(record: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
-	var expected_range: Array = dataset_config.get("expected_range", [1, 20])
+	var expected_range: Array = dataset_config["expected_range"]
 	var wave_number_value: Variant = record.get("wave", record.get("number", null))
 	var lower: int = int(expected_range[0]) if expected_range.size() >= 2 else 1
 	var upper: int = int(expected_range[1]) if expected_range.size() >= 2 else 20
@@ -413,10 +445,10 @@ static func _validate_references(
 			continue
 		var target_dataset: String = reference_targets[field]
 		var target_records: Array = gameplay.get(target_dataset, [])
-		var target_config: Dictionary = datasets.get(target_dataset, {})
+		var target_config: Dictionary = datasets[target_dataset]
 		var expected_id: String = String(record[field])
 		if target_records.is_empty():
-			issues.append(_not_ready_issue("REF001", record.get("source_path", source_config.get("path", "")), String(record.get("id", "")), "Reference target dataset %s is not present." % target_dataset, expected_id, 0, target_config.get("target_gate", source_config.get("target_gate", "G0"))))
+			issues.append(_not_ready_issue("REF001", record.get("source_path", source_config["path"]), String(record.get("id", "")), "Reference target dataset %s is not present." % target_dataset, expected_id, 0, target_config["target_gate"]))
 			continue
 		var resolved: bool = false
 		for target_record_value: Variant in target_records:
@@ -515,9 +547,9 @@ static func _record_issue(
 	actual: Variant
 ) -> Dictionary:
 	return _issue(
-		"ERROR", rule, record.get("source_path", dataset_config.get("path", "")),
+		"ERROR", rule, record.get("source_path", dataset_config["path"]),
 		record.get("source_line", 0), String(record.get("id", "")), message,
-		expected, actual, dataset_config.get("target_gate", "G0")
+		expected, actual, dataset_config["target_gate"]
 	)
 
 static func _dataset_records(snapshot: Dictionary, dataset_name: String) -> Array:
@@ -527,9 +559,123 @@ static func _dataset_records(snapshot: Dictionary, dataset_name: String) -> Arra
 		return snapshot.get("design_documents", {}).get("records", [])
 	return snapshot.get("gameplay", {}).get(dataset_name, [])
 
+static func _dataset_has_content(snapshot: Dictionary, dataset_name: String) -> bool:
+	if dataset_name == "assets":
+		var assets_value: Variant = snapshot.get("assets", {})
+		if not assets_value is Dictionary:
+			return false
+		var assets: Dictionary = assets_value
+		var header_value: Variant = assets.get("header", PackedStringArray())
+		var has_header: bool = (
+			(header_value is PackedStringArray or header_value is Array)
+			and header_value.size() > 0
+		)
+		var rows_value: Variant = assets.get("rows", [])
+		return has_header or (rows_value is Array and rows_value.size() > 0)
+	if dataset_name == "design_documents":
+		var documents_value: Variant = snapshot.get("design_documents", {})
+		if not documents_value is Dictionary:
+			return false
+		var documents: Dictionary = documents_value
+		var manifest_value: Variant = documents.get("manifest", {})
+		var files_value: Variant = documents.get("actual_markdown_files", [])
+		var records_value: Variant = documents.get("records", [])
+		return (
+			(manifest_value is Dictionary and not manifest_value.is_empty())
+			or (files_value is Array and files_value.size() > 0)
+			or (records_value is Array and records_value.size() > 0)
+		)
+	return not _dataset_records(snapshot, dataset_name).is_empty()
+
 static func _dataset_state(datasets: Dictionary, dataset_name: String) -> String:
-	var dataset_config: Dictionary = datasets.get(dataset_name, {})
-	return dataset_config.get("state", "")
+	var dataset_config_value: Variant = datasets.get(dataset_name, null)
+	if not _dataset_config_is_runtime_safe(dataset_name, dataset_config_value):
+		return ""
+	var dataset_config: Dictionary = dataset_config_value
+	return dataset_config["state"]
+
+static func _required_dataset_fields(dataset_name: String) -> Array[String]:
+	var fields: Array[String] = ["state", "path", "target_gate"]
+	if dataset_name in EXPECTED_COUNT_DATASETS:
+		fields.append("expected_count")
+	if dataset_name == "upgrades":
+		fields.append("expected_categories")
+	elif dataset_name == "waves":
+		fields.append("expected_range")
+	return fields
+
+static func _has_exact_keys(dictionary: Dictionary, expected_keys: Array[String]) -> bool:
+	var actual_keys: Array[String] = []
+	for key: Variant in dictionary:
+		actual_keys.append(String(key))
+	var sorted_expected: Array[String] = expected_keys.duplicate()
+	actual_keys.sort()
+	sorted_expected.sort()
+	return actual_keys == sorted_expected
+
+static func _is_integral_number(value: Variant) -> bool:
+	if value is int:
+		return true
+	if value is float:
+		return is_finite(value) and is_equal_approx(value, floorf(value))
+	return false
+
+static func _validate_expected_categories(
+	value: Variant,
+	target_gate: String,
+	issues: Array[Dictionary]
+) -> void:
+	if not value is Dictionary:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "upgrades", "Upgrade expected_categories must be the exact five-key integer matrix.", UPGRADE_CATEGORIES, value, target_gate))
+		return
+	var categories: Dictionary = value
+	var valid: bool = _has_exact_keys(categories, UPGRADE_CATEGORIES)
+	for category: String in UPGRADE_CATEGORIES:
+		if not _is_integral_number(categories.get(category, null)) or int(categories.get(category, -1)) < 0:
+			valid = false
+	if not valid:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "upgrades", "Upgrade expected_categories must be the exact five-key nonnegative integer matrix.", UPGRADE_CATEGORIES, categories, target_gate))
+
+static func _validate_expected_range(
+	value: Variant,
+	target_gate: String,
+	issues: Array[Dictionary]
+) -> void:
+	var valid: bool = value is Array and value.size() == 2
+	if valid:
+		valid = _is_integral_number(value[0]) and _is_integral_number(value[1]) and int(value[0]) <= int(value[1])
+	if not valid:
+		issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, "waves", "Wave expected_range must contain two ordered integral numbers.", "two ordered integers", value, target_gate))
+
+static func _dataset_config_is_runtime_safe(dataset_name: String, value: Variant) -> bool:
+	if not value is Dictionary:
+		return false
+	var dataset_config: Dictionary = value
+	if not _has_exact_keys(dataset_config, _required_dataset_fields(dataset_name)):
+		return false
+	if not dataset_config["state"] is String or String(dataset_config["state"]) not in DATASET_STATES:
+		return false
+	if not dataset_config["path"] is String or not _is_safe_res_path(dataset_config["path"]):
+		return false
+	if not dataset_config["target_gate"] is String or String(dataset_config["target_gate"]) not in GATE_ORDER:
+		return false
+	if dataset_name in EXPECTED_COUNT_DATASETS:
+		if not _is_integral_number(dataset_config["expected_count"]) or int(dataset_config["expected_count"]) < 0:
+			return false
+	if dataset_name == "upgrades":
+		var categories_value: Variant = dataset_config["expected_categories"]
+		if not categories_value is Dictionary or not _has_exact_keys(categories_value, UPGRADE_CATEGORIES):
+			return false
+		for category: String in UPGRADE_CATEGORIES:
+			if not _is_integral_number(categories_value.get(category, null)) or int(categories_value.get(category, -1)) < 0:
+				return false
+	elif dataset_name == "waves":
+		var range_value: Variant = dataset_config["expected_range"]
+		if not range_value is Array or range_value.size() != 2:
+			return false
+		if not _is_integral_number(range_value[0]) or not _is_integral_number(range_value[1]) or int(range_value[0]) > int(range_value[1]):
+			return false
+	return true
 
 static func _readiness_rule(dataset_name: String) -> String:
 	var rules: Dictionary = {

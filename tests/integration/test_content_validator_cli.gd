@@ -2,12 +2,16 @@ extends RefCounted
 
 const TOOL_PATH: String = "res://tools/validate_content.gd"
 const VALID_CONFIG: String = "res://tests/fixtures/content_validator/g0_valid/data/content_validation.json"
+const MALFORMED_DATASETS_CONFIG: String = "res://tests/fixtures/content_validator/g0_invalid/data/datasets_array.json"
+const INVALID_FIELD_TYPE_CONFIG: String = "res://tests/fixtures/content_validator/g0_invalid/data/invalid_field_type.json"
 
 func run() -> Array[String]:
 	var failures: Array[String] = []
 	_test_valid_g0_fixture_exits_zero_with_consistent_jsonl(failures)
 	_test_full_profile_exits_one_for_future_not_ready_catalogs(failures)
 	_test_unknown_profile_exits_two(failures)
+	_test_malformed_config_content_returns_jsonl_error(failures)
+	_test_invalid_config_field_type_returns_jsonl_error(failures)
 	return failures
 
 func _test_valid_g0_fixture_exits_zero_with_consistent_jsonl(failures: Array[String]) -> void:
@@ -53,6 +57,30 @@ func _test_unknown_profile_exits_two(failures: Array[String]) -> void:
 	]))
 	_assert_equal(execution.get("exit_code"), 2, "Unknown CLI profiles must exit two.", failures)
 	_parse_jsonl(execution.get("output", ""), failures)
+
+func _test_malformed_config_content_returns_jsonl_error(failures: Array[String]) -> void:
+	var execution: Dictionary = _execute(PackedStringArray([
+		"--profile=g0", "--format=jsonl", "--config=" + MALFORMED_DATASETS_CONFIG,
+	]))
+	_assert_equal(execution.get("exit_code"), 1, "Malformed config content must be a validation failure, not a crash.", failures)
+	var objects: Array[Dictionary] = _parse_jsonl(execution.get("output", ""), failures)
+	_assert_true(not objects.is_empty(), "Malformed config content must still emit JSONL.", failures)
+	if not objects.is_empty():
+		var summary: Dictionary = objects[-1]
+		_assert_equal(summary.get("type"), "summary", "Malformed config output must end in a summary.", failures)
+		_assert_true(int((summary.get("counts", {}) as Dictionary).get("error", 0)) > 0, "Malformed config summary must count a CFG001 error.", failures)
+
+func _test_invalid_config_field_type_returns_jsonl_error(failures: Array[String]) -> void:
+	var execution: Dictionary = _execute(PackedStringArray([
+		"--profile=g0", "--format=jsonl", "--config=" + INVALID_FIELD_TYPE_CONFIG,
+	]))
+	_assert_equal(execution.get("exit_code"), 1, "Invalid config field types must be validation failures, not runtime errors.", failures)
+	var objects: Array[Dictionary] = _parse_jsonl(execution.get("output", ""), failures)
+	_assert_true(not objects.is_empty(), "Invalid config field types must still emit JSONL.", failures)
+	if not objects.is_empty():
+		var summary: Dictionary = objects[-1]
+		_assert_equal(summary.get("type"), "summary", "Invalid field-type output must end in a summary.", failures)
+		_assert_true(int((summary.get("counts", {}) as Dictionary).get("error", 0)) > 0, "Invalid field-type summary must count CFG001.", failures)
 
 func _execute(tool_args: PackedStringArray) -> Dictionary:
 	var args: PackedStringArray = [

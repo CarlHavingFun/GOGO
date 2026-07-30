@@ -1,2 +1,7 @@
 asset_id,phase,category,subject,state,path,logical_canvas,pivot,frames,fps,prompt_section,status,notes,generation_canvas,direction,collision_reference,palette,negative_constraints,godot_import,reviewer,reference_source,reference_sha256,reference_rights_policy,sprite_layout,source_output,cleaned_output,qa_record,godot_evidence
-weapon_fixture_base,A1,weapon,fixture,base,assets/fixture/weapon_fixture_base.png,160x96,grip_point,1,0,,planned,"comma, preserved",,right,,,,,,,,original,single,,,,
+xiaodong_idle,A5,character,xiaodong,idle,assets/characters/xiaodong_idle.png,96x96,feet,1,0,,planned,"comma, preserved",,right,,,,,,,,original,single,,,,
+xiaodong_walk,A5,character,xiaodong,walk,assets/characters/xiaodong_walk.png,96x96,feet,1,0,,planned,walk cycle,,right,,,,,,,,original,single,,,,
+xiaodong_hit,A5,character,xiaodong,hit,assets/characters/xiaodong_hit.png,96x96,feet,1,0,,planned,hit reaction,,right,,,,,,,,original,single,,,,
+xiaodong_death,A5,character,xiaodong,death,assets/characters/xiaodong_death.png,96x96,feet,1,0,,planned,death pose,,right,,,,,,,,original,single,,,,
+xiaodong_skill_breakin,A5,character,xiaodong,skill_breakin,assets/characters/xiaodong_skill_breakin.png,96x96,feet,1,0,,planned,skill breakin,,right,,,,,,,,original,single,,,,
+xiaodong_portrait,A5,ui,xiaodong,portrait,assets/ui/xiaodong_portrait.png,96x96,center,1,0,,planned,portrait,,right,,,,,,,,original,single,,,,

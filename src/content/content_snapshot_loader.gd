@@ -27,11 +27,21 @@ static func load_project(
 		return {"snapshot": snapshot, "load_issues": load_issues}
 	var config: Dictionary = config_value
 	snapshot["config"] = config
-	var datasets: Dictionary = config.get("datasets", {})
-	_load_design_documents(snapshot, load_issues, normalized_root, datasets.get("design_documents", {}))
-	_load_assets(snapshot, load_issues, normalized_root, datasets.get("assets", {}))
+	var datasets_value: Variant = config.get("datasets", null)
+	if not datasets_value is Dictionary:
+		load_issues.append(_issue("CFG001", config_path, 0, "datasets", "Config datasets must be an object."))
+		return {"snapshot": snapshot, "load_issues": load_issues}
+	var datasets: Dictionary = datasets_value
+	var design_config: Dictionary = _dataset_config_for_loading(datasets, "design_documents", config_path, load_issues)
+	if not design_config.is_empty():
+		_load_design_documents(snapshot, load_issues, normalized_root, design_config)
+	var asset_config: Dictionary = _dataset_config_for_loading(datasets, "assets", config_path, load_issues)
+	if not asset_config.is_empty():
+		_load_assets(snapshot, load_issues, normalized_root, asset_config)
 	for dataset_name: String in GAMEPLAY_DATASETS:
-		_load_gameplay_dataset(snapshot, load_issues, normalized_root, dataset_name, datasets.get(dataset_name, {}))
+		var dataset_config: Dictionary = _dataset_config_for_loading(datasets, dataset_name, config_path, load_issues)
+		if not dataset_config.is_empty():
+			_load_gameplay_dataset(snapshot, load_issues, normalized_root, dataset_name, dataset_config)
 	return {"snapshot": snapshot, "load_issues": load_issues}
 
 static func _empty_snapshot() -> Dictionary:
@@ -45,19 +55,42 @@ static func _empty_snapshot() -> Dictionary:
 		},
 	}
 
+static func _dataset_config_for_loading(
+	datasets: Dictionary,
+	dataset_name: String,
+	config_path: String,
+	load_issues: Array[Dictionary]
+) -> Dictionary:
+	var dataset_config_value: Variant = datasets.get(dataset_name, null)
+	if not dataset_config_value is Dictionary:
+		load_issues.append(_issue("CFG001", config_path, 0, dataset_name, "Dataset config must be an object."))
+		return {}
+	var dataset_config: Dictionary = dataset_config_value
+	if not dataset_config.get("state", null) is String:
+		load_issues.append(_issue("CFG001", config_path, 0, dataset_name, "Dataset state must be a string."))
+		return {}
+	if not dataset_config.get("path", null) is String:
+		load_issues.append(_issue("CFG001", config_path, 0, dataset_name, "Dataset path must be a string."))
+		return {}
+	return dataset_config
+
 static func _load_design_documents(
 	snapshot: Dictionary,
 	load_issues: Array[Dictionary],
 	project_root: String,
 	dataset_config: Dictionary
 ) -> void:
-	var declared_path: String = dataset_config.get("path", "")
+	var declared_path: String = dataset_config["path"]
 	if not _is_safe_res_path(declared_path):
 		if not declared_path.is_empty():
 			load_issues.append(_issue("CFG001", declared_path, 0, "design_documents", "Dataset path must be a safe res:// path."))
 		return
 	var manifest_path: String = _resolve_dataset_path(project_root, declared_path)
 	if manifest_path.is_empty():
+		return
+	if dataset_config["state"] == "not_implemented":
+		if _path_is_nonempty(manifest_path):
+			load_issues.append(_issue("CFG001", manifest_path, 0, "design_documents", "Dataset declared not_implemented must be absent or empty."))
 		return
 	var design_directory: String = manifest_path.get_base_dir()
 	var actual_markdown_files: Array[String] = []
@@ -115,13 +148,17 @@ static func _load_assets(
 	project_root: String,
 	dataset_config: Dictionary
 ) -> void:
-	var declared_path: String = dataset_config.get("path", "")
+	var declared_path: String = dataset_config["path"]
 	if not _is_safe_res_path(declared_path):
 		if not declared_path.is_empty():
 			load_issues.append(_issue("CFG001", declared_path, 0, "assets", "Dataset path must be a safe res:// path."))
 		return
 	var csv_path: String = _resolve_dataset_path(project_root, declared_path)
 	if csv_path.is_empty():
+		return
+	if dataset_config["state"] == "not_implemented":
+		if _path_is_nonempty(csv_path):
+			load_issues.append(_issue("CFG001", csv_path, 0, "assets", "Dataset declared not_implemented must be absent or empty."))
 		return
 	if not FileAccess.file_exists(csv_path):
 		load_issues.append(_issue("AST001", csv_path, 0, "asset_manifest", "Asset manifest does not exist."))
@@ -168,7 +205,7 @@ static func _load_gameplay_dataset(
 	dataset_name: String,
 	dataset_config: Dictionary
 ) -> void:
-	var declared_path: String = dataset_config.get("path", "")
+	var declared_path: String = dataset_config["path"]
 	if not _is_safe_res_path(declared_path):
 		if not declared_path.is_empty():
 			load_issues.append(_issue("CFG001", declared_path, 0, dataset_name, "Dataset path must be a safe res:// path."))
@@ -176,7 +213,7 @@ static func _load_gameplay_dataset(
 	var dataset_path: String = _resolve_dataset_path(project_root, declared_path)
 	if dataset_path.is_empty():
 		return
-	var state: String = dataset_config.get("state", "")
+	var state: String = dataset_config["state"]
 	if state == "not_implemented" and _path_is_nonempty(dataset_path):
 		load_issues.append(_issue("CFG001", dataset_path, 0, dataset_name, "Dataset declared not_implemented must be absent or empty."))
 		return
