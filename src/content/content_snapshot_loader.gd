@@ -9,6 +9,8 @@ const ASSET_EVIDENCE_FIELDS: Array[String] = [
 ]
 const XIAODONG_DESIGN_CARD_PATH: String = "assets/characters/xiaodong/character_xiaodong_design.md"
 const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
+const XIAODONG_REFERENCE_BYTES: int = 77554
+const XIAODONG_REFERENCE_SHA256: String = "fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52"
 const GOVERNANCE_FENCE: String = "```gogo-governance+json"
 
 static func load_project(
@@ -222,7 +224,11 @@ static func _load_xiaodong_governance(snapshot: Dictionary, project_root: String
 		reference["bytes"] = original_bytes.size()
 		if not original_bytes.is_empty():
 			reference["sha256"] = FileAccess.get_sha256(reference_path)
-			if _has_jpeg_container_markers(original_bytes):
+			if (
+				original_bytes.size() == XIAODONG_REFERENCE_BYTES
+				and reference["sha256"] == XIAODONG_REFERENCE_SHA256
+				and _has_jpeg_container_markers(original_bytes)
+			):
 				var image: Image = Image.new()
 				var decode_error: Error = image.load_jpg_from_buffer(original_bytes)
 				if decode_error == OK:
@@ -256,19 +262,47 @@ static func _normalize_governance_machine_block(markdown: String, card: Dictiona
 	var machine_blocks: Array[String] = []
 	var current_lines: Array[String] = []
 	var in_machine_block: bool = false
+	var in_html_comment: bool = false
+	var outer_fence_character: String = ""
+	var outer_fence_length: int = 0
 	for line_value: Variant in normalized_markdown.split("\n", true):
 		var line: String = String(line_value)
-		if not in_machine_block:
-			if line == GOVERNANCE_FENCE:
-				in_machine_block = true
+		if in_machine_block:
+			if line == "```":
+				machine_blocks.append("\n".join(current_lines))
+				in_machine_block = false
 				current_lines = []
+			else:
+				current_lines.append(line)
 			continue
-		if line == "```":
-			machine_blocks.append("\n".join(current_lines))
-			in_machine_block = false
+
+		if not outer_fence_character.is_empty():
+			var closing_fence: Dictionary = _markdown_fence(line)
+			if (
+				closing_fence.get("character", "") == outer_fence_character
+				and int(closing_fence.get("length", 0)) >= outer_fence_length
+				and String(closing_fence.get("suffix", "")).strip_edges().is_empty()
+			):
+				outer_fence_character = ""
+				outer_fence_length = 0
+			continue
+
+		if in_html_comment:
+			in_html_comment = _html_comment_state_after_line(line, true)
+			continue
+
+		if line == GOVERNANCE_FENCE:
+			in_machine_block = true
 			current_lines = []
-		else:
-			current_lines.append(line)
+			continue
+
+		var opening_fence: Dictionary = _markdown_fence(line)
+		if not opening_fence.is_empty():
+			outer_fence_character = opening_fence["character"]
+			outer_fence_length = opening_fence["length"]
+			continue
+
+		in_html_comment = _html_comment_state_after_line(line, false)
 	card["machine_block_count"] = machine_blocks.size()
 	if in_machine_block:
 		card["parse_error"] = "unterminated gogo-governance+json block"
@@ -284,6 +318,45 @@ static func _normalize_governance_machine_block(markdown: String, card: Dictiona
 		card["parse_error"] = "gogo-governance+json block must contain one valid JSON object"
 		return
 	card["record"] = record_value
+
+static func _markdown_fence(line: String) -> Dictionary:
+	var marker_start: int = 0
+	while marker_start < line.length() and marker_start < 4 and line.substr(marker_start, 1) == " ":
+		marker_start += 1
+	if marker_start > 3 or marker_start >= line.length():
+		return {}
+	var marker_character: String = line.substr(marker_start, 1)
+	if marker_character != "`" and marker_character != "~":
+		return {}
+	var marker_end: int = marker_start
+	while marker_end < line.length() and line.substr(marker_end, 1) == marker_character:
+		marker_end += 1
+	var marker_length: int = marker_end - marker_start
+	if marker_length < 3:
+		return {}
+	return {
+		"character": marker_character,
+		"length": marker_length,
+		"suffix": line.substr(marker_end),
+	}
+
+static func _html_comment_state_after_line(line: String, starts_inside: bool) -> bool:
+	var in_comment: bool = starts_inside
+	var cursor: int = 0
+	while cursor < line.length():
+		if in_comment:
+			var closing_index: int = line.find("-->", cursor)
+			if closing_index < 0:
+				return true
+			in_comment = false
+			cursor = closing_index + 3
+		else:
+			var opening_index: int = line.find("<!--", cursor)
+			if opening_index < 0:
+				return false
+			in_comment = true
+			cursor = opening_index + 4
+	return in_comment
 
 static func _has_jpeg_container_markers(bytes: PackedByteArray) -> bool:
 	return (

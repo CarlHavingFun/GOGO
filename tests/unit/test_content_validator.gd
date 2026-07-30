@@ -17,6 +17,7 @@ const FULL_INVALID_FIXTURE: String = "res://tests/fixtures/content_validator/ful
 const DESIGN_FIXTURE_SHA256: String = "559f2884854bd2335f027facfa19a2b4e181a44b3ad74ba55cb8c2366419486e"
 const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
 const XIAODONG_REFERENCE_SHA256: String = "fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52"
+const CORRUPT_REFERENCE_SHA256: String = "d20f6ffd523b78a86cd2f916fa34af5d1918d75f7b142237c752ad6b254213ab"
 const ASSET_HEADER: PackedStringArray = [
 	"asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
 	"pivot", "frames", "fps", "prompt_section", "status", "notes",
@@ -45,6 +46,7 @@ func run() -> Array[String]:
 		return failures
 	_test_loader_normalizes_real_json_csv_and_markdown(failures)
 	_test_loader_normalizes_xiaodong_card_and_original_jpeg_bytes(failures)
+	_test_loader_rejects_inactive_governance_machine_blocks(failures)
 	_test_loader_normalizes_missing_and_corrupt_references_without_throwing(failures)
 	_test_loader_reads_real_gameplay_resources_without_inventing_rows(failures)
 	_test_loader_returns_content_issues_instead_of_throwing(failures)
@@ -149,6 +151,69 @@ func _test_loader_normalizes_xiaodong_card_and_original_jpeg_bytes(failures: Arr
 	_assert_equal(duplicate_card.get("machine_block_count"), 2, "The loader must preserve duplicate exact machine-block evidence for AST007.", failures)
 	_assert_equal(duplicate_card.get("record"), {}, "The loader must not select a record from duplicate machine blocks.", failures)
 
+func _test_loader_rejects_inactive_governance_machine_blocks(failures: Array[String]) -> void:
+	var inactive_cases: Array[Dictionary] = [
+		{
+			"label": "four-backtick outer fence",
+			"markdown": "````markdown\n```gogo-governance+json\n{}\n```\n````\n",
+		},
+		{
+			"label": "tilde outer fence",
+			"markdown": "~~~markdown\n```gogo-governance+json\n{}\n```\n~~~~\n",
+		},
+		{
+			"label": "multiline HTML comment",
+			"markdown": "<!-- inactive example\n```gogo-governance+json\n{}\n```\n-->\n",
+		},
+	]
+	for case: Dictionary in inactive_cases:
+		var card: Dictionary = {
+			"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+			"exists": true,
+			"machine_block_count": 0,
+			"parse_error": "",
+			"record": {},
+		}
+		_loader_script.call("_normalize_governance_machine_block", case["markdown"], card)
+		_assert_equal(card.get("machine_block_count"), 0, "An exact opener inside a %s must remain inactive." % case["label"], failures)
+		var snapshot: Dictionary = _base_snapshot()
+		snapshot["assets"]["governance"]["xiaodong"]["design_card"] = card
+		_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST007"), 1, "An inactive %s example must not satisfy AST007." % case["label"], failures)
+
+	var valid_record: Dictionary = _valid_xiaodong_governance()["design_card"]["record"]
+	var closed_outer_fence_card: Dictionary = {
+		"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+		"exists": true,
+		"machine_block_count": 0,
+		"parse_error": "",
+		"record": {},
+	}
+	_loader_script.call(
+		"_normalize_governance_machine_block",
+		"````markdown\n```gogo-governance+json\n{}\n```\n`````\n```gogo-governance+json\n%s\n```\n" % JSON.stringify(valid_record),
+		closed_outer_fence_card
+	)
+	_assert_equal(closed_outer_fence_card.get("machine_block_count"), 1, "A longer closing fence must end its outer context before a top-level exact block.", failures)
+	_assert_equal(closed_outer_fence_card.get("record", {}).get("subject"), "xiaodong", "The top-level exact block after a longer close must be the parsed record.", failures)
+
+	var unterminated_card: Dictionary = {
+		"path": "assets/characters/xiaodong/character_xiaodong_design.md",
+		"exists": true,
+		"machine_block_count": 0,
+		"parse_error": "",
+		"record": {},
+	}
+	_loader_script.call(
+		"_normalize_governance_machine_block",
+		"```gogo-governance+json\n{}\n",
+		unterminated_card
+	)
+	_assert_equal(unterminated_card.get("machine_block_count"), 0, "An unterminated exact block must not count as a complete machine block.", failures)
+	_assert_equal(unterminated_card.get("parse_error"), "unterminated gogo-governance+json block", "An unterminated exact block must retain deterministic parse evidence.", failures)
+	var unterminated_snapshot: Dictionary = _base_snapshot()
+	unterminated_snapshot["assets"]["governance"]["xiaodong"]["design_card"] = unterminated_card
+	_assert_equal(_issue_count(_validate(unterminated_snapshot, &"g0"), "AST007"), 1, "An unterminated exact block must produce one stable AST007 issue.", failures)
+
 func _test_loader_normalizes_missing_and_corrupt_references_without_throwing(failures: Array[String]) -> void:
 	var missing: Dictionary = _loader_script.call(
 		"load_project",
@@ -166,8 +231,9 @@ func _test_loader_normalizes_missing_and_corrupt_references_without_throwing(fai
 	)
 	var corrupt_reference: Dictionary = corrupt.get("snapshot", {}).get("assets", {}).get("governance", {}).get("xiaodong", {}).get("reference", {})
 	_assert_equal(corrupt_reference.get("exists"), true, "A corrupt fixed reference must still normalize its filesystem existence.", failures)
-	_assert_true(int(corrupt_reference.get("bytes", 0)) > 0, "A corrupt fixed reference must retain its nonzero byte count.", failures)
-	_assert_equal(corrupt_reference.get("jpeg_decoded"), false, "Non-JPEG bytes must fail JPEG decoding without throwing.", failures)
+	_assert_equal(corrupt_reference.get("bytes"), 22, "A corrupt SOI/EOI fixture must retain its original byte count.", failures)
+	_assert_equal(corrupt_reference.get("sha256"), CORRUPT_REFERENCE_SHA256, "A corrupt SOI/EOI fixture must retain its original SHA-256 evidence.", failures)
+	_assert_equal(corrupt_reference.get("jpeg_decoded"), false, "Unapproved SOI/EOI bytes must not claim successful JPEG decoding.", failures)
 
 func _test_loader_returns_content_issues_instead_of_throwing(failures: Array[String]) -> void:
 	var result: Dictionary = _loader_script.call("load_project", INVALID_ROOT, INVALID_CONFIG)
