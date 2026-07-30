@@ -3,8 +3,10 @@ extends SceneTree
 const TEST_PATHS: Array[String] = [
 	"res://tests/unit/test_weapon_runtime.gd",
 	"res://tests/unit/test_spread_sampler.gd",
+	"res://tests/unit/test_content_validator.gd",
 	"res://tests/integration/test_playable_scene.gd",
 	"res://tests/integration/test_m0_acceptance.gd",
+	"res://tests/integration/test_content_validator_cli.gd",
 ]
 
 func _initialize() -> void:

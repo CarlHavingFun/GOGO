@@ -1,0 +1,2 @@
+asset_id,phase,category,subject,state,path,logical_canvas,pivot,frames,fps,prompt_section,status,notes,generation_canvas,direction,collision_reference,palette,negative_constraints,godot_import,reviewer,reference_source,reference_sha256,reference_rights_policy,sprite_layout,source_output,cleaned_output,qa_record,godot_evidence
+generated_missing_evidence,A1,weapon,fixture,base,assets/fixture/generated.png,160x96,grip_point,1,0,,generated,missing evidence,,right,,,,,,,,original,single,,,,
