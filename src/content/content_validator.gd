@@ -32,7 +32,32 @@ const ASSET_CATEGORIES: Array[String] = [
 const ASSET_STATUSES: Array[String] = ["planned", "generated", "cleaned", "approved", "in_game", "rejected"]
 const GENERATED_OR_LATER: Array[String] = ["generated", "cleaned", "approved", "in_game", "rejected"]
 const XIAODONG_A5_STATES: Array[String] = ["idle", "walk", "hit", "death", "skill_breakin", "portrait"]
+const XIAODONG_DESIGN_CARD_PATH: String = "assets/characters/xiaodong/character_xiaodong_design.md"
+const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
+const XIAODONG_REFERENCE_BYTES: int = 77554
+const XIAODONG_REFERENCE_WIDTH: int = 853
+const XIAODONG_REFERENCE_HEIGHT: int = 1280
+const XIAODONG_REFERENCE_SHA256: String = "fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52"
+const XIAODONG_CARD_FIELDS: Array[String] = [
+	"schema_version", "subject", "design_stage", "asset_stage", "artifact_state",
+	"decision", "candidate_count", "reference", "boundary",
+]
+const XIAODONG_CARD_REFERENCE_FIELDS: Array[String] = [
+	"path", "bytes", "width", "height", "sha256", "rights_policy",
+]
+const XIAODONG_CARD_BOUNDARY_FIELDS: Array[String] = [
+	"c0_changes_a5_status", "c0_enters_godot", "a5_status", "a5_gate",
+]
+const XIAODONG_ARTIFACT_STATES: Array[String] = ["not_generated", "generated", "cleaned", "rejected"]
+const XIAODONG_DECISIONS: Array[String] = ["pending_review", "accepted_for_concept", "revise", "rejected"]
 const UPGRADE_CATEGORIES: Array[String] = ["calibration", "engine", "mutation", "module", "contract"]
+const GAMEPLAY_ID_PREFIXES: Dictionary = {
+	"characters": "char_",
+	"weapons": "wpn_",
+	"throwables": "throw_",
+	"upgrades": "upgrade_",
+	"enemies": "enemy_",
+}
 
 static func validate_project(
 	profile: StringName = &"g0",
@@ -227,8 +252,15 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 	var sorted_expected: Array[String] = XIAODONG_A5_STATES.duplicate()
 	sorted_actual.sort()
 	sorted_expected.sort()
-	if sorted_actual != sorted_expected:
+	var has_exact_xiaodong_rows: bool = sorted_actual == sorted_expected
+	if not has_exact_xiaodong_rows:
 		issues.append(_issue("ERROR", "AST005", dataset_config["path"], 0, "xiaodong", "A5 Xiaodong must have exactly idle/walk/hit/death/skill_breakin/portrait.", sorted_expected, sorted_actual, target_gate))
+	_validate_xiaodong_governance(
+		assets.get("governance", null),
+		rows,
+		has_exact_xiaodong_rows,
+		issues
+	)
 
 static func _validate_asset_schema(
 	row: Dictionary,
@@ -333,6 +365,211 @@ static func _validate_asset_prompt(
 		if String(row.get(field, "")).strip_edges().is_empty():
 			issues.append(_issue("ERROR", "AST004", source_path, source_line, row.get("asset_id", ""), "Generated-or-later assets require nonempty %s." % field, "nonempty", row.get(field), target_gate))
 
+static func _validate_xiaodong_governance(
+	governance_value: Variant,
+	rows: Array,
+	has_exact_xiaodong_rows: bool,
+	issues: Array[Dictionary]
+) -> void:
+	var xiaodong: Dictionary = {}
+	if governance_value is Dictionary:
+		var xiaodong_value: Variant = (governance_value as Dictionary).get("xiaodong", null)
+		if xiaodong_value is Dictionary:
+			xiaodong = xiaodong_value
+	var card_validation: Dictionary = _validate_xiaodong_design_card(
+		xiaodong.get("design_card", null),
+		issues
+	)
+	var reference_reasons: Array[String] = []
+	var actual_reference_value: Variant = xiaodong.get("reference", null)
+	var actual_reference: Dictionary = {}
+	if not actual_reference_value is Dictionary:
+		reference_reasons.append("fixed reference evidence is missing or not an object")
+	else:
+		actual_reference = actual_reference_value
+		if actual_reference.get("path") != XIAODONG_REFERENCE_PATH:
+			reference_reasons.append("loader reference path is not the fixed registry path")
+		if actual_reference.get("exists") != true:
+			reference_reasons.append("fixed reference file is missing")
+		else:
+			if actual_reference.get("bytes") != XIAODONG_REFERENCE_BYTES:
+				reference_reasons.append("reference byte count differs from the approved original")
+			if actual_reference.get("jpeg_decoded") != true:
+				reference_reasons.append("reference bytes do not decode as JPEG")
+			if actual_reference.get("width") != XIAODONG_REFERENCE_WIDTH or actual_reference.get("height") != XIAODONG_REFERENCE_HEIGHT:
+				reference_reasons.append("decoded reference dimensions differ from 853x1280")
+			if actual_reference.get("sha256") != XIAODONG_REFERENCE_SHA256:
+				reference_reasons.append("reference SHA-256 differs from the approved original")
+
+	if card_validation.get("valid", false):
+		var card_record: Dictionary = card_validation["record"]
+		var card_reference: Dictionary = card_record["reference"]
+		if card_reference.get("path") != XIAODONG_REFERENCE_PATH:
+			reference_reasons.append("design-card reference path differs from the fixed registry path")
+		if card_reference.get("bytes") != XIAODONG_REFERENCE_BYTES:
+			reference_reasons.append("design-card reference byte count differs from the approved original")
+		if card_reference.get("width") != XIAODONG_REFERENCE_WIDTH or card_reference.get("height") != XIAODONG_REFERENCE_HEIGHT:
+			reference_reasons.append("design-card reference dimensions differ from 853x1280")
+		if card_reference.get("sha256") != XIAODONG_REFERENCE_SHA256:
+			reference_reasons.append("design-card reference SHA-256 differs from the approved original")
+		if card_reference.get("rights_policy") != "R2":
+			reference_reasons.append("design-card reference rights policy must be R2")
+
+	if has_exact_xiaodong_rows:
+		for row_value: Variant in rows:
+			if not row_value is Dictionary:
+				continue
+			var row: Dictionary = row_value
+			if row.get("phase") != "A5" or row.get("subject") != "xiaodong":
+				continue
+			var asset_id: String = String(row.get("asset_id", "xiaodong"))
+			if row.get("reference_source") != XIAODONG_REFERENCE_PATH:
+				reference_reasons.append("%s reference_source differs from the fixed registry path" % asset_id)
+			if row.get("reference_sha256") != XIAODONG_REFERENCE_SHA256:
+				reference_reasons.append("%s reference_sha256 differs from the approved original" % asset_id)
+			if row.get("reference_rights_policy") != "R2":
+				reference_reasons.append("%s reference_rights_policy must be R2" % asset_id)
+			if row.get("status") != "planned":
+				reference_reasons.append("%s A5 lifecycle status must remain planned" % asset_id)
+
+	if not reference_reasons.is_empty():
+		issues.append(_issue(
+			"ERROR",
+			"AST006",
+			XIAODONG_REFERENCE_PATH,
+			0,
+			"xiaodong_reference",
+			"Xiaodong R2 reference integrity and three-way evidence consistency failed.",
+			{
+				"bytes": XIAODONG_REFERENCE_BYTES,
+				"width": XIAODONG_REFERENCE_WIDTH,
+				"height": XIAODONG_REFERENCE_HEIGHT,
+				"sha256": XIAODONG_REFERENCE_SHA256,
+				"rights_policy": "R2",
+				"a5_status": "planned",
+			},
+			reference_reasons,
+			"G0"
+		))
+
+static func _validate_xiaodong_design_card(
+	card_value: Variant,
+	issues: Array[Dictionary]
+) -> Dictionary:
+	var reasons: Array[String] = []
+	var card: Dictionary = {}
+	var record: Dictionary = {}
+	if not card_value is Dictionary:
+		reasons.append("fixed design-card evidence is missing or not an object")
+	else:
+		card = card_value
+		var card_evidence_fields: Array[String] = [
+			"path", "exists", "machine_block_count", "parse_error", "record",
+		]
+		if not _has_exact_keys(card, card_evidence_fields):
+			reasons.append("normalized design-card evidence has an invalid field set")
+		if card.get("path") != XIAODONG_DESIGN_CARD_PATH:
+			reasons.append("design-card path is not the fixed registry path")
+		if card.get("exists") != true:
+			reasons.append("fixed design card is missing")
+		else:
+			var block_count_valid: bool = (
+				_is_integral_number(card.get("machine_block_count", null))
+				and int(card.get("machine_block_count", -1)) == 1
+			)
+			if not block_count_valid:
+				reasons.append("design card must contain exactly one gogo-governance+json block")
+			elif not card.get("parse_error", null) is String or not String(card.get("parse_error", "")).is_empty():
+				reasons.append("design-card machine block is missing, unterminated, or invalid JSON")
+			else:
+				var record_value: Variant = card.get("record", null)
+				if not record_value is Dictionary:
+					reasons.append("design-card machine record must be an object")
+				else:
+					record = record_value
+					_validate_xiaodong_card_record(record, reasons)
+	if not reasons.is_empty():
+		issues.append(_issue(
+			"ERROR",
+			"AST007",
+			XIAODONG_DESIGN_CARD_PATH,
+			0,
+			"xiaodong_design_card",
+			"Xiaodong design-card machine contract or C0/A5/Godot boundary is invalid.",
+			"one valid gogo-governance+json record with the approved lifecycle and boundary",
+			reasons,
+			"G0"
+		))
+		return {"valid": false, "record": {}}
+	return {"valid": true, "record": record}
+
+static func _validate_xiaodong_card_record(record: Dictionary, reasons: Array[String]) -> void:
+	if not _has_exact_keys(record, XIAODONG_CARD_FIELDS):
+		reasons.append("machine record must use the exact contract field set")
+	if not _is_integral_number(record.get("schema_version", null)) or int(record.get("schema_version", -1)) != 1:
+		reasons.append("schema_version must be integer 1")
+	if record.get("subject") != "xiaodong":
+		reasons.append("subject must be xiaodong")
+	if record.get("design_stage") != "C0":
+		reasons.append("design_stage must be C0")
+	if record.get("asset_stage") != "A5":
+		reasons.append("asset_stage must be A5")
+
+	var artifact_state_value: Variant = record.get("artifact_state", null)
+	var decision_value: Variant = record.get("decision", null)
+	var count_value: Variant = record.get("candidate_count", null)
+	var artifact_state: String = String(artifact_state_value) if artifact_state_value is String else ""
+	var decision: String = String(decision_value) if decision_value is String else ""
+	var valid_count: bool = _is_integral_number(count_value) and int(count_value) >= 0
+	var candidate_count: int = int(count_value) if valid_count else -1
+	if artifact_state not in XIAODONG_ARTIFACT_STATES:
+		reasons.append("artifact_state uses an unknown lifecycle value")
+	if decision not in XIAODONG_DECISIONS:
+		reasons.append("decision uses an unknown review value")
+	if not valid_count:
+		reasons.append("candidate_count must be a nonnegative integer")
+	if valid_count:
+		if artifact_state == "not_generated" and (candidate_count != 0 or decision != "pending_review"):
+			reasons.append("not_generated requires zero candidates and pending_review")
+		if candidate_count == 0 and (artifact_state != "not_generated" or decision != "pending_review"):
+			reasons.append("zero candidates requires not_generated and pending_review")
+		if candidate_count > 0 and artifact_state == "not_generated":
+			reasons.append("positive candidates cannot remain not_generated")
+		if decision == "accepted_for_concept" and (candidate_count == 0 or artifact_state not in ["generated", "cleaned"]):
+			reasons.append("accepted_for_concept requires positive candidates in generated or cleaned state")
+
+	var reference_value: Variant = record.get("reference", null)
+	if not reference_value is Dictionary:
+		reasons.append("reference must be an object")
+	else:
+		var reference: Dictionary = reference_value
+		if not _has_exact_keys(reference, XIAODONG_CARD_REFERENCE_FIELDS):
+			reasons.append("reference must use the exact path/bytes/width/height/sha256/rights_policy fields")
+		if not reference.get("path", null) is String:
+			reasons.append("reference path must be a string")
+		if not _is_integral_number(reference.get("bytes", null)):
+			reasons.append("reference bytes must be an integer")
+		if not _is_integral_number(reference.get("width", null)) or not _is_integral_number(reference.get("height", null)):
+			reasons.append("reference dimensions must be integers")
+		if not reference.get("sha256", null) is String or not reference.get("rights_policy", null) is String:
+			reasons.append("reference SHA-256 and rights policy must be strings")
+
+	var boundary_value: Variant = record.get("boundary", null)
+	if not boundary_value is Dictionary:
+		reasons.append("boundary must be an object")
+	else:
+		var boundary: Dictionary = boundary_value
+		if not _has_exact_keys(boundary, XIAODONG_CARD_BOUNDARY_FIELDS):
+			reasons.append("boundary must use the exact four invariant fields")
+		if boundary.get("c0_changes_a5_status") != false:
+			reasons.append("C0 must not change A5 status")
+		if boundary.get("c0_enters_godot") != false:
+			reasons.append("C0 must not enter Godot")
+		if boundary.get("a5_status") != "planned":
+			reasons.append("A5 status must remain planned")
+		if boundary.get("a5_gate") != "M4":
+			reasons.append("A5 gate must remain M4")
+
 static func _validate_gameplay(gameplay: Dictionary, datasets: Dictionary, issues: Array[Dictionary]) -> void:
 	var seen_ids: Dictionary = {}
 	for dataset_name: String in GAMEPLAY_DATASETS:
@@ -383,6 +620,9 @@ static func _validate_gameplay_id(
 	var target_gate: String = dataset_config["target_gate"]
 	if not _is_snake_case(identifier):
 		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be nonempty snake_case.", "snake_case", identifier, target_gate))
+	var required_prefix: String = GAMEPLAY_ID_PREFIXES.get(dataset_name, "")
+	if not required_prefix.is_empty() and not identifier.begins_with(required_prefix):
+		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must use the canonical dataset namespace.", required_prefix, identifier, target_gate))
 	if seen_ids.has(identifier):
 		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be unique across gameplay datasets.", "unique across gameplay datasets", seen_ids[identifier], target_gate))
 	else:

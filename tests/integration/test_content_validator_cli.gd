@@ -4,6 +4,11 @@ const TOOL_PATH: String = "res://tools/validate_content.gd"
 const VALID_CONFIG: String = "res://tests/fixtures/content_validator/g0_valid/data/content_validation.json"
 const MALFORMED_DATASETS_CONFIG: String = "res://tests/fixtures/content_validator/g0_invalid/data/datasets_array.json"
 const INVALID_FIELD_TYPE_CONFIG: String = "res://tests/fixtures/content_validator/g0_invalid/data/invalid_field_type.json"
+const GOVERNANCE_ROOT: String = "res://tests/fixtures/content_validator/governance/"
+const MISSING_REFERENCE_CONFIG: String = GOVERNANCE_ROOT + "missing_reference/data/content_validation.json"
+const CORRUPT_REFERENCE_CONFIG: String = GOVERNANCE_ROOT + "corrupt_reference/data/content_validation.json"
+const MISSING_CARD_CONFIG: String = GOVERNANCE_ROOT + "missing_card/data/content_validation.json"
+const INVALID_CARD_CONFIG: String = GOVERNANCE_ROOT + "invalid_card/data/content_validation.json"
 
 func run() -> Array[String]:
 	var failures: Array[String] = []
@@ -12,6 +17,7 @@ func run() -> Array[String]:
 	_test_unknown_profile_exits_two(failures)
 	_test_malformed_config_content_returns_jsonl_error(failures)
 	_test_invalid_config_field_type_returns_jsonl_error(failures)
+	_test_governance_artifact_failures_exit_one_with_stable_rules(failures)
 	return failures
 
 func _test_valid_g0_fixture_exits_zero_with_consistent_jsonl(failures: Array[String]) -> void:
@@ -82,6 +88,24 @@ func _test_invalid_config_field_type_returns_jsonl_error(failures: Array[String]
 		_assert_equal(summary.get("type"), "summary", "Invalid field-type output must end in a summary.", failures)
 		_assert_true(int((summary.get("counts", {}) as Dictionary).get("error", 0)) > 0, "Invalid field-type summary must count CFG001.", failures)
 
+func _test_governance_artifact_failures_exit_one_with_stable_rules(failures: Array[String]) -> void:
+	var cases: Array[Dictionary] = [
+		{"config": MISSING_REFERENCE_CONFIG, "rule": "AST006", "forbidden": "AST007", "label": "missing reference"},
+		{"config": CORRUPT_REFERENCE_CONFIG, "rule": "AST006", "forbidden": "AST007", "label": "corrupt reference"},
+		{"config": MISSING_CARD_CONFIG, "rule": "AST007", "forbidden": "AST006", "label": "missing card"},
+		{"config": INVALID_CARD_CONFIG, "rule": "AST007", "forbidden": "AST006", "label": "invalid card"},
+	]
+	for case: Dictionary in cases:
+		var execution: Dictionary = _execute(PackedStringArray([
+			"--profile=g0", "--format=jsonl", "--config=" + case["config"],
+		]))
+		_assert_equal(execution.get("exit_code"), 1, "The %s G0 fixture must exit one." % case["label"], failures)
+		var objects: Array[Dictionary] = _parse_jsonl(execution.get("output", ""), failures)
+		_assert_equal(_rule_count(objects, case["rule"]), 1, "The %s fixture must emit exactly one %s." % [case["label"], case["rule"]], failures)
+		_assert_equal(_rule_count(objects, case["forbidden"]), 0, "The %s fixture must not cascade into %s." % [case["label"], case["forbidden"]], failures)
+		if not objects.is_empty():
+			_assert_equal(int((objects[-1].get("counts", {}) as Dictionary).get("error", 0)), 1, "The %s fixture must report one ERROR." % case["label"], failures)
+
 func _execute(tool_args: PackedStringArray) -> Dictionary:
 	var args: PackedStringArray = [
 		"--headless",
@@ -116,6 +140,13 @@ func _type_count(objects: Array[Dictionary], type_name: String) -> int:
 	var count: int = 0
 	for object: Dictionary in objects:
 		if object.get("type") == type_name:
+			count += 1
+	return count
+
+func _rule_count(objects: Array[Dictionary], rule: String) -> int:
+	var count: int = 0
+	for object: Dictionary in objects:
+		if object.get("type") == "issue" and object.get("rule") == rule:
 			count += 1
 	return count
 

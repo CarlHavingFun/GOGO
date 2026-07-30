@@ -7,6 +7,9 @@ const GAMEPLAY_DATASETS: Array[String] = [
 const ASSET_EVIDENCE_FIELDS: Array[String] = [
 	"path", "source_output", "cleaned_output", "qa_record", "godot_evidence",
 ]
+const XIAODONG_DESIGN_CARD_PATH: String = "assets/characters/xiaodong/character_xiaodong_design.md"
+const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
+const GOVERNANCE_FENCE: String = "```gogo-governance+json"
 
 static func load_project(
 	project_root: String = "res://",
@@ -42,13 +45,18 @@ static func load_project(
 		var dataset_config: Dictionary = _dataset_config_for_loading(datasets, dataset_name, config_path, load_issues)
 		if not dataset_config.is_empty():
 			_load_gameplay_dataset(snapshot, load_issues, normalized_root, dataset_name, dataset_config)
+	_load_xiaodong_governance(snapshot, normalized_root)
 	return {"snapshot": snapshot, "load_issues": load_issues}
 
 static func _empty_snapshot() -> Dictionary:
 	return {
 		"config": {"schema_version": 0, "current_gate": "", "datasets": {}},
 		"design_documents": {"manifest": {}, "actual_markdown_files": [], "records": []},
-		"assets": {"header": PackedStringArray(), "rows": []},
+		"assets": {
+			"header": PackedStringArray(),
+			"rows": [],
+			"governance": {"xiaodong": _empty_xiaodong_governance()},
+		},
 		"gameplay": {
 			"weapons": [], "throwables": [], "characters": [], "upgrades": [],
 			"enemies": [], "waves": [], "unlocks": [],
@@ -197,6 +205,94 @@ static func _load_assets(
 			row["_%s_exists" % evidence_field] = not resolved_path.is_empty() and FileAccess.file_exists(resolved_path)
 		rows.append(row)
 	snapshot["assets"]["rows"] = rows
+
+static func _load_xiaodong_governance(snapshot: Dictionary, project_root: String) -> void:
+	var governance: Dictionary = _empty_xiaodong_governance()
+	var card: Dictionary = governance["design_card"]
+	var card_path: String = _resolve_record_path(project_root, XIAODONG_DESIGN_CARD_PATH)
+	if not card_path.is_empty() and FileAccess.file_exists(card_path):
+		card["exists"] = true
+		_normalize_governance_machine_block(FileAccess.get_file_as_string(card_path), card)
+
+	var reference: Dictionary = governance["reference"]
+	var reference_path: String = _resolve_record_path(project_root, XIAODONG_REFERENCE_PATH)
+	if not reference_path.is_empty() and FileAccess.file_exists(reference_path):
+		reference["exists"] = true
+		var original_bytes: PackedByteArray = FileAccess.get_file_as_bytes(reference_path)
+		reference["bytes"] = original_bytes.size()
+		if not original_bytes.is_empty():
+			reference["sha256"] = FileAccess.get_sha256(reference_path)
+			if _has_jpeg_container_markers(original_bytes):
+				var image: Image = Image.new()
+				var decode_error: Error = image.load_jpg_from_buffer(original_bytes)
+				if decode_error == OK:
+					reference["jpeg_decoded"] = true
+					reference["width"] = image.get_width()
+					reference["height"] = image.get_height()
+	snapshot["assets"]["governance"] = {"xiaodong": governance}
+
+static func _empty_xiaodong_governance() -> Dictionary:
+	return {
+		"design_card": {
+			"path": XIAODONG_DESIGN_CARD_PATH,
+			"exists": false,
+			"machine_block_count": 0,
+			"parse_error": "",
+			"record": {},
+		},
+		"reference": {
+			"path": XIAODONG_REFERENCE_PATH,
+			"exists": false,
+			"bytes": 0,
+			"jpeg_decoded": false,
+			"width": 0,
+			"height": 0,
+			"sha256": "",
+		},
+	}
+
+static func _normalize_governance_machine_block(markdown: String, card: Dictionary) -> void:
+	var normalized_markdown: String = markdown.replace("\r\n", "\n").replace("\r", "\n")
+	var machine_blocks: Array[String] = []
+	var current_lines: Array[String] = []
+	var in_machine_block: bool = false
+	for line_value: Variant in normalized_markdown.split("\n", true):
+		var line: String = String(line_value)
+		if not in_machine_block:
+			if line == GOVERNANCE_FENCE:
+				in_machine_block = true
+				current_lines = []
+			continue
+		if line == "```":
+			machine_blocks.append("\n".join(current_lines))
+			in_machine_block = false
+			current_lines = []
+		else:
+			current_lines.append(line)
+	card["machine_block_count"] = machine_blocks.size()
+	if in_machine_block:
+		card["parse_error"] = "unterminated gogo-governance+json block"
+	if machine_blocks.size() != 1:
+		return
+	var parser: JSON = JSON.new()
+	var parse_error: Error = parser.parse(machine_blocks[0])
+	var record_value: Variant = parser.data
+	if parse_error != OK:
+		card["parse_error"] = "gogo-governance+json block must contain one valid JSON object"
+		return
+	if not record_value is Dictionary:
+		card["parse_error"] = "gogo-governance+json block must contain one valid JSON object"
+		return
+	card["record"] = record_value
+
+static func _has_jpeg_container_markers(bytes: PackedByteArray) -> bool:
+	return (
+		bytes.size() >= 4
+		and bytes[0] == 0xff
+		and bytes[1] == 0xd8
+		and bytes[bytes.size() - 2] == 0xff
+		and bytes[bytes.size() - 1] == 0xd9
+	)
 
 static func _load_gameplay_dataset(
 	snapshot: Dictionary,

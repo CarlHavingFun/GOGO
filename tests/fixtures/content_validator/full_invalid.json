@@ -24,17 +24,17 @@
   "assets": {"header": [], "rows": []},
   "gameplay": {
     "weapons": [
-      {"id": "shared_id", "character_id": "character_missing", "upgrade_id": "upgrade_missing", "damage": 0, "shots_per_second": 1, "magazine_size": 1, "reload_duration": 1, "range_pixels": 100}
+      {"id": "wpn_invalid", "character_id": "char_missing", "upgrade_id": "upgrade_missing", "damage": 0, "shots_per_second": 1, "magazine_size": 1, "reload_duration": 1, "range_pixels": 100}
     ],
     "throwables": [
-      {"id": "shared_id", "weapon_id": "weapon_missing"}
+      {"id": "throw_invalid", "weapon_id": "wpn_missing"}
     ],
     "characters": [
-      {"id": "character_01", "display_name": "Character 01", "module_ids": ["module_01", "module_01"]}
+      {"id": "char_01", "display_name": "Character 01", "module_ids": ["upgrade_module_01", "upgrade_module_01"]}
     ],
     "upgrades": [
-      {"id": "mutation_01", "category": "mutation", "weapon_id": "weapon_missing", "conflicts": ["mutation_01"]},
-      {"id": "module_01", "category": "module", "character_id": "character_other", "conflicts": []}
+      {"id": "upgrade_mut_01", "category": "mutation", "weapon_id": "wpn_missing", "conflicts": ["upgrade_mut_01"]},
+      {"id": "upgrade_module_01", "category": "module", "character_id": "char_other", "conflicts": []}
     ],
     "enemies": [
       {"id": "enemy_01"}
