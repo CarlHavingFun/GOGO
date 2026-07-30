@@ -48,7 +48,15 @@ fx_he_explosion,A4,effect,he,explosion,assets/effects/fx_he_explosion.png,128x12
 fx_fire_cluster,A4,effect,fire,cluster,assets/effects/fx_fire_cluster.png,64x64,bottom_center,8,12,11.7,planned,
 enemy_shield_idle,A4,enemy,shield,idle,assets/enemies/shield/enemy_shield_idle.png,128x128,feet_center,4,5,10.4,planned,directional front shield
 enemy_repair_idle,A4,enemy,repair,idle,assets/enemies/repair/enemy_repair_idle.png,96x96,feet_center,4,5,10.5,planned,
-character_xiaodong_idle,A5,character,xiaodong,idle,assets/characters/xiaodong/character_xiaodong_idle.png,128x128,feet_center,4,5,6.2,planned,no weapon
+reference_xiaodong_pixel_anchor,A0,reference,xiaodong,approved_anchor,assets/characters/xiaodong/reference/xiaodong_approved_pixel_anchor_v01.jpeg,1024x1536,none,1,0,11A.3,approved,reference only not runtime
+character_xiaodong_standard_pose,A0,character,xiaodong,standard_pose,assets/characters/xiaodong/standard/character_xiaodong_standard_pose_v01.png,128x128,feet_center,1,0,11A.4,planned,approval gate before animation
+character_xiaodong_idle,A0,character,xiaodong,idle,assets/characters/xiaodong/idle/,128x128,feet_center,4,6,11A.5,planned,independent PNG frames
+character_xiaodong_walk,A0,character,xiaodong,walk,assets/characters/xiaodong/walk/,128x128,feet_center,8,10,11A.5,planned,independent PNG frames
+character_xiaodong_crouch_idle,A0,character,xiaodong,crouch_idle,assets/characters/xiaodong/crouch_idle/,128x128,feet_center,4,6,11A.5,planned,Ctrl recoil state
+character_xiaodong_crouch_walk,A0,character,xiaodong,crouch_walk,assets/characters/xiaodong/crouch_walk/,128x128,feet_center,8,8,11A.5,planned,Ctrl recoil movement
+character_xiaodong_hit,A0,character,xiaodong,hit,assets/characters/xiaodong/hit/,128x128,feet_center,2,12,11A.5,planned,engine handles knockback
+character_xiaodong_death,A0,character,xiaodong,death,assets/characters/xiaodong/death/,128x128,feet_center,6,10,11A.5,planned,non-gory last frame holds
+character_xiaodong_throw,A2,character,xiaodong,throw,assets/characters/xiaodong/throw/,128x128,feet_center,5,10,11A.5,planned,M2 only throwable separate
 portrait_xiaodong,A5,ui,xiaodong,portrait,assets/ui/portraits/portrait_xiaodong.png,128x128,center,1,0,6.2,planned,
 character_shangdi_idle,A5,character,shangdi,idle,assets/characters/shangdi/character_shangdi_idle.png,128x128,feet_center,4,5,6.4,planned,no weapon
 portrait_shangdi,A5,ui,shangdi,portrait,assets/ui/portraits/portrait_shangdi.png,128x128,center,1,0,6.4,planned,
