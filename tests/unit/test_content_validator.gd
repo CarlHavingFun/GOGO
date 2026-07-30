@@ -9,6 +9,8 @@ const INVALID_ROOT: String = "res://tests/fixtures/content_validator/g0_invalid/
 const INVALID_CONFIG: String = INVALID_ROOT + "data/content_validation.json"
 const NOT_IMPLEMENTED_ABSENT_CONFIG: String = INVALID_ROOT + "data/not_implemented_absent.json"
 const NOT_IMPLEMENTED_PRESENT_CONFIG: String = INVALID_ROOT + "data/not_implemented_present.json"
+const FULL_VALID_FIXTURE: String = "res://tests/fixtures/content_validator/full_valid.json"
+const FULL_INVALID_FIXTURE: String = "res://tests/fixtures/content_validator/full_invalid.json"
 const DESIGN_FIXTURE_SHA256: String = "559f2884854bd2335f027facfa19a2b4e181a44b3ad74ba55cb8c2366419486e"
 const ASSET_HEADER: PackedStringArray = [
 	"asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
@@ -53,6 +55,17 @@ func run() -> Array[String]:
 	_test_ast004_requires_generated_prompt_constraints(failures)
 	_test_ast005_requires_the_xiaodong_a5_deliverable_set(failures)
 	_test_gameplay_rules_run_for_present_partial_records(failures)
+	_test_full_catalog_fixtures_are_exact_behavior_inputs(failures)
+	_test_id001_rejects_malformed_duplicate_and_cross_domain_ids(failures)
+	_test_ref001_rejects_missing_complete_catalog_references(failures)
+	_test_wpn001_rejects_each_bounded_weapon_stat(failures)
+	_test_upg001_requires_total_and_category_counts(failures)
+	_test_upg002_requires_existing_nonself_symmetric_conflicts(failures)
+	_test_chr001_requires_three_distinct_owned_modules(failures)
+	_test_mut001_requires_a_mutation_for_every_weapon(failures)
+	_test_wave001_requires_exact_numbers_and_enemy_references(failures)
+	_test_ulk001_requires_existing_acyclic_dependencies(failures)
+	_test_production_full_profile_remains_not_ready(failures)
 	_test_every_partial_dataset_is_not_ready(failures)
 	_test_readiness_profiles_counts_sorting_and_exit_codes(failures)
 	_test_jsonl_and_cli_public_interfaces(failures)
@@ -432,6 +445,183 @@ func _test_gameplay_rules_run_for_present_partial_records(failures: Array[String
 	_assert_true(_has_issue(report, "WAVE001", "wave_one", "range"), "WAVE001 must validate present partial wave numbers.", failures)
 	_assert_true(_has_issue(report, "ULK001", "unlock_one", "target_id"), "ULK001 must validate present partial unlock records.", failures)
 
+func _test_full_catalog_fixtures_are_exact_behavior_inputs(failures: Array[String]) -> void:
+	var snapshot: Dictionary = _load_json_fixture(FULL_VALID_FIXTURE, failures)
+	if snapshot.is_empty():
+		return
+	var gameplay: Dictionary = snapshot.get("gameplay", {})
+	_assert_equal((gameplay.get("characters", []) as Array).size(), 5, "The full fixture must contain exactly five characters.", failures)
+	_assert_equal((gameplay.get("weapons", []) as Array).size(), 5, "The full fixture must contain exactly five weapons.", failures)
+	_assert_equal((gameplay.get("throwables", []) as Array).size(), 4, "The full fixture must contain exactly four throwables.", failures)
+	_assert_equal((gameplay.get("enemies", []) as Array).size(), 14, "The full fixture must contain exactly fourteen enemies.", failures)
+	_assert_equal((gameplay.get("upgrades", []) as Array).size(), 47, "The full fixture must contain exactly forty-seven upgrades.", failures)
+	_assert_equal((gameplay.get("waves", []) as Array).size(), 20, "The full fixture must contain exactly twenty waves.", failures)
+	_assert_equal(
+		_upgrade_category_counts(snapshot),
+		{"calibration": 8, "engine": 10, "mutation": 9, "module": 15, "contract": 5},
+		"The full fixture must use the exact 8/10/9/15/5 upgrade matrix.",
+		failures
+	)
+	for character_value: Variant in gameplay.get("characters", []):
+		var character: Dictionary = character_value
+		var module_ids: Array = character.get("module_ids", [])
+		var distinct_ids: Dictionary = {}
+		for module_id: Variant in module_ids:
+			distinct_ids[String(module_id)] = true
+		_assert_equal(module_ids.size(), 3, "Each fixture character must declare three module IDs.", failures)
+		_assert_equal(distinct_ids.size(), 3, "Each fixture character must declare three distinct module IDs.", failures)
+	var valid_report: Dictionary = _validate(snapshot, &"full")
+	_assert_equal(valid_report.get("gate_status"), "pass", "The exact synthetic catalog must pass full validation.", failures)
+	_assert_equal(valid_report.get("catalog_status"), "ready", "The exact synthetic catalog must be ready.", failures)
+	_assert_equal(valid_report.get("issues", []), [], "The exact synthetic catalog must have no validation issues.", failures)
+
+	var invalid_report: Dictionary = _validate(_load_json_fixture(FULL_INVALID_FIXTURE, failures), &"full")
+	_assert_equal(invalid_report.get("gate_status"), "fail", "The explicit invalid fixture must fail full validation.", failures)
+	_assert_issue_fields(invalid_report, "ID001", "shared_id", "unique across gameplay datasets", "weapons", "The invalid fixture must expose cross-domain ID reuse.", failures)
+	_assert_issue_fields(invalid_report, "REF001", "shared_id", "character_missing", null, "The invalid fixture must expose a missing reference.", failures)
+	_assert_issue_fields(invalid_report, "WPN001", "shared_id", "> 0", 0, "The invalid fixture must expose a bounded weapon stat.", failures)
+	_assert_issue_fields(invalid_report, "UPG001", "upgrades", 47, 2, "The invalid fixture must expose the upgrade total.", failures)
+	_assert_issue_fields(invalid_report, "UPG002", "mutation_01", "different upgrade id", "mutation_01", "The invalid fixture must expose a self conflict.", failures)
+	_assert_issue_fields(invalid_report, "CHR001", "character_01", "exactly 3 distinct module ids", ["module_01", "module_01"], "The invalid fixture must expose an invalid module set.", failures)
+	_assert_issue_fields(invalid_report, "MUT001", "shared_id", ">= 1 mutation", 0, "The invalid fixture must expose a weapon without a mutation.", failures)
+	_assert_issue_fields(invalid_report, "WAVE001", "wave_01", [1, 20], 21, "The invalid fixture must expose an out-of-range wave.", failures)
+	_assert_issue_fields(invalid_report, "ULK001", "unlocks", "acyclic", "cycle", "The invalid fixture must expose an unlock cycle.", failures)
+
+func _test_id001_rejects_malformed_duplicate_and_cross_domain_ids(failures: Array[String]) -> void:
+	var malformed: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(malformed, "enemies", "enemy_01")["id"] = "Bad Enemy"
+	_assert_issue_fields(_validate(malformed, &"full"), "ID001", "Bad Enemy", "snake_case", "Bad Enemy", "ID001 must reject malformed IDs.", failures)
+
+	var duplicate: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(duplicate, "enemies", "enemy_02")["id"] = "enemy_01"
+	_assert_issue_fields(_validate(duplicate, &"full"), "ID001", "enemy_01", "unique across gameplay datasets", "enemies", "ID001 must reject duplicate IDs in one domain.", failures)
+
+	var cross_domain: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(cross_domain, "throwables", "throwable_01")["id"] = "weapon_01"
+	_assert_issue_fields(_validate(cross_domain, &"full"), "ID001", "weapon_01", "unique across gameplay datasets", "weapons", "ID001 must reject IDs reused across domains.", failures)
+
+func _test_ref001_rejects_missing_complete_catalog_references(failures: Array[String]) -> void:
+	var missing_character: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_character, "weapons", "weapon_01")["character_id"] = "character_missing"
+	_assert_issue_fields(_validate(missing_character, &"full"), "REF001", "weapon_01", "character_missing", null, "REF001 must reject a missing character reference.", failures)
+
+	var missing_weapon: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_weapon, "throwables", "throwable_01")["weapon_id"] = "weapon_missing"
+	_assert_issue_fields(_validate(missing_weapon, &"full"), "REF001", "throwable_01", "weapon_missing", null, "REF001 must reject a missing weapon reference.", failures)
+
+	var missing_enemy: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_enemy, "waves", "wave_01")["enemy_id"] = "enemy_missing"
+	_assert_issue_fields(_validate(missing_enemy, &"full"), "REF001", "wave_01", "enemy_missing", null, "REF001 must reject a missing enemy reference.", failures)
+
+	var missing_upgrade: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_upgrade, "weapons", "weapon_01")["upgrade_id"] = "upgrade_missing"
+	_assert_issue_fields(_validate(missing_upgrade, &"full"), "REF001", "weapon_01", "upgrade_missing", null, "REF001 must reject a missing upgrade reference.", failures)
+
+func _test_wpn001_rejects_each_bounded_weapon_stat(failures: Array[String]) -> void:
+	var mutations: Array[Dictionary] = [
+		{"field": "damage", "value": 0, "expected": "> 0"},
+		{"field": "reload_duration", "value": 0, "expected": "> 0"},
+		{"field": "range_pixels", "value": 0, "expected": "> 0"},
+		{"field": "pierce_count", "value": -1, "expected": ">= 0"},
+		{"field": "pierce_decay", "value": -0.1, "expected": "0..1"},
+		{"field": "pierce_decay", "value": 1.1, "expected": "0..1"},
+		{"field": "weakpoint_multiplier", "value": 0.9, "expected": ">= 1"},
+	]
+	for mutation: Dictionary in mutations:
+		var snapshot: Dictionary = _full_valid_snapshot(failures)
+		_record_by_id(snapshot, "weapons", "weapon_01")[mutation["field"]] = mutation["value"]
+		_assert_issue_fields(
+			_validate(snapshot, &"full"), "WPN001", "weapon_01",
+			mutation["expected"], mutation["value"],
+			"WPN001 must reject weapon field %s=%s." % [mutation["field"], str(mutation["value"])],
+			failures
+		)
+
+func _test_upg001_requires_total_and_category_counts(failures: Array[String]) -> void:
+	var short_catalog: Dictionary = _full_valid_snapshot(failures)
+	(short_catalog["gameplay"]["upgrades"] as Array).pop_back()
+	_assert_issue_fields(_validate(short_catalog, &"full"), "UPG001", "upgrades", 47, 46, "UPG001 must require exactly forty-seven upgrades.", failures)
+
+	var wrong_matrix: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(wrong_matrix, "upgrades", "calibration_08")["category"] = "engine"
+	_assert_issue_fields(
+		_validate(wrong_matrix, &"full"), "UPG001", "upgrades",
+		{"calibration": 8, "engine": 10, "mutation": 9, "module": 15, "contract": 5},
+		{"calibration": 7, "engine": 11, "mutation": 9, "module": 15, "contract": 5},
+		"UPG001 must require the exact upgrade category matrix.",
+		failures
+	)
+
+func _test_upg002_requires_existing_nonself_symmetric_conflicts(failures: Array[String]) -> void:
+	var missing: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing, "upgrades", "calibration_01")["conflicts"] = ["upgrade_missing"]
+	_assert_issue_fields(_validate(missing, &"full"), "UPG002", "calibration_01", "existing upgrade id", "upgrade_missing", "UPG002 must reject a conflict target that does not exist.", failures)
+
+	var self_conflict: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(self_conflict, "upgrades", "calibration_01")["conflicts"] = ["calibration_01"]
+	_assert_issue_fields(_validate(self_conflict, &"full"), "UPG002", "calibration_01", "different upgrade id", "calibration_01", "UPG002 must reject a self conflict.", failures)
+
+	var asymmetric: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(asymmetric, "upgrades", "calibration_02")["conflicts"] = []
+	_assert_issue_fields(_validate(asymmetric, &"full"), "UPG002", "calibration_01", "calibration_01", [], "UPG002 must require symmetric conflict declarations.", failures)
+
+func _test_chr001_requires_three_distinct_owned_modules(failures: Array[String]) -> void:
+	var two_modules: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(two_modules, "characters", "character_01")["module_ids"] = ["module_01", "module_02"]
+	_assert_issue_fields(_validate(two_modules, &"full"), "CHR001", "character_01", "exactly 3 distinct module ids", ["module_01", "module_02"], "CHR001 must reject two modules.", failures)
+
+	var four_modules: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(four_modules, "characters", "character_01")["module_ids"] = ["module_01", "module_02", "module_03", "module_04"]
+	_assert_issue_fields(_validate(four_modules, &"full"), "CHR001", "character_01", "exactly 3 distinct module ids", ["module_01", "module_02", "module_03", "module_04"], "CHR001 must reject four modules.", failures)
+
+	var duplicate_module: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(duplicate_module, "characters", "character_01")["module_ids"] = ["module_01", "module_01", "module_03"]
+	_assert_issue_fields(_validate(duplicate_module, &"full"), "CHR001", "character_01", "exactly 3 distinct module ids", ["module_01", "module_01", "module_03"], "CHR001 must reject duplicate modules.", failures)
+
+	var wrong_owner: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(wrong_owner, "upgrades", "module_01")["character_id"] = "character_02"
+	_assert_issue_fields(_validate(wrong_owner, &"full"), "CHR001", "character_01", "character_01", "character_02", "CHR001 must reject a module whose back-reference names another character.", failures)
+
+func _test_mut001_requires_a_mutation_for_every_weapon(failures: Array[String]) -> void:
+	var snapshot: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(snapshot, "upgrades", "mutation_09")["weapon_id"] = "weapon_04"
+	_assert_issue_fields(_validate(snapshot, &"full"), "MUT001", "weapon_05", ">= 1 mutation", 0, "MUT001 must reject a weapon without a mutation.", failures)
+
+func _test_wave001_requires_exact_numbers_and_enemy_references(failures: Array[String]) -> void:
+	var missing_wave: Dictionary = _full_valid_snapshot(failures)
+	(missing_wave["gameplay"]["waves"] as Array).pop_back()
+	_assert_issue_fields(_validate(missing_wave, &"full"), "WAVE001", "waves", [1, 20], [20], "WAVE001 must reject a missing wave number.", failures)
+
+	var duplicate_wave: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(duplicate_wave, "waves", "wave_20")["wave"] = 19
+	_assert_issue_fields(_validate(duplicate_wave, &"full"), "WAVE001", "wave_20", "unique wave number", 19, "WAVE001 must reject a duplicate wave number.", failures)
+
+	var out_of_range: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(out_of_range, "waves", "wave_20")["wave"] = 21
+	_assert_issue_fields(_validate(out_of_range, &"full"), "WAVE001", "wave_20", [1, 20], 21, "WAVE001 must reject an out-of-range wave number.", failures)
+
+	var missing_enemy: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_enemy, "waves", "wave_01")["enemy_ids"] = ["enemy_missing"]
+	_assert_issue_fields(_validate(missing_enemy, &"full"), "WAVE001", "wave_01", "enemy_missing", null, "WAVE001 must reject an unresolved enemy_ids entry.", failures)
+
+func _test_ulk001_requires_existing_acyclic_dependencies(failures: Array[String]) -> void:
+	var diamond_report: Dictionary = _validate(_full_valid_snapshot(failures), &"full")
+	_assert_equal(_issue_count(diamond_report, "ULK001"), 0, "ULK001 must accept the valid diamond dependency graph.", failures)
+
+	var missing_dependency: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(missing_dependency, "unlocks", "unlock_left")["requires_unlock_ids"] = ["unlock_missing"]
+	_assert_issue_fields(_validate(missing_dependency, &"full"), "ULK001", "unlock_left", "existing unlock id", "unlock_missing", "ULK001 must reject a missing unlock dependency.", failures)
+
+	var cycle: Dictionary = _full_valid_snapshot(failures)
+	_record_by_id(cycle, "unlocks", "unlock_root")["requires_unlock_ids"] = ["unlock_top"]
+	_assert_issue_fields(_validate(cycle, &"full"), "ULK001", "unlocks", "acyclic", "cycle", "ULK001 must reject a dependency cycle.", failures)
+
+func _test_production_full_profile_remains_not_ready(failures: Array[String]) -> void:
+	var report: Dictionary = _validator_script.call("validate_project", &"full", "res://data/content_validation.json")
+	_assert_equal(report.get("gate_status"), "fail", "Production must not pass full while future datasets are absent or partial.", failures)
+	_assert_equal(report.get("catalog_status"), "not_ready", "Production must honestly report a not_ready catalog.", failures)
+	_assert_true(int((report.get("counts", {}) as Dictionary).get("not_ready", 0)) > 0, "Production full validation must retain explicit NOT_READY issues.", failures)
+
 func _test_every_partial_dataset_is_not_ready(failures: Array[String]) -> void:
 	var unlock_snapshot: Dictionary = _base_snapshot()
 	unlock_snapshot["config"]["datasets"]["unlocks"]["state"] = "partial"
@@ -498,6 +688,37 @@ func _test_jsonl_and_cli_public_interfaces(failures: Array[String]) -> void:
 
 func _validate(snapshot: Dictionary, profile: StringName) -> Dictionary:
 	return _validator_script.call("validate_snapshot", snapshot, profile)
+
+func _load_json_fixture(path: String, failures: Array[String]) -> Dictionary:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		failures.append("Unable to open JSON fixture: %s" % path)
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		failures.append("JSON fixture must contain an object: %s" % path)
+		return {}
+	return parsed
+
+func _full_valid_snapshot(failures: Array[String]) -> Dictionary:
+	return _load_json_fixture(FULL_VALID_FIXTURE, failures)
+
+func _record_by_id(snapshot: Dictionary, dataset_name: String, identifier: String) -> Dictionary:
+	for record_value: Variant in snapshot.get("gameplay", {}).get(dataset_name, []):
+		if record_value is Dictionary:
+			var record: Dictionary = record_value
+			if record.get("id") == identifier:
+				return record
+	return {}
+
+func _upgrade_category_counts(snapshot: Dictionary) -> Dictionary:
+	var counts: Dictionary = {"calibration": 0, "engine": 0, "mutation": 0, "module": 0, "contract": 0}
+	for record_value: Variant in snapshot.get("gameplay", {}).get("upgrades", []):
+		if record_value is Dictionary:
+			var category: String = String((record_value as Dictionary).get("category", ""))
+			if counts.has(category):
+				counts[category] += 1
+	return counts
 
 func _base_snapshot() -> Dictionary:
 	var datasets: Dictionary = {
@@ -603,6 +824,54 @@ func _has_issue_with_severity(report: Dictionary, rule: String, subject: String,
 		if issue.get("rule") == rule and issue.get("subject") == subject and issue.get("severity") == severity:
 			return true
 	return false
+
+func _assert_issue_fields(
+	report: Dictionary,
+	rule: String,
+	subject: String,
+	expected: Variant,
+	actual: Variant,
+	message: String,
+	failures: Array[String]
+) -> void:
+	for issue_value: Variant in report.get("issues", []):
+		if not issue_value is Dictionary:
+			continue
+		var issue: Dictionary = issue_value
+		if (
+			issue.get("severity") == "ERROR"
+			and issue.get("rule") == rule
+			and issue.get("subject") == subject
+			and _variants_equal(issue.get("expected"), expected)
+			and _variants_equal(issue.get("actual"), actual)
+		):
+			return
+	failures.append("%s Missing exact issue {%s, %s, expected=%s, actual=%s}." % [message, rule, subject, str(expected), str(actual)])
+
+func _variants_equal(first: Variant, second: Variant) -> bool:
+	if (first is int or first is float) and (second is int or second is float):
+		return is_equal_approx(float(first), float(second))
+	if typeof(first) != typeof(second):
+		return false
+	if first is Array:
+		var first_array: Array = first
+		var second_array: Array = second
+		if first_array.size() != second_array.size():
+			return false
+		for index: int in range(first_array.size()):
+			if not _variants_equal(first_array[index], second_array[index]):
+				return false
+		return true
+	if first is Dictionary:
+		var first_dictionary: Dictionary = first
+		var second_dictionary: Dictionary = second
+		if first_dictionary.size() != second_dictionary.size():
+			return false
+		for key: Variant in first_dictionary:
+			if not second_dictionary.has(key) or not _variants_equal(first_dictionary[key], second_dictionary[key]):
+				return false
+		return true
+	return first == second
 
 func _issue_count(report: Dictionary, rule: String) -> int:
 	var count: int = 0

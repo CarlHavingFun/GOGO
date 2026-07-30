@@ -334,6 +334,7 @@ static func _validate_asset_prompt(
 			issues.append(_issue("ERROR", "AST004", source_path, source_line, row.get("asset_id", ""), "Generated-or-later assets require nonempty %s." % field, "nonempty", row.get(field), target_gate))
 
 static func _validate_gameplay(gameplay: Dictionary, datasets: Dictionary, issues: Array[Dictionary]) -> void:
+	var seen_ids: Dictionary = {}
 	for dataset_name: String in GAMEPLAY_DATASETS:
 		var dataset_config_value: Variant = datasets.get(dataset_name, null)
 		if not _dataset_config_is_runtime_safe(dataset_name, dataset_config_value):
@@ -343,7 +344,6 @@ static func _validate_gameplay(gameplay: Dictionary, datasets: Dictionary, issue
 		if state not in ["partial", "ready"]:
 			continue
 		var records: Array = gameplay.get(dataset_name, [])
-		var seen_ids: Dictionary = {}
 		for record_value: Variant in records:
 			if not record_value is Dictionary:
 				continue
@@ -360,6 +360,16 @@ static func _validate_gameplay(gameplay: Dictionary, datasets: Dictionary, issue
 			elif dataset_name == "unlocks":
 				_validate_unlock(record, dataset_config, issues)
 			_validate_references(record, gameplay, datasets, dataset_config, issues)
+	if _dataset_state(datasets, "upgrades") == "ready":
+		_validate_upgrade_catalog(gameplay.get("upgrades", []), datasets["upgrades"], issues)
+	if _dataset_state(datasets, "characters") == "ready" and _dataset_state(datasets, "upgrades") == "ready":
+		_validate_character_catalog(gameplay.get("characters", []), gameplay.get("upgrades", []), datasets["characters"], issues)
+	if _dataset_state(datasets, "weapons") == "ready" and _dataset_state(datasets, "upgrades") == "ready":
+		_validate_mutation_catalog(gameplay.get("weapons", []), gameplay.get("upgrades", []), datasets["weapons"], issues)
+	if _dataset_state(datasets, "waves") == "ready" and _dataset_state(datasets, "enemies") == "ready":
+		_validate_wave_catalog(gameplay.get("waves", []), gameplay.get("enemies", []), datasets["waves"], issues)
+	if _dataset_state(datasets, "unlocks") == "ready":
+		_validate_unlock_catalog(gameplay.get("unlocks", []), datasets["unlocks"], issues)
 
 static func _validate_gameplay_id(
 	record: Dictionary,
@@ -374,9 +384,9 @@ static func _validate_gameplay_id(
 	if not _is_snake_case(identifier):
 		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be nonempty snake_case.", "snake_case", identifier, target_gate))
 	if seen_ids.has(identifier):
-		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be unique within %s." % dataset_name, "unique", identifier, target_gate))
+		issues.append(_issue("ERROR", "ID001", path, record.get("source_line", 0), identifier, "Gameplay ID must be unique across gameplay datasets.", "unique across gameplay datasets", seen_ids[identifier], target_gate))
 	else:
-		seen_ids[identifier] = true
+		seen_ids[identifier] = dataset_name
 
 static func _validate_weapon(record: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
 	var positive_fields: Array[String] = [
@@ -392,12 +402,18 @@ static func _validate_weapon(record: Dictionary, dataset_config: Dictionary, iss
 	]:
 		if record.has(field) and (not record[field] is int and not record[field] is float or float(record[field]) < 0.0):
 			issues.append(_record_issue("WPN001", record, dataset_config, "Weapon %s must be numeric and nonnegative." % field, ">= 0", record.get(field)))
-	if record.has("pierce_count") and int(record.get("pierce_count", -1)) < 0:
-		issues.append(_record_issue("WPN001", record, dataset_config, "Weapon pierce_count must be nonnegative.", ">= 0", record.get("pierce_count")))
-	if record.has("pierce_decay") and (float(record.get("pierce_decay", -1.0)) < 0.0 or float(record.get("pierce_decay", 2.0)) > 1.0):
-		issues.append(_record_issue("WPN001", record, dataset_config, "Weapon pierce_decay must be within 0..1.", "0..1", record.get("pierce_decay")))
-	if record.has("weakpoint_multiplier") and float(record.get("weakpoint_multiplier", 0.0)) < 1.0:
-		issues.append(_record_issue("WPN001", record, dataset_config, "Weapon weakpoint_multiplier must be at least 1.", ">= 1", record.get("weakpoint_multiplier")))
+	if record.has("pierce_count"):
+		var pierce_count: Variant = record.get("pierce_count")
+		if not _is_integral_number(pierce_count) or int(pierce_count) < 0:
+			issues.append(_record_issue("WPN001", record, dataset_config, "Weapon pierce_count must be a nonnegative integer.", ">= 0", pierce_count))
+	if record.has("pierce_decay"):
+		var pierce_decay: Variant = record.get("pierce_decay")
+		if not pierce_decay is int and not pierce_decay is float or not is_finite(float(pierce_decay)) or float(pierce_decay) < 0.0 or float(pierce_decay) > 1.0:
+			issues.append(_record_issue("WPN001", record, dataset_config, "Weapon pierce_decay must be within 0..1.", "0..1", pierce_decay))
+	if record.has("weakpoint_multiplier"):
+		var weakpoint_multiplier: Variant = record.get("weakpoint_multiplier")
+		if not weakpoint_multiplier is int and not weakpoint_multiplier is float or not is_finite(float(weakpoint_multiplier)) or float(weakpoint_multiplier) < 1.0:
+			issues.append(_record_issue("WPN001", record, dataset_config, "Weapon weakpoint_multiplier must be at least 1.", ">= 1", weakpoint_multiplier))
 
 static func _validate_upgrade(record: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
 	var category: String = record.get("category", "")
@@ -415,7 +431,7 @@ static func _validate_wave(record: Dictionary, dataset_config: Dictionary, issue
 	var wave_number_value: Variant = record.get("wave", record.get("number", null))
 	var lower: int = int(expected_range[0]) if expected_range.size() >= 2 else 1
 	var upper: int = int(expected_range[1]) if expected_range.size() >= 2 else 20
-	if not wave_number_value is int or int(wave_number_value) < lower or int(wave_number_value) > upper:
+	if not _is_integral_number(wave_number_value) or int(wave_number_value) < lower or int(wave_number_value) > upper:
 		issues.append(_record_issue("WAVE001", record, dataset_config, "Wave number must be an integer in the declared range.", expected_range, wave_number_value))
 
 static func _validate_unlock(record: Dictionary, dataset_config: Dictionary, issues: Array[Dictionary]) -> void:
@@ -462,6 +478,218 @@ static func _validate_references(
 				break
 		if not resolved:
 			issues.append(_record_issue("REF001", record, source_config, "Reference %s does not resolve." % field, expected_id, null))
+
+static func _validate_upgrade_catalog(
+	records: Array,
+	dataset_config: Dictionary,
+	issues: Array[Dictionary]
+) -> void:
+	var expected_categories: Dictionary = dataset_config["expected_categories"]
+	var actual_categories: Dictionary = {}
+	for category: String in UPGRADE_CATEGORIES:
+		actual_categories[category] = 0
+	for record_value: Variant in records:
+		if not record_value is Dictionary:
+			continue
+		var category: String = String((record_value as Dictionary).get("category", ""))
+		if actual_categories.has(category):
+			actual_categories[category] += 1
+	var category_counts_match: bool = true
+	for category: String in UPGRADE_CATEGORIES:
+		if int(actual_categories[category]) != int(expected_categories[category]):
+			category_counts_match = false
+	if not category_counts_match:
+		issues.append(_issue(
+			"ERROR", "UPG001", dataset_config["path"], 0, "upgrades",
+			"Upgrade category counts must match the declared matrix.",
+			expected_categories, actual_categories, dataset_config["target_gate"]
+		))
+
+	var upgrades_by_id: Dictionary = _records_by_id(records)
+	for record_value: Variant in records:
+		if not record_value is Dictionary:
+			continue
+		var record: Dictionary = record_value
+		var identifier: String = String(record.get("id", ""))
+		var conflicts_value: Variant = record.get("conflicts", [])
+		if not conflicts_value is Array:
+			issues.append(_record_issue("UPG002", record, dataset_config, "Upgrade conflicts must be an array.", "Array", conflicts_value))
+			continue
+		var conflicts: Array = conflicts_value
+		for conflict_value: Variant in conflicts:
+			var conflict_id: String = String(conflict_value)
+			if conflict_id == identifier:
+				issues.append(_record_issue("UPG002", record, dataset_config, "Upgrade conflicts must not reference self.", "different upgrade id", conflict_id))
+				continue
+			if not upgrades_by_id.has(conflict_id):
+				issues.append(_record_issue("UPG002", record, dataset_config, "Upgrade conflict does not resolve.", "existing upgrade id", conflict_id))
+				continue
+			var target_record: Dictionary = upgrades_by_id[conflict_id]
+			var target_conflicts_value: Variant = target_record.get("conflicts", [])
+			var target_conflicts: Array = target_conflicts_value if target_conflicts_value is Array else []
+			if identifier not in target_conflicts:
+				issues.append(_record_issue("UPG002", record, dataset_config, "Upgrade conflict must be symmetric.", identifier, target_conflicts))
+
+static func _validate_character_catalog(
+	characters: Array,
+	upgrades: Array,
+	dataset_config: Dictionary,
+	issues: Array[Dictionary]
+) -> void:
+	var upgrades_by_id: Dictionary = _records_by_id(upgrades)
+	for character_value: Variant in characters:
+		if not character_value is Dictionary:
+			continue
+		var character: Dictionary = character_value
+		var character_id: String = String(character.get("id", ""))
+		var module_ids_value: Variant = character.get("module_ids", [])
+		var module_ids: Array = module_ids_value if module_ids_value is Array else []
+		var distinct_module_ids: Dictionary = {}
+		for module_id_value: Variant in module_ids:
+			distinct_module_ids[String(module_id_value)] = true
+		if not module_ids_value is Array or module_ids.size() != 3 or distinct_module_ids.size() != 3:
+			issues.append(_record_issue("CHR001", character, dataset_config, "Character must declare exactly three distinct module IDs.", "exactly 3 distinct module ids", module_ids_value))
+		for module_id_value: Variant in module_ids:
+			var module_id: String = String(module_id_value)
+			if not upgrades_by_id.has(module_id) or String((upgrades_by_id[module_id] as Dictionary).get("category", "")) != "module":
+				issues.append(_record_issue("CHR001", character, dataset_config, "Character module ID must resolve to a module upgrade.", "existing module upgrade id", module_id))
+				continue
+			var module_record: Dictionary = upgrades_by_id[module_id]
+			var owner_id: String = String(module_record.get("character_id", ""))
+			if owner_id != character_id:
+				issues.append(_record_issue("CHR001", character, dataset_config, "Character module back-reference must name its owner.", character_id, owner_id))
+
+static func _validate_mutation_catalog(
+	weapons: Array,
+	upgrades: Array,
+	dataset_config: Dictionary,
+	issues: Array[Dictionary]
+) -> void:
+	var mutations_by_weapon: Dictionary = {}
+	for upgrade_value: Variant in upgrades:
+		if not upgrade_value is Dictionary:
+			continue
+		var upgrade: Dictionary = upgrade_value
+		if upgrade.get("category") != "mutation":
+			continue
+		var weapon_id: String = String(upgrade.get("weapon_id", ""))
+		mutations_by_weapon[weapon_id] = int(mutations_by_weapon.get(weapon_id, 0)) + 1
+	for weapon_value: Variant in weapons:
+		if not weapon_value is Dictionary:
+			continue
+		var weapon: Dictionary = weapon_value
+		var weapon_id: String = String(weapon.get("id", ""))
+		var mutation_count: int = int(mutations_by_weapon.get(weapon_id, 0))
+		if mutation_count < 1:
+			issues.append(_record_issue("MUT001", weapon, dataset_config, "Every weapon must have at least one mutation upgrade.", ">= 1 mutation", mutation_count))
+
+static func _validate_wave_catalog(
+	waves: Array,
+	enemies: Array,
+	dataset_config: Dictionary,
+	issues: Array[Dictionary]
+) -> void:
+	var expected_range: Array = dataset_config["expected_range"]
+	var lower: int = int(expected_range[0])
+	var upper: int = int(expected_range[1])
+	var enemies_by_id: Dictionary = _records_by_id(enemies)
+	var seen_numbers: Dictionary = {}
+	for wave_value: Variant in waves:
+		if not wave_value is Dictionary:
+			continue
+		var wave: Dictionary = wave_value
+		var wave_number_value: Variant = wave.get("wave", wave.get("number", null))
+		if _is_integral_number(wave_number_value):
+			var wave_number: int = int(wave_number_value)
+			if seen_numbers.has(wave_number):
+				issues.append(_record_issue("WAVE001", wave, dataset_config, "Wave number must be unique.", "unique wave number", wave_number_value))
+			else:
+				seen_numbers[wave_number] = true
+		var enemy_ids_value: Variant = wave.get("enemy_ids", [])
+		if not enemy_ids_value is Array or enemy_ids_value.is_empty():
+			issues.append(_record_issue("WAVE001", wave, dataset_config, "Wave must declare at least one enemy ID.", "nonempty enemy_ids", enemy_ids_value))
+			continue
+		for enemy_id_value: Variant in enemy_ids_value:
+			var enemy_id: String = String(enemy_id_value)
+			if not enemies_by_id.has(enemy_id):
+				issues.append(_record_issue("WAVE001", wave, dataset_config, "Wave enemy reference does not resolve.", enemy_id, null))
+	var missing_numbers: Array[int] = []
+	for wave_number: int in range(lower, upper + 1):
+		if not seen_numbers.has(wave_number):
+			missing_numbers.append(wave_number)
+	if not missing_numbers.is_empty():
+		issues.append(_issue(
+			"ERROR", "WAVE001", dataset_config["path"], 0, "waves",
+			"Wave catalog is missing declared wave numbers.",
+			expected_range, missing_numbers, dataset_config["target_gate"]
+		))
+
+static func _validate_unlock_catalog(
+	records: Array,
+	dataset_config: Dictionary,
+	issues: Array[Dictionary]
+) -> void:
+	var unlocks_by_id: Dictionary = _records_by_id(records)
+	var dependency_counts: Dictionary = {}
+	var dependents: Dictionary = {}
+	for identifier_value: Variant in unlocks_by_id:
+		var identifier: String = String(identifier_value)
+		dependency_counts[identifier] = 0
+		dependents[identifier] = []
+	for record_value: Variant in records:
+		if not record_value is Dictionary:
+			continue
+		var record: Dictionary = record_value
+		var identifier: String = String(record.get("id", ""))
+		var dependencies_value: Variant = record.get("requires_unlock_ids", [])
+		if not dependencies_value is Array:
+			issues.append(_record_issue("ULK001", record, dataset_config, "Unlock dependencies must be an array.", "Array", dependencies_value))
+			continue
+		var distinct_dependencies: Dictionary = {}
+		for dependency_value: Variant in dependencies_value:
+			var dependency_id: String = String(dependency_value)
+			if distinct_dependencies.has(dependency_id):
+				continue
+			distinct_dependencies[dependency_id] = true
+			if not unlocks_by_id.has(dependency_id):
+				issues.append(_record_issue("ULK001", record, dataset_config, "Unlock dependency does not resolve.", "existing unlock id", dependency_id))
+				continue
+			dependency_counts[identifier] = int(dependency_counts.get(identifier, 0)) + 1
+			var dependency_dependents: Array = dependents.get(dependency_id, [])
+			dependency_dependents.append(identifier)
+			dependents[dependency_id] = dependency_dependents
+	var queue: Array[String] = []
+	for identifier_value: Variant in dependency_counts:
+		var identifier: String = String(identifier_value)
+		if int(dependency_counts[identifier]) == 0:
+			queue.append(identifier)
+	queue.sort()
+	var visited_count: int = 0
+	while not queue.is_empty():
+		var identifier: String = queue.pop_front()
+		visited_count += 1
+		var dependency_dependents: Array = dependents.get(identifier, [])
+		dependency_dependents.sort()
+		for dependent_value: Variant in dependency_dependents:
+			var dependent_id: String = String(dependent_value)
+			dependency_counts[dependent_id] = int(dependency_counts[dependent_id]) - 1
+			if int(dependency_counts[dependent_id]) == 0:
+				queue.append(dependent_id)
+		queue.sort()
+	if visited_count != unlocks_by_id.size():
+		issues.append(_issue(
+			"ERROR", "ULK001", dataset_config["path"], 0, "unlocks",
+			"Unlock dependency graph must be acyclic.",
+			"acyclic", "cycle", dataset_config["target_gate"]
+		))
+
+static func _records_by_id(records: Array) -> Dictionary:
+	var records_by_id: Dictionary = {}
+	for record_value: Variant in records:
+		if record_value is Dictionary:
+			var record: Dictionary = record_value
+			records_by_id[String(record.get("id", ""))] = record
+	return records_by_id
 
 static func _build_report(profile: String, input_issues: Array[Dictionary], argument_error: bool = false) -> Dictionary:
 	var issues: Array[Dictionary] = input_issues.duplicate(true)

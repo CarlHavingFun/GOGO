@@ -1,0 +1,151 @@
+{
+  "config": {
+    "schema_version": 1,
+    "current_gate": "G0",
+    "datasets": {
+      "assets": {"state": "ready", "path": "res://tests/fixtures/content_validator/assets.csv", "target_gate": "G0"},
+      "design_documents": {"state": "ready", "path": "res://tests/fixtures/content_validator/design.json", "target_gate": "G0"},
+      "weapons": {"state": "ready", "path": "res://tests/fixtures/content_validator/weapons", "target_gate": "M4", "expected_count": 5},
+      "throwables": {"state": "ready", "path": "res://tests/fixtures/content_validator/throwables", "target_gate": "M4", "expected_count": 4},
+      "characters": {"state": "ready", "path": "res://tests/fixtures/content_validator/characters", "target_gate": "M4", "expected_count": 5},
+      "upgrades": {
+        "state": "ready",
+        "path": "res://tests/fixtures/content_validator/upgrades",
+        "target_gate": "M4",
+        "expected_count": 47,
+        "expected_categories": {"calibration": 8, "engine": 10, "mutation": 9, "module": 15, "contract": 5}
+      },
+      "enemies": {"state": "ready", "path": "res://tests/fixtures/content_validator/enemies", "target_gate": "M4", "expected_count": 14},
+      "waves": {"state": "ready", "path": "res://tests/fixtures/content_validator/waves", "target_gate": "M4", "expected_range": [1, 20]},
+      "unlocks": {"state": "ready", "path": "res://tests/fixtures/content_validator/unlocks", "target_gate": "M5"}
+    }
+  },
+  "design_documents": {
+    "manifest": {"documents": []},
+    "actual_markdown_files": [],
+    "records": []
+  },
+  "assets": {
+    "header": [
+      "asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
+      "pivot", "frames", "fps", "prompt_section", "status", "notes",
+      "generation_canvas", "direction", "collision_reference", "palette",
+      "negative_constraints", "godot_import", "reviewer", "reference_source",
+      "reference_sha256", "reference_rights_policy", "sprite_layout",
+      "source_output", "cleaned_output", "qa_record", "godot_evidence"
+    ],
+    "rows": [
+      {"asset_id": "xiaodong_idle", "phase": "A5", "category": "character", "subject": "xiaodong", "state": "idle", "path": "assets/xiaodong_idle.png", "logical_canvas": "96x96", "pivot": "feet", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28},
+      {"asset_id": "xiaodong_walk", "phase": "A5", "category": "character", "subject": "xiaodong", "state": "walk", "path": "assets/xiaodong_walk.png", "logical_canvas": "96x96", "pivot": "feet", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28},
+      {"asset_id": "xiaodong_hit", "phase": "A5", "category": "character", "subject": "xiaodong", "state": "hit", "path": "assets/xiaodong_hit.png", "logical_canvas": "96x96", "pivot": "feet", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28},
+      {"asset_id": "xiaodong_death", "phase": "A5", "category": "character", "subject": "xiaodong", "state": "death", "path": "assets/xiaodong_death.png", "logical_canvas": "96x96", "pivot": "feet", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28},
+      {"asset_id": "xiaodong_skill_breakin", "phase": "A5", "category": "character", "subject": "xiaodong", "state": "skill_breakin", "path": "assets/xiaodong_skill_breakin.png", "logical_canvas": "96x96", "pivot": "feet", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28},
+      {"asset_id": "xiaodong_portrait", "phase": "A5", "category": "ui", "subject": "xiaodong", "state": "portrait", "path": "assets/xiaodong_portrait.png", "logical_canvas": "96x96", "pivot": "center", "frames": "1", "fps": "0", "prompt_section": "", "status": "planned", "notes": "test only", "generation_canvas": "", "direction": "right", "collision_reference": "", "palette": "", "negative_constraints": "", "godot_import": "", "reviewer": "", "reference_source": "", "reference_sha256": "", "reference_rights_policy": "original", "sprite_layout": "single", "source_output": "", "cleaned_output": "", "qa_record": "", "godot_evidence": "", "_column_count": 28}
+    ]
+  },
+  "gameplay": {
+    "weapons": [
+      {"id": "weapon_01", "character_id": "character_01", "upgrade_id": "calibration_01", "damage": 10, "shots_per_second": 2, "magazine_size": 10, "reload_duration": 1, "range_pixels": 300, "pierce_count": 0, "pierce_decay": 0.5, "weakpoint_multiplier": 1.5},
+      {"id": "weapon_02", "character_id": "character_02", "upgrade_id": "calibration_02", "damage": 11, "shots_per_second": 2, "magazine_size": 10, "reload_duration": 1, "range_pixels": 300, "pierce_count": 0, "pierce_decay": 0.5, "weakpoint_multiplier": 1.5},
+      {"id": "weapon_03", "character_id": "character_03", "upgrade_id": "calibration_03", "damage": 12, "shots_per_second": 2, "magazine_size": 10, "reload_duration": 1, "range_pixels": 300, "pierce_count": 0, "pierce_decay": 0.5, "weakpoint_multiplier": 1.5},
+      {"id": "weapon_04", "character_id": "character_04", "upgrade_id": "calibration_04", "damage": 13, "shots_per_second": 2, "magazine_size": 10, "reload_duration": 1, "range_pixels": 300, "pierce_count": 0, "pierce_decay": 0.5, "weakpoint_multiplier": 1.5},
+      {"id": "weapon_05", "character_id": "character_05", "upgrade_id": "calibration_05", "damage": 14, "shots_per_second": 2, "magazine_size": 10, "reload_duration": 1, "range_pixels": 300, "pierce_count": 0, "pierce_decay": 0.5, "weakpoint_multiplier": 1.5}
+    ],
+    "throwables": [
+      {"id": "throwable_01", "weapon_id": "weapon_01"},
+      {"id": "throwable_02", "weapon_id": "weapon_02"},
+      {"id": "throwable_03", "weapon_id": "weapon_03"},
+      {"id": "throwable_04", "weapon_id": "weapon_04"}
+    ],
+    "characters": [
+      {"id": "character_01", "display_name": "Character 01", "module_ids": ["module_01", "module_02", "module_03"]},
+      {"id": "character_02", "display_name": "Character 02", "module_ids": ["module_04", "module_05", "module_06"]},
+      {"id": "character_03", "display_name": "Character 03", "module_ids": ["module_07", "module_08", "module_09"]},
+      {"id": "character_04", "display_name": "Character 04", "module_ids": ["module_10", "module_11", "module_12"]},
+      {"id": "character_05", "display_name": "Character 05", "module_ids": ["module_13", "module_14", "module_15"]}
+    ],
+    "upgrades": [
+      {"id": "calibration_01", "category": "calibration", "conflicts": ["calibration_02"]},
+      {"id": "calibration_02", "category": "calibration", "conflicts": ["calibration_01"]},
+      {"id": "calibration_03", "category": "calibration", "conflicts": []},
+      {"id": "calibration_04", "category": "calibration", "conflicts": []},
+      {"id": "calibration_05", "category": "calibration", "conflicts": []},
+      {"id": "calibration_06", "category": "calibration", "conflicts": []},
+      {"id": "calibration_07", "category": "calibration", "conflicts": []},
+      {"id": "calibration_08", "category": "calibration", "conflicts": []},
+      {"id": "engine_01", "category": "engine", "conflicts": ["engine_02"]},
+      {"id": "engine_02", "category": "engine", "conflicts": ["engine_01"]},
+      {"id": "engine_03", "category": "engine", "conflicts": []},
+      {"id": "engine_04", "category": "engine", "conflicts": []},
+      {"id": "engine_05", "category": "engine", "conflicts": []},
+      {"id": "engine_06", "category": "engine", "conflicts": []},
+      {"id": "engine_07", "category": "engine", "conflicts": []},
+      {"id": "engine_08", "category": "engine", "conflicts": []},
+      {"id": "engine_09", "category": "engine", "conflicts": []},
+      {"id": "engine_10", "category": "engine", "conflicts": []},
+      {"id": "mutation_01", "category": "mutation", "weapon_id": "weapon_01", "conflicts": []},
+      {"id": "mutation_02", "category": "mutation", "weapon_id": "weapon_01", "conflicts": []},
+      {"id": "mutation_03", "category": "mutation", "weapon_id": "weapon_02", "conflicts": []},
+      {"id": "mutation_04", "category": "mutation", "weapon_id": "weapon_02", "conflicts": []},
+      {"id": "mutation_05", "category": "mutation", "weapon_id": "weapon_03", "conflicts": []},
+      {"id": "mutation_06", "category": "mutation", "weapon_id": "weapon_03", "conflicts": []},
+      {"id": "mutation_07", "category": "mutation", "weapon_id": "weapon_04", "conflicts": []},
+      {"id": "mutation_08", "category": "mutation", "weapon_id": "weapon_04", "conflicts": []},
+      {"id": "mutation_09", "category": "mutation", "weapon_id": "weapon_05", "conflicts": []},
+      {"id": "module_01", "category": "module", "character_id": "character_01", "conflicts": []},
+      {"id": "module_02", "category": "module", "character_id": "character_01", "conflicts": []},
+      {"id": "module_03", "category": "module", "character_id": "character_01", "conflicts": []},
+      {"id": "module_04", "category": "module", "character_id": "character_02", "conflicts": []},
+      {"id": "module_05", "category": "module", "character_id": "character_02", "conflicts": []},
+      {"id": "module_06", "category": "module", "character_id": "character_02", "conflicts": []},
+      {"id": "module_07", "category": "module", "character_id": "character_03", "conflicts": []},
+      {"id": "module_08", "category": "module", "character_id": "character_03", "conflicts": []},
+      {"id": "module_09", "category": "module", "character_id": "character_03", "conflicts": []},
+      {"id": "module_10", "category": "module", "character_id": "character_04", "conflicts": []},
+      {"id": "module_11", "category": "module", "character_id": "character_04", "conflicts": []},
+      {"id": "module_12", "category": "module", "character_id": "character_04", "conflicts": []},
+      {"id": "module_13", "category": "module", "character_id": "character_05", "conflicts": []},
+      {"id": "module_14", "category": "module", "character_id": "character_05", "conflicts": []},
+      {"id": "module_15", "category": "module", "character_id": "character_05", "conflicts": []},
+      {"id": "contract_01", "category": "contract", "conflicts": ["contract_02"]},
+      {"id": "contract_02", "category": "contract", "conflicts": ["contract_01"]},
+      {"id": "contract_03", "category": "contract", "conflicts": []},
+      {"id": "contract_04", "category": "contract", "conflicts": []},
+      {"id": "contract_05", "category": "contract", "conflicts": []}
+    ],
+    "enemies": [
+      {"id": "enemy_01"}, {"id": "enemy_02"}, {"id": "enemy_03"}, {"id": "enemy_04"},
+      {"id": "enemy_05"}, {"id": "enemy_06"}, {"id": "enemy_07"}, {"id": "enemy_08"},
+      {"id": "enemy_09"}, {"id": "enemy_10"}, {"id": "enemy_11"}, {"id": "enemy_12"},
+      {"id": "enemy_13"}, {"id": "enemy_14"}
+    ],
+    "waves": [
+      {"id": "wave_01", "wave": 1, "enemy_id": "enemy_01", "enemy_ids": ["enemy_01"]},
+      {"id": "wave_02", "wave": 2, "enemy_id": "enemy_02", "enemy_ids": ["enemy_02"]},
+      {"id": "wave_03", "wave": 3, "enemy_id": "enemy_03", "enemy_ids": ["enemy_03"]},
+      {"id": "wave_04", "wave": 4, "enemy_id": "enemy_04", "enemy_ids": ["enemy_04"]},
+      {"id": "wave_05", "wave": 5, "enemy_id": "enemy_05", "enemy_ids": ["enemy_05"]},
+      {"id": "wave_06", "wave": 6, "enemy_id": "enemy_06", "enemy_ids": ["enemy_06"]},
+      {"id": "wave_07", "wave": 7, "enemy_id": "enemy_07", "enemy_ids": ["enemy_07"]},
+      {"id": "wave_08", "wave": 8, "enemy_id": "enemy_08", "enemy_ids": ["enemy_08"]},
+      {"id": "wave_09", "wave": 9, "enemy_id": "enemy_09", "enemy_ids": ["enemy_09"]},
+      {"id": "wave_10", "wave": 10, "enemy_id": "enemy_10", "enemy_ids": ["enemy_10"]},
+      {"id": "wave_11", "wave": 11, "enemy_id": "enemy_11", "enemy_ids": ["enemy_11"]},
+      {"id": "wave_12", "wave": 12, "enemy_id": "enemy_12", "enemy_ids": ["enemy_12"]},
+      {"id": "wave_13", "wave": 13, "enemy_id": "enemy_13", "enemy_ids": ["enemy_13"]},
+      {"id": "wave_14", "wave": 14, "enemy_id": "enemy_14", "enemy_ids": ["enemy_14"]},
+      {"id": "wave_15", "wave": 15, "enemy_id": "enemy_01", "enemy_ids": ["enemy_01"]},
+      {"id": "wave_16", "wave": 16, "enemy_id": "enemy_02", "enemy_ids": ["enemy_02"]},
+      {"id": "wave_17", "wave": 17, "enemy_id": "enemy_03", "enemy_ids": ["enemy_03"]},
+      {"id": "wave_18", "wave": 18, "enemy_id": "enemy_04", "enemy_ids": ["enemy_04"]},
+      {"id": "wave_19", "wave": 19, "enemy_id": "enemy_05", "enemy_ids": ["enemy_05"]},
+      {"id": "wave_20", "wave": 20, "enemy_id": "enemy_06", "enemy_ids": ["enemy_06"]}
+    ],
+    "unlocks": [
+      {"id": "unlock_root", "requires_unlock_ids": []},
+      {"id": "unlock_left", "requires_unlock_ids": ["unlock_root"]},
+      {"id": "unlock_right", "requires_unlock_ids": ["unlock_root"]},
+      {"id": "unlock_top", "requires_unlock_ids": ["unlock_left", "unlock_right"]}
+    ]
+  }
+}
