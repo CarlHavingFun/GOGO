@@ -1,6 +1,9 @@
 name: Godot M0
 
 on:
+  push:
+    branches:
+      - foundation/topdown-kit-evaluation
   pull_request:
     branches: [main]
   workflow_dispatch:
