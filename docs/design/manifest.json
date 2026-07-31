@@ -20,8 +20,8 @@
     {
       "file": "00_产品宪法.md",
       "role": "authoritative",
-      "bytes": 14810,
-      "sha256": "e9d87f6ba59f8a675c30c24a762c8f6c881d38458091827a5882cba367a2703f"
+      "bytes": 15352,
+      "sha256": "7b2127998ec32433d2b80fe0fe50394a47a1ad7d56d152ca27259c94230234ca"
     },
     {
       "file": "01_核心循环与20波流程.md",
@@ -44,8 +44,8 @@
     {
       "file": "04_角色与流派设计.md",
       "role": "authoritative",
-      "bytes": 26412,
-      "sha256": "dc3bb4814e1c1c0af5fe76dc63de90983e0a6415371e446f3b6c6b11fe99a4b7"
+      "bytes": 27241,
+      "sha256": "73dfeaa128860b326b234a2cfd9bcbf06a96cab3c4a935393b9228687dc5ccfd"
     },
     {
       "file": "05_技能与奖励池.md",
@@ -68,8 +68,8 @@
     {
       "file": "08_UI美术音频规范.md",
       "role": "authoritative",
-      "bytes": 17979,
-      "sha256": "1d12d0117324d7432ad288da55bdaf357b1c43394c6876e0606ae00d38d72aa5"
+      "bytes": 18594,
+      "sha256": "0235cbb0ac9dfa1f7004dceba7b4f58b4f6cd0d2caf9d63119e94e8f709b6f7d"
     },
     {
       "file": "09_Godot技术架构.md",
@@ -98,8 +98,8 @@
     {
       "file": "13_素材生产管线与提示词.md",
       "role": "authoritative",
-      "bytes": 29850,
-      "sha256": "d60825ecbff0555a8c5534ee1bec643d585752380b7eab9a71bb8270a7577068"
+      "bytes": 31491,
+      "sha256": "424d192a626fabec2e6e9af7afc0d8bf35a46fa81d38ad95eb289cf949bb8490"
     },
     {
       "file": "兼容性要求规范.md",

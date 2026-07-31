@@ -4,7 +4,8 @@
 - 资产阶段：`A5`（仅登记正式生产计划）
 - artifact state：`generated`
 - decision：`accepted_for_concept`
-- 权威规格：`docs/superpowers/specs/2026-07-30-gogo-vnext-xiaodong-c0-design.md`
+- 当前权威补充：`docs/superpowers/specs/2026-07-31-gogo-xiaodong-eight-direction-grip-design.md`
+- 上位历史规格：`docs/superpowers/specs/2026-07-30-gogo-vnext-xiaodong-c0-design.md`
 
 ```gogo-governance+json
 {
@@ -107,6 +108,21 @@ Godot 实机验收
 | `hit` 关键姿势 | 2 | 短促、非血腥的受击语义 |
 | `death` 关键姿势 | 3 | 无肢解的连续倒地路径 |
 | `skill_breakin` 关键姿势 | 3 | 蓄力—爆发—回稳且无武器/特效 |
+
+### 当前八方向分层目标
+
+2026-07-31 后续书面批准改变当前生产计划，但不改写上表和候选账本的历史
+结论。正式 `walk` 覆盖 `n,ne,e,se,s,sw,w,nw` 八方向；C0 每方向四相位
+`contact_l,passing_l,contact_r,passing_r`，共 32 张无肩下手臂的
+`walk_body` layer。八方向 × pistol/rifle/sniper 三类形成 24 个 grip
+group，每组含 `back_arm/front_arm`，共 48 张空手 arm layer；32 个 body
+分别与同方向三类握持确定性合成，共 96 个完整全身 QA 结果。
+
+现有四张 cleaned `se` walk 帧均为带完整手臂的历史 full-arm pose guide，
+不是 modular body 或 grip 输出。第一视觉门只制作八方向各一个 `contact_l`
+body、八个 rifle grip group，以及 `se` 的 pistol/rifle/sniper 对比并形成
+“八方向头身 + 三类握持”联系表；联系表交付后必须暂停，等待用户明确批准，
+不得提前补齐其余 24 个 body layer 和 14 个握持组。
 
 ## 4. 批准 Prompt
 
@@ -450,8 +466,10 @@ alpha bbox 中心均为 `(512,600)`，清理后中心约为 `(64,75)`。这就�
 
 - C0 输出只是概念候选和动作依据，不登记为 A5 的 `generated`、`cleaned`、`approved` 或 `in_game`。
 - C0 的 `accepted_for_concept` 只表示概念审查结果，不替代正式 manifest 生命周期状态。
-- 本历史批次发生时，A5 manifest 只有六项，且均为 `planned`。已批准补充规格
-  的当前目标是十二项（原六项加六张握持 layer）；该十二项计划状态将由 Task 4
-  落盘，不能回写成“本批次已有十二项”或提前改变任何 A5 状态。
+- 本历史批次发生时，A5 manifest 只有六项，且均为 `planned`；对应旧批次
+  ledger 继续作为历史快照，不回写为十二项。
+- 2026-07-31 后续批准后的当前 A5 计划为十二项 `planned` 记录：原六项加
+  六张握持 layer。当前计划目录的变化不代表历史批次当时已有十二项，也不
+  提前改变任何 A5 状态。
 - C0 原始生成图不得直接进入 Godot，也不得伪装成正式 A5 Sprite Sheet。
 - 只有清理、正式验收、manifest 证据与文件位置一致的 A5 资产，才可按正式状态流继续。
