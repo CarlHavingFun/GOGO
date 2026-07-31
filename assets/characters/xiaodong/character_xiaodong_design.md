@@ -3,7 +3,7 @@
 - 设计阶段：`C0`
 - 资产阶段：`A5`（仅登记正式生产计划）
 - artifact state：`generated`
-- decision：`pending_review`
+- decision：`accepted_for_concept`
 - 权威规格：`docs/superpowers/specs/2026-07-30-gogo-vnext-xiaodong-c0-design.md`
 
 ```gogo-governance+json
@@ -13,7 +13,7 @@
   "design_stage": "C0",
   "asset_stage": "A5",
   "artifact_state": "generated",
-  "decision": "pending_review",
+  "decision": "accepted_for_concept",
   "candidate_count": 2,
   "reference": {
     "path": "assets/source/references/characters/xiaodong/reference_01.jpg",
@@ -148,7 +148,7 @@ R2 排除项不得追加 `no real-person portrait`。生成工具若支持负面
 | 候选 ID | 生成时间 | 生成工具 | 源文件相对路径 | 参考图 ID / SHA-256 | 目标动作 / 帧用途 | QA | 决定 / 理由 | 清理结果 / manifest |
 |---|---|---|---|---|---|---|---|---|
 | `xiaodong_c0_master_001` | `2026-07-31T02:40:53+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_001_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版 / 身份与项目转译 | 独立复核 `9/10`，QA5 失败 | `revise` / 朝向近正面偏左，不是右下 | `not_cleaned` / 无正式 manifest 条目 |
-| `xiaodong_c0_master_002` | `2026-07-31T02:54:02+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版定向修订 / 身份与项目转译 | 代理预检 `10/10`，独立 QA5 通过 | `pending_review` / 等待用户明确视觉决定 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_master_002` | `2026-07-31T02:54:02+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版定向修订 / 身份与项目转译 | 代理预检 `10/10`，独立 QA5 通过 | `accepted_for_concept` / 用户明确回复“批准002” | `not_cleaned` / 无正式 manifest 条目 |
 
 当前候选记录数：`2`。
 
@@ -329,17 +329,28 @@ Constraints: modify only direction/three-quarter orientation; no redesign, no ne
 | 10 | 双脚和身体底部锚点适合动画 | 1 | 双脚完整、底部中心清楚 |
 
 代理预检合计：`10/10`；QA5 另经独立方向复核，以约 `90%` 置信度通过。
-这只是进入用户审阅的必要预检，不构成 `accepted_for_concept`；最终视觉
-决定仍由用户明确给出。
+该预检在用户决定前只构成审阅入口，不单独构成
+`accepted_for_concept`；最终视觉决定见下方用户批准记录。
+
+#### 用户批准记录
+
+- 决定时间：`2026-07-31T08:57:23+0800`；
+- 用户原文：`批准002`；
+- 决定：`accepted_for_concept`；
+- 范围：只批准 `xiaodong_c0_master_002` 作为 C0 视觉母版和后续头像/
+  动作关键姿势的一致性依据；
+- 不包含：正式 `cleaned`、A5 `approved`/`in_game`、Godot 导入、M5
+  发布权利判断或任何第三方授权结论。
 
 #### 当前决定与下一步
 
 - artifact state：`generated`；
-- decision：`pending_review`；
-- 理由：已修复候选 001 的朝向问题，并形成可追溯、通过代理预检的视觉
-  母版候选，等待用户判断神似与项目转译是否可接受；
-- 下一轮只允许修改：以用户明确意见为准；在用户批准母版前，不生成头像
-  或任何动作关键姿势；
+- decision：`accepted_for_concept`；
+- 理由：候选 002 已通过代理 `10/10` 预检、独立方向复核和独立 checkpoint
+  Review，用户随后明确回复“批准002”；
+- 下一轮允许内容：只以候选 002 和原始参考共同约束一张头像母版与
+  `idle/walk/hit/death/skill_breakin` 的批准数量关键姿势；每个动作独立
+  生成，不混入武器、文字、UI、场景或技能特效；
 - cleaning result：`not_cleaned`；review preview 不是正式清理结果；
 - final manifest：无；六项 A5 正式素材继续保持 `planned`，不进入 Godot。
 
