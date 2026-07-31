@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
+<rect x="10" y="43" width="44" height="8" fill="#3D4450" stroke="#1C1E24" stroke-width="2"/>
+<polygon points="18,43 28,26 34,43" fill="#C84832" stroke="#1C1E24" stroke-width="2"/>
+<polygon points="22,31 18,23 22,14 26,23" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<polygon points="32,31 28,23 32,14 36,23" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<polygon points="42,31 38,23 42,14 46,23" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<circle cx="96" cy="32" r="20" fill="none" stroke="#A970FF" stroke-width="3"/>
+<circle cx="96" cy="32" r="8" fill="#C84832" stroke="#1C1E24" stroke-width="2"/>
+<line x1="118" y1="32" x2="124" y2="32" stroke="#E06A3B" stroke-width="3"/>
+<line x1="112" y1="48" x2="116" y2="52" stroke="#E06A3B" stroke-width="3"/>
+<line x1="96" y1="54" x2="96" y2="60" stroke="#E06A3B" stroke-width="3"/>
+<line x1="80" y1="48" x2="76" y2="52" stroke="#E06A3B" stroke-width="3"/>
+<line x1="74" y1="32" x2="68" y2="32" stroke="#E06A3B" stroke-width="3"/>
+<line x1="80" y1="16" x2="76" y2="12" stroke="#E06A3B" stroke-width="3"/>
+<line x1="96" y1="10" x2="96" y2="4" stroke="#E06A3B" stroke-width="3"/>
+<line x1="112" y1="16" x2="116" y2="12" stroke="#E06A3B" stroke-width="3"/>
+<line x1="136" y1="40" x2="154" y2="31" stroke="#E06A3B" stroke-width="4"/>
+<line x1="159" y1="36" x2="179" y2="24" stroke="#FFD36A" stroke-width="4"/>
+<polygon points="181,23 173,20 176,29" fill="#F7C948" stroke="#1C1E24" stroke-width="1"/>
+<polygon points="150,24 158,31 152,39" fill="#C84832" stroke="#1C1E24" stroke-width="1"/>
+<polygon points="212,20 224,13 236,20 236,34 224,41 212,34" fill="#FFD36A" stroke="#1C1E24" stroke-width="2"/>
+<polygon points="207,52 214,38 220,48 227,32 234,49" fill="#E06A3B" stroke="#1C1E24" stroke-width="2"/>
+<rect x="20" y="74" width="24" height="42" fill="#70513A" stroke="#1C1E24" stroke-width="2"/>
+<line x1="32" y1="74" x2="28" y2="94" stroke="#FFD36A" stroke-width="2"/>
+<line x1="28" y1="94" x2="38" y2="106" stroke="#FFD36A" stroke-width="2"/>
+<circle cx="32" cy="109" r="17" fill="none" stroke="#A970FF" stroke-width="2"/>
+<circle cx="32" cy="109" r="25" fill="none" stroke="#E06A3B" stroke-width="1"/>
+<line x1="73" y1="97" x2="83" y2="97" stroke="#E8EDF5" stroke-width="2"/>
+<line x1="83" y1="97" x2="88" y2="85" stroke="#E8EDF5" stroke-width="2"/>
+<line x1="88" y1="85" x2="94" y2="108" stroke="#C84832" stroke-width="2"/>
+<line x1="94" y1="108" x2="102" y2="91" stroke="#C84832" stroke-width="2"/>
+<line x1="102" y1="91" x2="118" y2="91" stroke="#E8EDF5" stroke-width="2"/>
+<polygon points="108,114 118,104 118,111 124,111 124,117 118,117 118,124" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<circle cx="160" cy="98" r="20" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
+<circle cx="160" cy="98" r="16" fill="none" stroke="#C84832" stroke-width="2"/>
+<line x1="160" y1="98" x2="172" y2="86" stroke="#FFD36A" stroke-width="3"/>
+<line x1="150" y1="92" x2="146" y2="90" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="160" y1="86" x2="160" y2="82" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="170" y1="92" x2="174" y2="90" stroke="#E8EDF5" stroke-width="1"/>
+<rect x="200" y="100" width="5" height="14" fill="#C84832" stroke="#1C1E24" stroke-width="1"/>
+<rect x="206" y="100" width="5" height="14" fill="#C84832" stroke="#1C1E24" stroke-width="1"/>
+<rect x="212" y="100" width="5" height="14" fill="#C84832" stroke="#1C1E24" stroke-width="1"/>
+<rect x="218" y="100" width="5" height="14" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<rect x="224" y="100" width="5" height="14" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<rect x="230" y="100" width="5" height="14" fill="#E06A3B" stroke="#1C1E24" stroke-width="1"/>
+<rect x="236" y="100" width="5" height="14" fill="#F7C948" stroke="#1C1E24" stroke-width="1"/>
+<rect x="242" y="100" width="5" height="14" fill="#F7C948" stroke="#1C1E24" stroke-width="1"/>
+<polygon points="224,72 227,81 237,81 229,87 232,97 224,91 216,97 219,87 211,81 221,81" fill="#F7C948" stroke="#1C1E24" stroke-width="1"/>
+</svg>

@@ -1,0 +1,38 @@
+asset_id,asset_role,category,subject,rarity,atlas_path,atlas_rect,rarity_overlay,has_timer_badge,status,notes
+ui_rarity_common_frame,ui_overlay,rarity,common_frame,common,assets/ui/icons/rarity_ui_atlas.svg,"0,0,64,64",common,false,concept_ready,white circle code
+ui_rarity_rare_frame,ui_overlay,rarity,rare_frame,rare,assets/ui/icons/rarity_ui_atlas.svg,"64,0,64,64",rare,false,concept_ready,blue diamond code
+ui_rarity_epic_frame,ui_overlay,rarity,epic_frame,epic,assets/ui/icons/rarity_ui_atlas.svg,"128,0,64,64",epic,false,concept_ready,purple hex code
+ui_rarity_legendary_frame,ui_overlay,rarity,legendary_frame,legendary,assets/ui/icons/rarity_ui_atlas.svg,"192,0,64,64",legendary,false,concept_ready,gold star code
+ui_timer_common,ui_overlay,timer,common_timer,common,assets/ui/icons/rarity_ui_atlas.svg,"0,64,64,64",common,true,concept_ready,optional timer overlay; compose separately
+ui_timer_rare,ui_overlay,timer,rare_timer,rare,assets/ui/icons/rarity_ui_atlas.svg,"64,64,64,64",rare,true,concept_ready,optional timer overlay; compose separately
+ui_timer_epic,ui_overlay,timer,epic_timer,epic,assets/ui/icons/rarity_ui_atlas.svg,"128,64,64,64",epic,true,concept_ready,optional timer overlay; compose separately
+ui_timer_legendary,ui_overlay,timer,legendary_timer,legendary,assets/ui/icons/rarity_ui_atlas.svg,"192,64,64,64",legendary,true,concept_ready,optional timer overlay; compose separately
+ui_weapon_usp,ui_icon,weapon,usp,common,assets/ui/icons/weapon_throwable_atlas.svg,"0,0,64,64",common,false,concept_ready,neutral icon; rarity overlay separate
+ui_weapon_deagle,ui_icon,weapon,deagle,rare,assets/ui/icons/weapon_throwable_atlas.svg,"64,0,64,64",rare,false,concept_ready,neutral icon; rarity overlay separate
+ui_weapon_ak,ui_icon,weapon,ak,rare,assets/ui/icons/weapon_throwable_atlas.svg,"128,0,64,64",rare,false,concept_ready,neutral icon; rarity overlay separate
+ui_weapon_m4,ui_icon,weapon,m4,rare,assets/ui/icons/weapon_throwable_atlas.svg,"0,64,64,64",rare,false,concept_ready,neutral icon; rarity overlay separate
+ui_weapon_awp,ui_icon,weapon,awp,epic,assets/ui/icons/weapon_throwable_atlas.svg,"64,64,64,64",epic,true,concept_ready,neutral icon; rarity overlay separate
+ui_throwable_he,ui_icon,throwable,he,rare,assets/ui/icons/weapon_throwable_atlas.svg,"128,64,64,64",rare,true,concept_ready,neutral icon; rarity overlay separate
+ui_throwable_smoke,ui_icon,throwable,smoke,rare,assets/ui/icons/weapon_throwable_atlas.svg,"0,128,64,64",rare,true,concept_ready,neutral icon; rarity overlay separate
+ui_throwable_flash,ui_icon,throwable,flash,rare,assets/ui/icons/weapon_throwable_atlas.svg,"64,128,64,64",rare,true,concept_ready,neutral icon; rarity overlay separate
+ui_throwable_fire,ui_icon,throwable,fire,rare,assets/ui/icons/weapon_throwable_atlas.svg,"128,128,64,64",rare,true,concept_ready,neutral icon; rarity overlay separate
+CAL_01,upgrade_icon,universal,体能训练,common,assets/ui/icons/common_upgrade_atlas.svg,"0,0,64,64",common,false,concept_ready,runtime PNG pending approval
+CAL_02,upgrade_icon,universal,轻装步法,common,assets/ui/icons/common_upgrade_atlas.svg,"64,0,64,64",common,false,concept_ready,runtime PNG pending approval
+CAL_03,upgrade_icon,universal,快速装填,common,assets/ui/icons/common_upgrade_atlas.svg,"128,0,64,64",common,true,concept_ready,runtime PNG pending approval
+CAL_04,upgrade_icon,universal,枪线校准,common,assets/ui/icons/common_upgrade_atlas.svg,"192,0,64,64",common,true,concept_ready,runtime PNG pending approval
+CAL_05,upgrade_icon,universal,火力增幅,common,assets/ui/icons/common_upgrade_atlas.svg,"0,64,64,64",common,false,concept_ready,runtime PNG pending approval
+CAL_06,upgrade_icon,universal,应急护板,common,assets/ui/icons/common_upgrade_atlas.svg,"64,64,64,64",common,false,concept_ready,runtime PNG pending approval
+CAL_07,upgrade_icon,universal,扩容弹匣,rare,assets/ui/icons/common_upgrade_atlas.svg,"128,64,64,64",rare,true,concept_ready,runtime PNG pending approval
+CAL_08,upgrade_icon,universal,战术背带,rare,assets/ui/icons/common_upgrade_atlas.svg,"192,64,64,64",rare,false,concept_ready,runtime PNG pending approval
+ENG_01,upgrade_icon,universal,弱点追猎,rare,assets/ui/icons/common_upgrade_atlas.svg,"0,128,64,64",rare,true,concept_ready,runtime PNG pending approval
+ENG_02,upgrade_icon,universal,换弹冲击,rare,assets/ui/icons/common_upgrade_atlas.svg,"64,128,64,64",rare,true,concept_ready,runtime PNG pending approval
+ENG_04,upgrade_icon,universal,穿透增幅,epic,assets/ui/icons/common_upgrade_atlas.svg,"128,128,64,64",epic,false,concept_ready,runtime PNG pending approval
+ENG_06,upgrade_icon,universal,燃尽扩散,epic,assets/ui/icons/common_upgrade_atlas.svg,"192,128,64,64",epic,true,concept_ready,runtime PNG pending approval
+DON_01,upgrade_icon,xiaodong,开局即战,rare,assets/ui/icons/xiaodong_upgrade_atlas.svg,"0,0,64,64",rare,true,concept_ready,M0; character-exclusive
+DON_02,upgrade_icon,xiaodong,贴脸统治,epic,assets/ui/icons/xiaodong_upgrade_atlas.svg,"64,0,64,64",epic,false,concept_ready,M0; character-exclusive
+DON_03,upgrade_icon,xiaodong,失控火线,legendary,assets/ui/icons/xiaodong_upgrade_atlas.svg,"128,0,64,64",legendary,true,concept_ready,M0; character-exclusive
+DON_04,upgrade_icon,xiaodong,余热拾荒,rare,assets/ui/icons/xiaodong_upgrade_atlas.svg,"192,0,64,64",rare,true,reserved,A2; character-exclusive
+DON_05,upgrade_icon,xiaodong,破门余震,epic,assets/ui/icons/xiaodong_upgrade_atlas.svg,"0,64,64,64",epic,true,reserved,A2; character-exclusive
+DON_06,upgrade_icon,xiaodong,焦躁反扑,epic,assets/ui/icons/xiaodong_upgrade_atlas.svg,"64,64,64,64",epic,true,reserved,A2; character-exclusive
+DON_07,upgrade_icon,xiaodong,红区压枪,rare,assets/ui/icons/xiaodong_upgrade_atlas.svg,"128,64,64,64",rare,true,reserved,A2; character-exclusive
+DON_08,upgrade_icon,xiaodong,超载红线,legendary,assets/ui/icons/xiaodong_upgrade_atlas.svg,"192,64,64,64",legendary,true,reserved,A2; character-exclusive
