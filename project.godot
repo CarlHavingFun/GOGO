@@ -1,5 +1,12 @@
 ; Engine configuration file.
-; Minimal M0 project metadata; tests run via tests/test_runner.gd.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+;
+; GOGO mainline remains the infinite desert prototype; M0 is a regression scene.
 config_version=5
 
 [application]

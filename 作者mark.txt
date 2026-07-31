@@ -1,0 +1,12 @@
+1.所有代码级原始设计可以先去github参考类似项目
+2.开发必须使用godot mcp skill
+3.生图必须使用 Agent Sprite Forge
+使用 Codex 规划资产生产。
+使用内置 imagegen 生成原始图。
+自动去背景和处理透明通道。
+自动切分帧。
+统一缩放和底部锚点。
+导出透明 PNG、GIF 和元数据。
+支持生成 Godot 场景、TileMap、碰撞体和分离式道具。
+它已经提供 Windows 安装方式，并包含 $generate2dsprite 和 $generate2dmap 两个主要 skill。
+4.good_practice里存放了作者认可的demo图片

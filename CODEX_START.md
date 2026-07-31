@@ -20,6 +20,14 @@ skills/generate2dsprite/SKILL.md
 skills/generate2dmap/SKILL.md
 ```
 
+## 作者确认的执行约束
+
+- 开发必须使用 Godot MCP skill。
+- 生图必须使用 Agent Sprite Forge，并使用 Codex 规划资产生产。
+- 原始图使用内置 imagegen 生成，再自动去背景、处理透明通道、切分帧、统一缩放和底部锚点。
+- 交付透明 PNG、GIF 和元数据；地图任务同时支持 Godot 场景、TileMap、碰撞体和分离式道具。
+- `good_practice/` 保存作者认可的 demo 图片；当前示例为 `good_practice/donk.png`。
+
 ## 权威关系
 
 - `docs/design/` 是唯一当前设计权威；`00_产品宪法.md` 优先级最高。
