@@ -144,14 +144,26 @@ static func _load_design_documents(
 			record["_document_path"] = document_path
 			record["exists"] = FileAccess.file_exists(document_path)
 			if record["exists"]:
-				record["actual_bytes"] = FileAccess.get_file_as_bytes(document_path).size()
-				record["actual_sha256"] = FileAccess.get_sha256(document_path)
+				var canonical_markdown: PackedByteArray = _canonical_markdown_bytes(document_path)
+				record["actual_bytes"] = canonical_markdown.size()
+				record["actual_sha256"] = _sha256_bytes(canonical_markdown)
 			else:
 				load_issues.append(_issue("DOC002", document_path, 0, file_name, "Registered Markdown file does not exist."))
 		else:
 			load_issues.append(_issue("DOC001", manifest_path, 0, "manifest", "Manifest file path is missing or unsafe."))
 		records.append(record)
 	snapshot["design_documents"]["records"] = records
+
+static func _canonical_markdown_bytes(path: String) -> PackedByteArray:
+	var markdown: String = FileAccess.get_file_as_string(path)
+	markdown = markdown.replace("\r\n", "\n").replace("\r", "\n")
+	return markdown.to_utf8_buffer()
+
+static func _sha256_bytes(bytes: PackedByteArray) -> String:
+	var hashing_context := HashingContext.new()
+	hashing_context.start(HashingContext.HASH_SHA256)
+	hashing_context.update(bytes)
+	return hashing_context.finish().hex_encode()
 
 static func _load_assets(
 	snapshot: Dictionary,

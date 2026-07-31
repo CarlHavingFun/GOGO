@@ -1,6 +1,6 @@
 extends RefCounted
 
-const ChunkStreamPlannerScript: Script = preload("res://systems/world/chunk_stream_planner.gd")
+const ChunkStreamPlannerScript: Script = preload("res://src/world/chunk_stream_planner.gd")
 
 var test_count: int = 0
 var _failures: Array[String] = []

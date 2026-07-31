@@ -70,8 +70,9 @@ func _play_cue(cue_name: StringName) -> void:
 func _on_shot_fired(_origin: Vector2, _end_position: Vector2, _did_hit: bool) -> void:
 	_play_cue(&"shot")
 
-func _on_hit_confirmed(target: TrainingDummy, _damage: int, _hit_position: Vector2) -> void:
-	_play_cue(&"knockdown" if target.get_is_knocked_down() else &"hit")
+func _on_hit_confirmed(target: Node, _damage: int, _hit_position: Vector2) -> void:
+	var knocked_down: bool = target != null and target.has_method("get_is_knocked_down") and bool(target.call("get_is_knocked_down"))
+	_play_cue(&"knockdown" if knocked_down else &"hit")
 
 func _on_empty_triggered() -> void:
 	_play_cue(&"empty")

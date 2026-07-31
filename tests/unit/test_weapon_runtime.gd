@@ -2,7 +2,7 @@ extends RefCounted
 
 const AK_PATH: String = "res://data/weapons/ak.tres"
 const RUNTIME_PATH: String = "res://src/combat/weapon_runtime.gd"
-const WEAPON_DEF_PATH: String = "res://data/weapons/weapon_def.gd"
+const WEAPON_DEF_PATH: String = "res://src/combat/weapon_definition.gd"
 const FLOAT_TOLERANCE: float = 0.0001
 
 func run() -> Array[String]:
@@ -11,7 +11,7 @@ func run() -> Array[String]:
 	var runtime_script: Script = load(RUNTIME_PATH) as Script
 	var ak_definition: Resource = load(AK_PATH) as Resource
 	if weapon_def_script == null:
-		failures.append("WeaponDef script is required for weapon runtime behavior tests.")
+		failures.append("WeaponDefinition script is required for weapon runtime behavior tests.")
 	if runtime_script == null:
 		failures.append("WeaponRuntime script is required for weapon runtime behavior tests.")
 	elif not runtime_script.can_instantiate():

@@ -1,6 +1,6 @@
 extends RefCounted
 
-const SpawnRingSamplerScript: Script = preload("res://systems/spawn/spawn_ring_sampler.gd")
+const SpawnRingSamplerScript: Script = preload("res://src/spawn/spawn_ring_sampler.gd")
 
 var test_count: int = 0
 var _failures: Array[String] = []

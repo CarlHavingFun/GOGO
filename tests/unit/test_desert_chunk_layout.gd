@@ -1,6 +1,6 @@
 extends RefCounted
 
-const DesertChunkLayoutScript: Script = preload("res://systems/world/desert_chunk_layout.gd")
+const DesertChunkLayoutScript: Script = preload("res://src/world/desert_chunk_layout.gd")
 
 var test_count: int = 0
 var _failures: Array[String] = []

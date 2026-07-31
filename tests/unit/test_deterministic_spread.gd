@@ -1,7 +1,7 @@
 extends RefCounted
 
-const WeaponDefinitionScript: Script = preload("res://systems/combat/weapon_definition.gd")
-const DeterministicSpreadScript: Script = preload("res://systems/combat/deterministic_spread.gd")
+const WeaponDefinitionScript: Script = preload("res://src/combat/weapon_definition.gd")
+const DeterministicSpreadScript: Script = preload("res://src/combat/deterministic_spread.gd")
 
 var test_count: int = 0
 var _failures: Array[String] = []
@@ -14,9 +14,9 @@ func run() -> Array[String]:
 
 func _make_definition() -> Variant:
 	var definition: Variant = WeaponDefinitionScript.new()
-	definition.base_spread_deg = 1.4
-	definition.move_spread_deg = 1.3
-	definition.recoil_spread_factor = 1.0
+	definition.base_spread_degrees = 1.4
+	definition.moving_spread_addition_degrees = 1.3
+	definition.recoil_spread_coefficient = 1.0
 	return definition
 
 func _test_equal_seed_equal_sequence() -> void:

@@ -4,8 +4,8 @@ class_name InfiniteSpawnDirector
 signal enemy_spawned(enemy: Node)
 signal enemy_recycled(enemy: Node, reason: StringName)
 
-const SpawnRingSamplerScript: Script = preload("res://systems/spawn/spawn_ring_sampler.gd")
-const PrototypeChaserScript: Script = preload("res://entities/enemies/prototype_chaser.gd")
+const SpawnRingSamplerScript: Script = preload("res://src/spawn/spawn_ring_sampler.gd")
+const PrototypeChaserScript: Script = preload("res://src/actors/prototype_chaser.gd")
 
 @export var player_path: NodePath = NodePath("../Player")
 @export var chunk_manager_path: NodePath = NodePath("../ChunkManager")

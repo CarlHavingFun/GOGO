@@ -2,7 +2,7 @@ class_name WeaponController
 extends Node2D
 
 signal shot_fired(origin: Vector2, end_position: Vector2, did_hit: bool)
-signal hit_confirmed(target: TrainingDummy, damage: int, hit_position: Vector2)
+signal hit_confirmed(target: Node, damage: int, hit_position: Vector2)
 signal empty_triggered()
 signal ammo_changed(current_ammo: int, magazine_size: int)
 signal reload_started(duration_seconds: float, is_automatic: bool)
@@ -12,7 +12,7 @@ signal state_changed()
 
 const MUZZLE_OFFSET_PIXELS: float = 30.0
 
-@export var weapon_definition: WeaponDef
+@export var weapon_definition: WeaponDefinition
 @export var combat_seed: int = 24680
 @export var shooter_path: NodePath = NodePath("..")
 @export var feedback_path: NodePath
@@ -34,7 +34,7 @@ var _last_shot_spread_degrees: float = 0.0
 
 func _ready() -> void:
 	if weapon_definition == null:
-		push_error("WeaponController requires a WeaponDef resource.")
+		push_error("WeaponController requires a WeaponDefinition resource.")
 		set_physics_process(false)
 		return
 	_shooter = get_node_or_null(shooter_path) as PlayerController
@@ -54,6 +54,9 @@ func _ready() -> void:
 func _physics_process(delta_seconds: float) -> void:
 	if _runtime == null:
 		return
+	if Input.is_action_just_pressed("reset_seed"):
+		_spread_sampler.configure(combat_seed)
+		state_changed.emit()
 	var was_reloading: bool = _runtime.is_reloading
 	var was_reload_automatic: bool = _runtime.reload_is_automatic
 	var fire_is_held: bool = Input.is_action_pressed("fire")
@@ -183,15 +186,28 @@ func _attempt_fire() -> bool:
 	var end_position: Vector2 = maximum_end_position
 	if did_hit:
 		end_position = result.get("position", maximum_end_position) as Vector2
-		var dummy: TrainingDummy = result.get("collider") as TrainingDummy
-		if dummy != null:
-			var applied_damage: int = dummy.take_hit(weapon_definition.damage, end_position)
-			if applied_damage > 0:
-				hit_confirmed.emit(dummy, applied_damage, end_position)
+		var collider: Node = result.get("collider") as Node
+		var damage_result: Dictionary = _apply_damage(collider, end_position)
+		var applied_damage: int = int(damage_result.get("damage", 0))
+		if applied_damage > 0:
+			hit_confirmed.emit(collider, applied_damage, end_position)
 	_feedback.present_shot(origin, end_position, did_hit)
 	shot_fired.emit(origin, end_position, did_hit)
 	_emit_reload_transition(was_reloading, _runtime.is_reloading, was_reload_automatic)
 	return true
+
+func _apply_damage(collider: Node, hit_position: Vector2) -> Dictionary:
+	if collider == null:
+		return {}
+	if collider.has_method("take_hit"):
+		var applied_damage: int = int(collider.call("take_hit", weapon_definition.damage, hit_position))
+		var knocked_down: bool = collider.has_method("get_is_knocked_down") and bool(collider.call("get_is_knocked_down"))
+		return {"hit": applied_damage > 0, "damage": applied_damage, "killed": knocked_down}
+	if collider.has_method("apply_damage"):
+		var result: Variant = collider.call("apply_damage", float(weapon_definition.damage), hit_position)
+		if result is Dictionary:
+			return result
+	return {}
 
 func _sample_shot_direction(
 	aim_direction: Vector2,

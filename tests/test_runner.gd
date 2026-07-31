@@ -7,6 +7,11 @@ const TEST_PATHS: Array[String] = [
 	"res://tests/integration/test_playable_scene.gd",
 	"res://tests/integration/test_m0_acceptance.gd",
 	"res://tests/integration/test_content_validator_cli.gd",
+	"res://tests/integration/test_infinite_desert_scene.gd",
+	"res://tests/unit/test_deterministic_spread.gd",
+	"res://tests/unit/test_chunk_stream_planner.gd",
+	"res://tests/unit/test_desert_chunk_layout.gd",
+	"res://tests/unit/test_spawn_ring_sampler.gd",
 ]
 
 func _initialize() -> void:

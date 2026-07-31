@@ -50,6 +50,9 @@ func get_status_text() -> String:
 func get_feedback_text() -> String:
 	return _feedback_text
 
+func present_feedback(message: String) -> void:
+	_present_feedback(message)
+
 func _refresh_view() -> void:
 	_ammo_text = "%d / ∞" % _weapon_controller.get_current_ammo()
 	_status_text = _derive_status_text()
@@ -89,8 +92,8 @@ func _build_debug_text() -> String:
 		]
 	)
 
-func _on_hit_confirmed(target: TrainingDummy, damage: int, _hit_position: Vector2) -> void:
-	if target.get_is_knocked_down():
+func _on_hit_confirmed(target: Node, damage: int, _hit_position: Vector2) -> void:
+	if target != null and target.has_method("get_is_knocked_down") and bool(target.call("get_is_knocked_down")):
 		_present_feedback("TARGET DOWN  +%d" % damage)
 	else:
 		_present_feedback("HIT  +%d" % damage)

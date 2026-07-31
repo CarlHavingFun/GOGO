@@ -56,7 +56,7 @@ func get_crosshair_center() -> Vector2:
 		+ raw_screen_direction.rotated(deg_to_rad(_weapon_controller.get_recoil_bias_degrees()))
 	)
 
-func _on_hit_confirmed(_target: TrainingDummy, _damage: int, _hit_position: Vector2) -> void:
+func _on_hit_confirmed(_target: Node, _damage: int, _hit_position: Vector2) -> void:
 	_hit_mark_remaining_seconds = HIT_MARK_DURATION_SECONDS
 	queue_redraw()
 

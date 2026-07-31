@@ -4,9 +4,9 @@ class_name InfiniteChunkManager
 signal chunk_loaded(coord: Vector2i, module_id: StringName)
 signal chunk_unloaded(coord: Vector2i)
 
-const DesertChunkLayoutScript: Script = preload("res://systems/world/desert_chunk_layout.gd")
-const ChunkStreamPlannerScript: Script = preload("res://systems/world/chunk_stream_planner.gd")
-const InfiniteDesertChunkScript: Script = preload("res://arenas/infinite_desert/infinite_desert_chunk.gd")
+const DesertChunkLayoutScript: Script = preload("res://src/world/desert_chunk_layout.gd")
+const ChunkStreamPlannerScript: Script = preload("res://src/world/chunk_stream_planner.gd")
+const InfiniteDesertChunkScript: Script = preload("res://src/arena/infinite_desert_chunk.gd")
 
 @export var player_path: NodePath = NodePath("../Player")
 @export var world_seed: int = 424242
@@ -59,6 +59,9 @@ func get_active_coords() -> Array[Vector2i]:
 
 func get_load_queue_size() -> int:
 	return _load_queue.size()
+
+func get_world_seed() -> int:
+	return world_seed
 
 func get_current_chunk_coord() -> Vector2i:
 	return _current_center
