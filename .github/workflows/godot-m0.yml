@@ -1,13 +1,15 @@
-name: Godot M0
+name: Godot CI
 
 on:
   push:
     branches:
       - foundation/topdown-kit-evaluation
+      - docs/arena-spawn-design
   pull_request:
     branches:
       - main
       - foundation/topdown-kit-evaluation
+      - docs/pixel-style-bible
   workflow_dispatch:
 
 permissions:
@@ -36,5 +38,5 @@ jobs:
       - name: Parse and import project
         run: ./godot --headless --path . --editor --quit
 
-      - name: Run headless M0 tests
+      - name: Run headless GOGO tests
         run: ./godot --headless --path . res://tests/test_runner.tscn
