@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "logical_units": "pixels",
+  "base_direction": "right",
+  "z_order_rule": {
+    "front_when": "aim_dir.y >= -0.20",
+    "behind_when": "aim_dir.y < -0.20"
+  },
+  "weapons": {
+    "usp": {
+      "canvas": [160, 96],
+      "grip_point": [47, 58],
+      "muzzle_point": [132, 42],
+      "shell_eject_point": [82, 36],
+      "shoulder_point": null,
+      "laser_origin": null,
+      "rotation_center": [47, 58],
+      "logical_length": 92,
+      "allow_horizontal_flip": true
+    },
+    "deagle": {
+      "canvas": [160, 96],
+      "grip_point": [46, 60],
+      "muzzle_point": [139, 41],
+      "shell_eject_point": [82, 34],
+      "shoulder_point": null,
+      "laser_origin": null,
+      "rotation_center": [46, 60],
+      "logical_length": 101,
+      "allow_horizontal_flip": true
+    },
+    "ak": {
+      "canvas": [160, 96],
+      "grip_point": [68, 58],
+      "muzzle_point": [151, 40],
+      "shell_eject_point": [91, 34],
+      "shoulder_point": [26, 56],
+      "laser_origin": null,
+      "rotation_center": [68, 58],
+      "logical_length": 132,
+      "allow_horizontal_flip": true
+    },
+    "m4": {
+      "canvas": [160, 96],
+      "grip_point": [67, 58],
+      "muzzle_point": [150, 39],
+      "shell_eject_point": [93, 33],
+      "shoulder_point": [28, 56],
+      "laser_origin": null,
+      "rotation_center": [67, 58],
+      "logical_length": 128,
+      "allow_horizontal_flip": true
+    },
+    "awp": {
+      "canvas": [192, 96],
+      "grip_point": [80, 59],
+      "muzzle_point": [184, 38],
+      "shell_eject_point": [111, 32],
+      "shoulder_point": [30, 57],
+      "laser_origin": [184, 38],
+      "rotation_center": [80, 59],
+      "logical_length": 160,
+      "allow_horizontal_flip": true
+    }
+  }
+}
