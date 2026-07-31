@@ -3,7 +3,11 @@ extends Node
 const SUITES: Array[Script] = [
 	preload("res://tests/unit/test_weapon_runtime.gd"),
 	preload("res://tests/unit/test_deterministic_spread.gd"),
+	preload("res://tests/unit/test_desert_chunk_layout.gd"),
+	preload("res://tests/unit/test_chunk_stream_planner.gd"),
+	preload("res://tests/unit/test_spawn_ring_sampler.gd"),
 	preload("res://tests/integration/test_m0_scene.gd"),
+	preload("res://tests/integration/test_infinite_desert_scene.gd"),
 ]
 
 func _ready() -> void:
@@ -20,11 +24,11 @@ func _ready() -> void:
 			failures.append(str(failure))
 
 	if failures.is_empty():
-		print("M0 TESTS PASS: %d assertions" % executed)
+		print("GOGO TESTS PASS: %d assertions" % executed)
 		get_tree().quit(0)
 		return
 
-	push_error("M0 TESTS FAIL: %d failure(s)" % failures.size())
+	push_error("GOGO TESTS FAIL: %d failure(s)" % failures.size())
 	for failure: String in failures:
 		push_error(" - %s" % failure)
 	get_tree().quit(1)
