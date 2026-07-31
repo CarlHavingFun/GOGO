@@ -1,0 +1,3 @@
+asset_id,phase,category,subject,state,path,logical_canvas,pivot,frames,fps,prompt_section,status,notes,generation_canvas,direction,collision_reference,palette,negative_constraints,godot_import,reviewer,reference_source,reference_sha256,reference_rights_policy,sprite_layout,source_output,cleaned_output,qa_record,godot_evidence
+duplicate_asset,A1,weapon,fixture,base,../escape.png,160x96,grip_point,1,0,,planned,first,,right,,,,,,,,original,single,,,,
+duplicate_asset,A1,weapon,fixture,base,/absolute.png,160x96,grip_point,1,0,,planned,second,,right,,,,,,,,original,single,,,,

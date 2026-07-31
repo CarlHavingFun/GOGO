@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "current_gate": "G0",
+  "datasets": {
+    "assets": {
+      "state": "ready",
+      "path": "res://assets/asset_manifest.csv",
+      "target_gate": "G0"
+    },
+    "design_documents": {
+      "state": "ready",
+      "path": "res://design/manifest.json",
+      "target_gate": "G0"
+    },
+    "weapons": {
+      "state": "partial",
+      "path": "res://data/weapons",
+      "target_gate": "M4",
+      "expected_count": 5
+    },
+    "throwables": {
+      "state": "not_implemented",
+      "path": "res://data/throwables",
+      "target_gate": "M4",
+      "expected_count": 4
+    },
+    "characters": {
+      "state": "not_implemented",
+      "path": "res://data/characters",
+      "target_gate": "M4",
+      "expected_count": 5
+    },
+    "upgrades": {
+      "state": "not_implemented",
+      "path": "res://data/upgrades",
+      "target_gate": "M4",
+      "expected_count": 47,
+      "expected_categories": {
+        "calibration": 8,
+        "engine": 10,
+        "mutation": 9,
+        "module": 15,
+        "contract": 5
+      }
+    },
+    "enemies": {
+      "state": "not_implemented",
+      "path": "res://data/enemies",
+      "target_gate": "M4",
+      "expected_count": 14
+    },
+    "waves": {
+      "state": "not_implemented",
+      "path": "res://data/waves",
+      "target_gate": "M4",
+      "expected_range": [1, 20]
+    },
+    "unlocks": {
+      "state": "not_implemented",
+      "path": "res://data/unlocks",
+      "target_gate": "M5"
+    }
+  }
+}

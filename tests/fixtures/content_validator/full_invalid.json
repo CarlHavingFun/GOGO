@@ -1,0 +1,50 @@
+{
+  "config": {
+    "schema_version": 1,
+    "current_gate": "G0",
+    "datasets": {
+      "assets": {"state": "not_implemented", "path": "res://tests/fixtures/content_validator/absent_assets.csv", "target_gate": "G0"},
+      "design_documents": {"state": "not_implemented", "path": "res://tests/fixtures/content_validator/absent_design.json", "target_gate": "G0"},
+      "weapons": {"state": "ready", "path": "res://tests/fixtures/content_validator/weapons", "target_gate": "M4", "expected_count": 5},
+      "throwables": {"state": "ready", "path": "res://tests/fixtures/content_validator/throwables", "target_gate": "M4", "expected_count": 4},
+      "characters": {"state": "ready", "path": "res://tests/fixtures/content_validator/characters", "target_gate": "M4", "expected_count": 5},
+      "upgrades": {
+        "state": "ready",
+        "path": "res://tests/fixtures/content_validator/upgrades",
+        "target_gate": "M4",
+        "expected_count": 47,
+        "expected_categories": {"calibration": 8, "engine": 10, "mutation": 9, "module": 15, "contract": 5}
+      },
+      "enemies": {"state": "ready", "path": "res://tests/fixtures/content_validator/enemies", "target_gate": "M4", "expected_count": 14},
+      "waves": {"state": "ready", "path": "res://tests/fixtures/content_validator/waves", "target_gate": "M4", "expected_range": [1, 20]},
+      "unlocks": {"state": "ready", "path": "res://tests/fixtures/content_validator/unlocks", "target_gate": "M5"}
+    }
+  },
+  "design_documents": {"manifest": {}, "actual_markdown_files": [], "records": []},
+  "assets": {"header": [], "rows": []},
+  "gameplay": {
+    "weapons": [
+      {"id": "wpn_invalid", "character_id": "char_missing", "upgrade_id": "upgrade_missing", "damage": 0, "shots_per_second": 1, "magazine_size": 1, "reload_duration": 1, "range_pixels": 100}
+    ],
+    "throwables": [
+      {"id": "throw_invalid", "weapon_id": "wpn_missing"}
+    ],
+    "characters": [
+      {"id": "char_01", "display_name": "Character 01", "module_ids": ["upgrade_module_01", "upgrade_module_01"]}
+    ],
+    "upgrades": [
+      {"id": "upgrade_mut_01", "category": "mutation", "weapon_id": "wpn_missing", "conflicts": ["upgrade_mut_01"]},
+      {"id": "upgrade_module_01", "category": "module", "character_id": "char_other", "conflicts": []}
+    ],
+    "enemies": [
+      {"id": "enemy_01"}
+    ],
+    "waves": [
+      {"id": "wave_01", "wave": 21, "enemy_id": "enemy_missing", "enemy_ids": ["enemy_missing"]}
+    ],
+    "unlocks": [
+      {"id": "unlock_root", "requires_unlock_ids": ["unlock_top"]},
+      {"id": "unlock_top", "requires_unlock_ids": ["unlock_root"]}
+    ]
+  }
+}

@@ -1,105 +1,189 @@
 extends RefCounted
 
-const WeaponDefinitionScript: Script = preload("res://systems/combat/weapon_definition.gd")
-const WeaponRuntimeScript: Script = preload("res://systems/combat/weapon_runtime.gd")
-
-var test_count: int = 0
-var _failures: Array[String] = []
+const AK_PATH: String = "res://data/weapons/ak.tres"
+const RUNTIME_PATH: String = "res://src/combat/weapon_runtime.gd"
+const WEAPON_DEF_PATH: String = "res://data/weapons/weapon_def.gd"
+const FLOAT_TOLERANCE: float = 0.0001
 
 func run() -> Array[String]:
-	_test_magazine_and_cooldown()
-	_test_reload_completion()
-	_test_non_empty_reload_can_be_cancelled_by_fire()
-	_test_empty_reload_cannot_be_cancelled_by_fire()
-	_test_definition_validation()
-	return _failures
+	var failures: Array[String] = []
+	var weapon_def_script: Script = load(WEAPON_DEF_PATH) as Script
+	var runtime_script: Script = load(RUNTIME_PATH) as Script
+	var ak_definition: Resource = load(AK_PATH) as Resource
+	if weapon_def_script == null:
+		failures.append("WeaponDef script is required for weapon runtime behavior tests.")
+	if runtime_script == null:
+		failures.append("WeaponRuntime script is required for weapon runtime behavior tests.")
+	elif not runtime_script.can_instantiate():
+		failures.append("WeaponRuntime script must parse and instantiate for behavior tests.")
+	if ak_definition == null:
+		failures.append("AK weapon Resource is required for weapon runtime behavior tests.")
+	if not failures.is_empty():
+		return failures
+	_test_ak_design_values(ak_definition, failures)
+	_test_successful_fire_consumes_one_round(runtime_script, ak_definition, failures)
+	_test_manual_reload_refills_a_partially_empty_magazine(runtime_script, ak_definition, failures)
+	_test_empty_magazine_starts_automatic_reload(runtime_script, ak_definition, failures)
+	_test_firing_cancels_reload_when_magazine_is_not_empty(runtime_script, ak_definition, failures)
+	_test_firing_does_not_cancel_reload_when_magazine_is_empty(runtime_script, ak_definition, failures)
+	_test_recoil_is_clamped_and_recovers_during_tick(runtime_script, ak_definition, failures)
+	_test_continuous_fire_expands_spread_and_stopping_recovers(runtime_script, ak_definition, failures)
+	_test_reload_progress_and_source_are_observable(runtime_script, ak_definition, failures)
+	return failures
 
-func _make_definition() -> Variant:
-	var definition: Variant = WeaponDefinitionScript.new()
-	definition.id = &"ak_m0"
-	definition.display_name = "AK"
-	definition.base_damage = 24.0
-	definition.shots_per_sec = 8.5
-	definition.magazine_size = 30
-	definition.reload_sec = 2.2
-	definition.base_spread_deg = 1.4
-	definition.move_spread_deg = 1.3
-	definition.recoil_per_shot = 9.0
-	definition.recoil_recovery_per_sec = 38.0
-	definition.recoil_spread_factor = 1.0
-	definition.max_range_px = 1400.0
-	return definition
+func _test_ak_design_values(ak_definition: Resource, failures: Array[String]) -> void:
+	var expected_tags: Array[StringName] = [&"rifle", &"automatic", &"recoil"]
+	_assert_equal(ak_definition.get(&"id"), &"wpn_ak", "AK must use the canonical gameplay ID.", failures)
+	_assert_equal(ak_definition.get(&"tags"), expected_tags, "AK tags must be stable.", failures)
+	_assert_equal(ak_definition.get(&"pierce_count"), 0, "M0 AK must preserve zero base pierce.", failures)
+	_assert_equal(ak_definition.get(&"pierce_decay"), 1.0, "Zero-pierce AK must use a neutral decay.", failures)
+	_assert_equal(ak_definition.get(&"weakpoint_multiplier"), 1.0, "M0 behavior must remain unchanged.", failures)
+	_assert_true(not _has_property(ak_definition, &"base_damage"), "WeaponDef must not expose base_damage beside damage.", failures)
+	_assert_true(not _has_property(ak_definition, &"reload_sec"), "WeaponDef must not expose reload_sec beside reload_duration.", failures)
+	_assert_true(not _has_property(ak_definition, &"max_range_px"), "WeaponDef must not expose max_range_px beside range_pixels.", failures)
+	_assert_equal(ak_definition.get("damage"), 24, "AK damage must be 24.", failures)
+	_assert_equal(ak_definition.get("shots_per_second"), 8.5, "AK fire rate must be 8.5 shots/sec.", failures)
+	_assert_equal(ak_definition.get("magazine_size"), 30, "AK magazine must hold 30 rounds.", failures)
+	_assert_equal(ak_definition.get("reload_duration"), 2.20, "AK reload must take 2.20 sec.", failures)
+	_assert_equal(ak_definition.get("base_spread_degrees"), 1.4, "AK base spread must be 1.4 degrees.", failures)
+	_assert_equal(ak_definition.get("moving_spread_addition_degrees"), 1.3, "AK moving spread addition must be 1.3 degrees.", failures)
+	_assert_equal(ak_definition.get("recoil_per_shot"), 9.0, "AK recoil must be 9 per shot.", failures)
+	_assert_equal(ak_definition.get("recoil_recovery_per_second"), 38.0, "AK recoil recovery must be 38 per sec.", failures)
+	_assert_equal(ak_definition.get("recoil_spread_coefficient"), 2.4, "AK recoil spread coefficient must be 2.4.", failures)
+	_assert_equal(ak_definition.get("maximum_recoil_bias_degrees"), 4.5, "AK maximum recoil bias must be 4.5 degrees.", failures)
+	_assert_equal(ak_definition.get("maximum_visual_kick_pixels"), 12.0, "AK maximum visual kick must be 12px.", failures)
+	_assert_equal(ak_definition.get("range_pixels"), 1400.0, "AK range must be 1400px.", failures)
 
-func _make_runtime() -> Variant:
-	var runtime: Variant = WeaponRuntimeScript.new()
-	runtime.configure(_make_definition())
-	return runtime
+func _test_successful_fire_consumes_one_round(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	_assert_true(runtime.call("try_fire"), "A loaded AK should fire.", failures)
+	_assert_equal(runtime.get("current_ammo"), 29, "A successful shot must consume exactly one round.", failures)
 
-func _test_magazine_and_cooldown() -> void:
-	var runtime: Variant = _make_runtime()
-	_assert_true(runtime.fire(), "first shot should fire")
-	_assert_equal(runtime.ammo_in_mag, 29, "first shot should consume one round")
-	_assert_false(runtime.fire(), "cooldown should reject an immediate second shot")
-	runtime.tick(1.0 / 8.5)
-	_assert_true(runtime.fire(), "shot should fire when cooldown has elapsed")
+func _test_manual_reload_refills_a_partially_empty_magazine(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	runtime.call("try_fire")
+	_assert_true(runtime.call("start_reload"), "A partially empty magazine should allow manual reload.", failures)
+	_assert_true(runtime.get("is_reloading"), "Manual reload should enter the reloading state.", failures)
+	runtime.call("tick", 2.19)
+	_assert_equal(runtime.get("current_ammo"), 29, "Reload should not complete before 2.20 sec.", failures)
+	runtime.call("tick", 0.01)
+	_assert_equal(runtime.get("current_ammo"), 30, "Completed reload must refill the magazine.", failures)
+	_assert_true(not runtime.get("is_reloading"), "Completed reload should leave the reloading state.", failures)
 
-	for index: int in range(28):
-		runtime.tick(1.0 / 8.5)
-		_assert_true(runtime.fire(), "shot %d should fire before magazine is empty" % (index + 3))
-	_assert_equal(runtime.ammo_in_mag, 0, "thirty shots should empty the magazine")
-	runtime.tick(1.0 / 8.5)
-	_assert_false(runtime.fire(), "the thirty-first shot should be rejected")
+func _test_empty_magazine_starts_automatic_reload(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	_fire_entire_magazine(runtime, failures)
+	_assert_true(runtime.get("is_reloading"), "The final successful shot should immediately start automatic reload.", failures)
+	runtime.call("tick", 2.20)
+	_assert_equal(runtime.get("current_ammo"), 30, "Automatic reload must refill the magazine.", failures)
 
-func _test_reload_completion() -> void:
-	var runtime: Variant = _make_runtime()
-	_assert_true(runtime.fire(), "setup shot should fire")
-	_assert_true(runtime.start_reload(), "partial magazine should start reload")
-	runtime.tick(2.19)
-	_assert_true(runtime.is_reloading, "reload should still be active before duration")
-	_assert_equal(runtime.ammo_in_mag, 29, "reload must not add rounds early")
-	runtime.tick(0.01)
-	_assert_false(runtime.is_reloading, "reload should complete at duration")
-	_assert_equal(runtime.ammo_in_mag, 30, "completed reload should refill magazine")
+func _test_firing_cancels_reload_when_magazine_is_not_empty(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	runtime.call("try_fire")
+	runtime.call("tick", 1.0 / 8.5)
+	runtime.call("start_reload")
+	_assert_true(runtime.call("try_fire"), "Fire should be allowed while cancelling a non-empty reload.", failures)
+	_assert_true(not runtime.get("is_reloading"), "A fire request should cancel reload when rounds remain.", failures)
+	_assert_equal(runtime.get("current_ammo"), 28, "The cancelling fire request must still consume one round.", failures)
 
-func _test_non_empty_reload_can_be_cancelled_by_fire() -> void:
-	var runtime: Variant = _make_runtime()
-	_assert_true(runtime.fire(), "setup shot should fire")
-	runtime.tick(1.0)
-	_assert_true(runtime.start_reload(), "partial magazine should start reload")
-	_assert_true(runtime.cancel_reload_for_shot(), "non-empty reload should be cancellable")
-	_assert_false(runtime.is_reloading, "cancelled reload should stop")
-	_assert_equal(runtime.ammo_in_mag, 29, "cancel must not grant ammunition")
-	_assert_true(runtime.fire(), "a shot may fire after cancelling the reload")
-	_assert_equal(runtime.ammo_in_mag, 28, "cancelled reload shot should consume ammunition")
+func _test_firing_does_not_cancel_reload_when_magazine_is_empty(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	_fire_entire_magazine(runtime, failures)
+	runtime.call("try_fire")
+	runtime.call("tick", 0.25)
+	_assert_true(not runtime.call("try_fire"), "An empty reloading magazine cannot fire.", failures)
+	_assert_true(runtime.get("is_reloading"), "A fire request must not cancel reload when the magazine is empty.", failures)
 
-func _test_empty_reload_cannot_be_cancelled_by_fire() -> void:
-	var runtime: Variant = _make_runtime()
-	for _index: int in range(30):
-		_assert_true(runtime.fire(), "setup should empty magazine")
-		runtime.tick(1.0 / 8.5)
-	_assert_true(runtime.start_reload(), "empty magazine should start reload")
-	_assert_false(runtime.cancel_reload_for_shot(), "empty reload should not be cancellable")
-	_assert_true(runtime.is_reloading, "empty reload must remain active")
-	_assert_false(runtime.fire(), "empty reload cannot fire")
+func _test_recoil_is_clamped_and_recovers_during_tick(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	_fire_entire_magazine(runtime, failures)
+	_assert_true(runtime.get("recoil") <= 100.0, "Recoil must never exceed 100.", failures)
+	runtime.call("tick", 100.0)
+	_assert_float_equal(runtime.get("recoil"), 0.0, "Recoil should recover to zero during tick.", failures)
 
-func _test_definition_validation() -> void:
-	var definition: Variant = _make_definition()
-	_assert_equal(definition.validate().size(), 0, "valid AK definition should pass validation")
-	definition.shots_per_sec = 0.0
-	definition.magazine_size = 0
-	definition.reload_sec = -1.0
-	definition.max_range_px = 0.0
-	_assert_equal(definition.validate().size(), 4, "invalid timing, magazine and range fields should be reported")
+func _test_continuous_fire_expands_spread_and_stopping_recovers(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var runtime: Variant = runtime_script.new(ak_definition)
+	if not runtime.has_method("get_current_spread_degrees"):
+		failures.append("WeaponRuntime must expose final spread for combat and presentation.")
+		return
+	var base_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	for shot_index: int in range(3):
+		_assert_true(runtime.call("try_fire"), "Short burst shot %d should fire." % (shot_index + 1), failures)
+		if shot_index < 2:
+			runtime.call("tick", 1.0 / 8.5)
+	var short_burst_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	for shot_index: int in range(9):
+		runtime.call("tick", 1.0 / 8.5)
+		_assert_true(runtime.call("try_fire"), "Continuous-fire shot %d should fire." % (shot_index + 4), failures)
+	var continuous_fire_spread: float = runtime.call("get_current_spread_degrees", false) as float
+	_assert_float_equal(base_spread, 1.4, "Base spread should match the AK definition at zero recoil.", failures)
+	_assert_true(short_burst_spread > base_spread, "A short burst should begin building spread.", failures)
+	_assert_true(
+		continuous_fire_spread > short_burst_spread * 1.35,
+		"Continuous fire must spread substantially wider than a short burst.",
+		failures
+	)
+	runtime.call("tick", 3.0)
+	_assert_float_equal(
+		runtime.call("get_current_spread_degrees", false) as float,
+		base_spread,
+		"Stopping fire must recover final spread to the base value.",
+		failures
+	)
 
-func _assert_true(value: bool, message: String) -> void:
-	test_count += 1
-	if not value:
-		_failures.append(message)
+func _test_reload_progress_and_source_are_observable(runtime_script: Script, ak_definition: Resource, failures: Array[String]) -> void:
+	var manual_runtime: Variant = runtime_script.new(ak_definition)
+	if not manual_runtime.has_method("get_reload_progress"):
+		failures.append("WeaponRuntime must expose reload progress.")
+		return
+	_assert_true(manual_runtime.call("try_fire"), "A round should be spent before manual reload.", failures)
+	_assert_true(manual_runtime.call("start_reload"), "Manual reload should start.", failures)
+	_assert_true(not (manual_runtime.get("reload_is_automatic") as bool), "R reload must be marked manual.", failures)
+	_assert_float_equal(
+		manual_runtime.call("get_reload_progress") as float,
+		0.0,
+		"Reload progress must start at zero.",
+		failures
+	)
+	manual_runtime.call("tick", 1.1)
+	_assert_float_equal(
+		manual_runtime.call("get_reload_progress") as float,
+		0.5,
+		"Reload progress must expose elapsed reload fraction.",
+		failures
+	)
+	var automatic_runtime: Variant = runtime_script.new(ak_definition)
+	_fire_entire_magazine(automatic_runtime, failures)
+	_assert_true(automatic_runtime.get("reload_is_automatic") as bool, "The last round must mark reload automatic.", failures)
+	automatic_runtime.call("tick", 0.55)
+	_assert_float_equal(
+		automatic_runtime.call("get_reload_progress") as float,
+		0.25,
+		"Automatic reload progress must be observable.",
+		failures
+	)
 
-func _assert_false(value: bool, message: String) -> void:
-	_assert_true(not value, message)
+func _fire_entire_magazine(runtime: Variant, failures: Array[String]) -> void:
+	for shot_index: int in range(30):
+		_assert_true(runtime.call("try_fire"), "Shot %d of a full magazine should fire." % (shot_index + 1), failures)
+		if shot_index < 29:
+			runtime.call("tick", 1.0 / 8.5)
+	_assert_equal(runtime.get("current_ammo"), 0, "Thirty shots must empty the AK magazine.", failures)
 
-func _assert_equal(actual: Variant, expected: Variant, message: String) -> void:
-	test_count += 1
+func _assert_true(condition: bool, message: String, failures: Array[String]) -> void:
+	if not condition:
+		failures.append(message)
+
+func _has_property(object: Object, property_name: StringName) -> bool:
+	for property: Dictionary in object.get_property_list():
+		if StringName(property.get("name", "")) == property_name:
+			return true
+	return false
+
+func _assert_equal(actual: Variant, expected: Variant, message: String, failures: Array[String]) -> void:
 	if actual != expected:
-		_failures.append("%s (expected=%s actual=%s)" % [message, expected, actual])
+		failures.append("%s Expected %s, got %s." % [message, str(expected), str(actual)])
+
+func _assert_float_equal(actual: float, expected: float, message: String, failures: Array[String]) -> void:
+	if absf(actual - expected) > FLOAT_TOLERANCE:
+		failures.append("%s Expected %.4f, got %.4f." % [message, expected, actual])

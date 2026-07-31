@@ -1,73 +1,124 @@
 {
+  "schema_version": 2,
   "project": "GOGO",
-  "version": "0.1",
-  "date": "2026-07-29",
+  "design_version": "0.3",
+  "date": "2026-07-30",
+  "coverage": {
+    "root": "docs/design",
+    "include": [
+      "*.md"
+    ],
+    "exclude": []
+  },
   "documents": [
     {
       "file": "README_设计文档索引.md",
-      "bytes": 4506,
-      "sha256": "c1f49ee307945ba07126ae6452457319d6a46022a650513a06cdb648d7120b32"
+      "role": "authoritative",
+      "bytes": 7742,
+      "sha256": "33b3182fe06c52dea51dc1e33557878c87d3b6db061d39412617aa8988b2a873"
     },
     {
       "file": "00_产品宪法.md",
-      "bytes": 11656,
-      "sha256": "254e2f1bcb6ee535a14f455636584e1c3a6578e35fea9d5195fa428a66067e8f"
+      "role": "authoritative",
+      "bytes": 15352,
+      "sha256": "7b2127998ec32433d2b80fe0fe50394a47a1ad7d56d152ca27259c94230234ca"
     },
     {
       "file": "01_核心循环与20波流程.md",
-      "bytes": 13957,
-      "sha256": "08ae1f438934f73ad116e5056272465fed64b1307da8417f141e00d9598bc478"
+      "role": "authoritative",
+      "bytes": 15295,
+      "sha256": "7b13406a540bf707baeb6c68b52e581d1a99a92971d21df4bf3627e45ec9fd72"
     },
     {
       "file": "02_战斗与枪械系统.md",
-      "bytes": 14220,
-      "sha256": "1622856a7a2ada1d708cc0ade14472e14e931837852a9ed71b8d281b34d2f03a"
+      "role": "authoritative",
+      "bytes": 14133,
+      "sha256": "b29af577df3f8a8526d8a6ec8b7e281228f6724a54f93542194e6a541730c472"
     },
     {
       "file": "03_投掷物与状态系统.md",
-      "bytes": 12485,
-      "sha256": "8bc4241caad86e4e53206d0fbc83becd124cd995e2838488ec666930d2358df0"
+      "role": "authoritative",
+      "bytes": 13144,
+      "sha256": "ab36c6ab8d90625282269c10fcfba63ed70a0b601ed9baf692d359f435068ee3"
     },
     {
       "file": "04_角色与流派设计.md",
-      "bytes": 24419,
-      "sha256": "3208d99b6f336df992e0f4474a85531d5fce7117b92ae8495265b48621c8792c"
+      "role": "authoritative",
+      "bytes": 27241,
+      "sha256": "73dfeaa128860b326b234a2cfd9bcbf06a96cab3c4a935393b9228687dc5ccfd"
     },
     {
       "file": "05_技能与奖励池.md",
-      "bytes": 20610,
-      "sha256": "6a2d5dee45526790f818077c4c2359e529794d3ce96d89b3e90bda44496154da"
+      "role": "authoritative",
+      "bytes": 21892,
+      "sha256": "0de855e7ae197a6252ff1e04b53cc87efce11455f92850f8408ccf7331d8b113"
     },
     {
       "file": "06_怪物与波次设计.md",
-      "bytes": 17772,
-      "sha256": "7ce54a2cc7b16822d64ec54c9a3d42cb837a77ead056583299596c214313cc27"
+      "role": "authoritative",
+      "bytes": 18852,
+      "sha256": "f6604ed9ccf38c66ddac45328f7c22e6122542c669a3c1002e6c58e1429f7e76"
     },
     {
       "file": "07_经济与局外成长.md",
-      "bytes": 12377,
-      "sha256": "cbfa5eeb4f2189ca2ce6277486284485f63160a3479ba9052fad5f0ae4ccff4d"
+      "role": "authoritative",
+      "bytes": 12924,
+      "sha256": "c233d7238bed561df6261101dc5edd425d32259566906d86cfc656bf93eaabb2"
     },
     {
       "file": "08_UI美术音频规范.md",
-      "bytes": 16668,
-      "sha256": "178de202fc9f46201b3931a5514d7d1a87d55476fe796f697f9748566336cf5d"
+      "role": "authoritative",
+      "bytes": 18594,
+      "sha256": "0235cbb0ac9dfa1f7004dceba7b4f58b4f6cd0d2caf9d63119e94e8f709b6f7d"
     },
     {
       "file": "09_Godot技术架构.md",
-      "bytes": 19764,
-      "sha256": "3e5341fb68fcf41769a84eaedd98744e07d1bf69041ed1f57a94445f8a6feee9"
+      "role": "authoritative",
+      "bytes": 20723,
+      "sha256": "346bfec6e75080e7dc60f96dce94325e139938d1abcbdbfeed5de8a67d91555e"
     },
     {
       "file": "10_平衡测试规范.md",
-      "bytes": 14744,
-      "sha256": "4d79653a9f83f20fd3bd100dc192e373f1533cad129e5e40e9071ad2a6af7ebb"
+      "role": "authoritative",
+      "bytes": 14892,
+      "sha256": "2b15968c4ca99473493e706cc50d87e751965f3c4a913889ebf9f8885fdf4f35"
     },
     {
       "file": "11_开发里程碑.md",
-      "bytes": 17756,
-      "sha256": "39a314fd099952c3113b341d326e024ccd3de18722f98c9406a587651ea2336a"
+      "role": "authoritative",
+      "bytes": 19796,
+      "sha256": "8badd4218b8ef11726cd706d16962e1f13502f933848237e789d5565a75a21de"
+    },
+    {
+      "file": "12_游戏性与素材Review.md",
+      "role": "authoritative",
+      "bytes": 12759,
+      "sha256": "46e58d0fd09cabeceb9fc8286b9b027a09214560f7f24fa0555c439c7e42765b"
+    },
+    {
+      "file": "13_素材生产管线与提示词.md",
+      "role": "authoritative",
+      "bytes": 31491,
+      "sha256": "424d192a626fabec2e6e9af7afc0d8bf35a46fa81d38ad95eb289cf949bb8490"
+    },
+    {
+      "file": "兼容性要求规范.md",
+      "role": "auxiliary",
+      "bytes": 425,
+      "sha256": "0efb7a02092dd12e76a1abb07c29b2009f850e52558daf376b2069c47637af01"
+    },
+    {
+      "file": "GOGO_完整设计文档合集_v0.1.md",
+      "role": "historical",
+      "bytes": 201645,
+      "sha256": "50210c784c1d89bbda74d07ee74d842ae90d5fc3012e090449a8cca9b18d3cc6"
     }
   ],
-  "upgrade_count": 47
+  "catalog_targets": {
+    "upgrade_count": 47,
+    "wave_range": [
+      1,
+      20
+    ]
+  }
 }
