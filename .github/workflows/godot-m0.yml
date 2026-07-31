@@ -40,3 +40,12 @@ jobs:
 
       - name: Run headless GOGO tests
         run: timeout 30s ./godot --headless --path . res://tests/test_runner.tscn
+
+      - name: Run infinite desert smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 30s ./godot --headless --path . --quit-after 600 2>&1 | tee smoke.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid call|Failed loading resource" smoke.log; then
+            exit 1
+          fi
