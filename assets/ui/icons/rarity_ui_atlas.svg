@@ -1,42 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="64" viewBox="0 0 256 64" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
+<!-- common frame -->
 <rect x="3" y="3" width="58" height="58" fill="none" stroke="#1C1E24" stroke-width="2"/>
 <rect x="5" y="5" width="54" height="54" fill="none" stroke="#E8EDF5" stroke-width="2"/>
 <circle cx="13" cy="51" r="4" fill="#E8EDF5" stroke="#1C1E24" stroke-width="1"/>
-<circle cx="51" cy="13" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
-<circle cx="51" cy="13" r="5" fill="none" stroke="#E8EDF5" stroke-width="1"/>
-<line x1="51" y1="13" x2="51" y2="10" stroke="#E8EDF5" stroke-width="1"/>
-<line x1="51" y1="13" x2="54" y2="14" stroke="#E8EDF5" stroke-width="1"/>
-<rect x="50" y="4" width="2" height="2" fill="#E8EDF5"/>
+<!-- rare frame -->
 <rect x="67" y="3" width="58" height="58" fill="none" stroke="#1C1E24" stroke-width="2"/>
 <rect x="69" y="5" width="54" height="54" fill="none" stroke="#4F9DFF" stroke-width="2"/>
 <polygon points="77,46 82,51 77,56 72,51" fill="#4F9DFF" stroke="#1C1E24" stroke-width="1"/>
-<circle cx="115" cy="13" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
-<circle cx="115" cy="13" r="5" fill="none" stroke="#4F9DFF" stroke-width="1"/>
-<line x1="115" y1="13" x2="115" y2="10" stroke="#E8EDF5" stroke-width="1"/>
-<line x1="115" y1="13" x2="118" y2="14" stroke="#E8EDF5" stroke-width="1"/>
-<rect x="114" y="4" width="2" height="2" fill="#4F9DFF"/>
+<!-- epic frame -->
 <rect x="131" y="3" width="58" height="58" fill="none" stroke="#1C1E24" stroke-width="2"/>
 <rect x="133" y="5" width="54" height="54" fill="none" stroke="#A970FF" stroke-width="2"/>
 <rect x="136" y="8" width="48" height="48" fill="none" stroke="#A970FF" stroke-width="1"/>
 <polygon points="137,47 145,47 147,51 145,55 137,55 135,51" fill="#A970FF" stroke="#1C1E24" stroke-width="1"/>
-<circle cx="179" cy="13" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
-<circle cx="179" cy="13" r="5" fill="none" stroke="#A970FF" stroke-width="1"/>
-<line x1="179" y1="13" x2="179" y2="10" stroke="#E8EDF5" stroke-width="1"/>
-<line x1="179" y1="13" x2="182" y2="14" stroke="#E8EDF5" stroke-width="1"/>
-<rect x="178" y="4" width="2" height="2" fill="#A970FF"/>
 <rect x="138" y="10" width="2" height="2" fill="#D4B6FF"/>
 <rect x="180" y="48" width="3" height="3" fill="#D4B6FF"/>
+<!-- legendary frame -->
 <rect x="195" y="3" width="58" height="58" fill="none" stroke="#1C1E24" stroke-width="2"/>
 <rect x="197" y="5" width="54" height="54" fill="none" stroke="#F7C948" stroke-width="2"/>
 <rect x="200" y="8" width="48" height="48" fill="none" stroke="#FFF0A6" stroke-width="1"/>
 <polygon points="205,45 207,49 211,51 207,53 205,57 203,53 199,51 203,49" fill="#F7C948" stroke="#1C1E24" stroke-width="1"/>
-<circle cx="243" cy="13" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
-<circle cx="243" cy="13" r="5" fill="none" stroke="#F7C948" stroke-width="1"/>
-<line x1="243" y1="13" x2="243" y2="10" stroke="#E8EDF5" stroke-width="1"/>
-<line x1="243" y1="13" x2="246" y2="14" stroke="#E8EDF5" stroke-width="1"/>
-<rect x="242" y="4" width="2" height="2" fill="#F7C948"/>
 <line x1="224" y1="1" x2="224" y2="6" stroke="#F7C948" stroke-width="2"/>
 <line x1="250" y1="32" x2="255" y2="32" stroke="#F7C948" stroke-width="2"/>
 <line x1="224" y1="58" x2="224" y2="63" stroke="#F7C948" stroke-width="2"/>
 <line x1="193" y1="32" x2="198" y2="32" stroke="#F7C948" stroke-width="2"/>
+
+<!-- common timer overlay -->
+<circle cx="51" cy="77" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
+<circle cx="51" cy="77" r="5" fill="none" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="51" y1="77" x2="51" y2="74" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="51" y1="77" x2="54" y2="78" stroke="#E8EDF5" stroke-width="1"/>
+<rect x="50" y="68" width="2" height="2" fill="#E8EDF5"/>
+<!-- rare timer overlay -->
+<circle cx="115" cy="77" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
+<circle cx="115" cy="77" r="5" fill="none" stroke="#4F9DFF" stroke-width="1"/>
+<line x1="115" y1="77" x2="115" y2="74" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="115" y1="77" x2="118" y2="78" stroke="#E8EDF5" stroke-width="1"/>
+<rect x="114" y="68" width="2" height="2" fill="#4F9DFF"/>
+<!-- epic timer overlay -->
+<circle cx="179" cy="77" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
+<circle cx="179" cy="77" r="5" fill="none" stroke="#A970FF" stroke-width="1"/>
+<line x1="179" y1="77" x2="179" y2="74" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="179" y1="77" x2="182" y2="78" stroke="#E8EDF5" stroke-width="1"/>
+<rect x="178" y="68" width="2" height="2" fill="#A970FF"/>
+<!-- legendary timer overlay -->
+<circle cx="243" cy="77" r="7" fill="#2B2F38" stroke="#1C1E24" stroke-width="2"/>
+<circle cx="243" cy="77" r="5" fill="none" stroke="#F7C948" stroke-width="1"/>
+<line x1="243" y1="77" x2="243" y2="74" stroke="#E8EDF5" stroke-width="1"/>
+<line x1="243" y1="77" x2="246" y2="78" stroke="#E8EDF5" stroke-width="1"/>
+<rect x="242" y="68" width="2" height="2" fill="#F7C948"/>
 </svg>
