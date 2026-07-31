@@ -18,6 +18,100 @@ const DESIGN_FIXTURE_SHA256: String = "559f2884854bd2335f027facfa19a2b4e181a44b3
 const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
 const XIAODONG_REFERENCE_SHA256: String = "fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52"
 const CORRUPT_REFERENCE_SHA256: String = "d20f6ffd523b78a86cd2f916fa34af5d1918d75f7b142237c752ad6b254213ab"
+const XIAODONG_A5_DELIVERABLES: Dictionary = {
+	"character_xiaodong_idle": {
+		"category": "character", "state": "idle",
+		"path": "assets/characters/xiaodong/character_xiaodong_idle.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "4", "fps": "5", "direction": "down_right",
+		"sprite_layout": "horizontal_4x1",
+	},
+	"character_xiaodong_walk": {
+		"category": "character", "state": "walk",
+		"path": "assets/characters/xiaodong/character_xiaodong_walk.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "64", "fps": "10", "direction": "eight_way",
+		"sprite_layout": "grid_8x8",
+	},
+	"character_xiaodong_hit": {
+		"category": "character", "state": "hit",
+		"path": "assets/characters/xiaodong/character_xiaodong_hit.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "2", "fps": "12", "direction": "down_right",
+		"sprite_layout": "horizontal_2x1",
+	},
+	"character_xiaodong_death": {
+		"category": "character", "state": "death",
+		"path": "assets/characters/xiaodong/character_xiaodong_death.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "6", "fps": "10", "direction": "down_right",
+		"sprite_layout": "horizontal_6x1",
+	},
+	"character_xiaodong_skill_breakin": {
+		"category": "character", "state": "skill_breakin",
+		"path": "assets/characters/xiaodong/character_xiaodong_skill_breakin.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "6", "fps": "12", "direction": "down_right",
+		"sprite_layout": "horizontal_6x1",
+	},
+	"portrait_xiaodong": {
+		"category": "ui", "state": "portrait",
+		"path": "assets/ui/portraits/portrait_xiaodong.png",
+		"logical_canvas": "128x128", "pivot": "center",
+		"frames": "1", "fps": "0", "direction": "none",
+		"sprite_layout": "single",
+	},
+	"character_xiaodong_grip_pistol_back": {
+		"category": "character", "state": "grip_pistol_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_pistol_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_pistol_front": {
+		"category": "character", "state": "grip_pistol_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_pistol_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_rifle_back": {
+		"category": "character", "state": "grip_rifle_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_rifle_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_rifle_front": {
+		"category": "character", "state": "grip_rifle_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_rifle_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_sniper_back": {
+		"category": "character", "state": "grip_sniper_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_sniper_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_sniper_front": {
+		"category": "character", "state": "grip_sniper_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_sniper_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+}
+const XIAODONG_STATIC_DIRECTIONAL_BANK_IDS: Array[String] = [
+	"character_xiaodong_grip_pistol_back",
+	"character_xiaodong_grip_pistol_front",
+	"character_xiaodong_grip_rifle_back",
+	"character_xiaodong_grip_rifle_front",
+	"character_xiaodong_grip_sniper_back",
+	"character_xiaodong_grip_sniper_front",
+]
 const ASSET_HEADER: PackedStringArray = [
 	"asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
 	"pivot", "frames", "fps", "prompt_section", "status", "notes",
@@ -65,6 +159,7 @@ func run() -> Array[String]:
 	_test_doc_rules_cover_paths_registration_bytes_and_hashes(failures)
 	_test_ast001_requires_exact_header_and_full_rows(failures)
 	_test_ast002_checks_ids_enums_dimensions_timing_and_paths(failures)
+	_test_ast002_allows_only_exact_static_directional_banks(failures)
 	_test_ast003_enforces_the_status_evidence_matrix(failures)
 	_test_ast004_requires_generated_prompt_constraints(failures)
 	_test_ast005_requires_the_xiaodong_a5_deliverable_set(failures)
@@ -97,8 +192,8 @@ func _test_loader_normalizes_real_json_csv_and_markdown(failures: Array[String])
 	var header: PackedStringArray = assets.get("header", PackedStringArray())
 	var rows: Array = assets.get("rows", [])
 	_assert_equal(header, ASSET_HEADER, "The loader must preserve the exact 28-column header.", failures)
-	_assert_equal(rows.size(), 6, "The valid CSV fixture must produce the six planned A5 Xiaodong records.", failures)
-	if rows.size() == 6:
+	_assert_equal(rows.size(), 12, "The valid CSV fixture must produce the twelve planned A5 Xiaodong records.", failures)
+	if rows.size() == 12:
 		var row: Dictionary = rows[0]
 		_assert_equal(row.get("notes"), "comma, preserved", "FileAccess CSV parsing must preserve a quoted comma.", failures)
 		_assert_equal(row.get("source_line"), 2, "The first CSV data record must preserve physical line 2.", failures)
@@ -590,6 +685,38 @@ func _test_ast002_checks_ids_enums_dimensions_timing_and_paths(failures: Array[S
 	_assert_true(_issue_count(report, "AST002") >= 9, "AST002 must independently validate uniqueness, snake_case, enums, canvas, frames/FPS, and safe paths.", failures)
 	_assert_true(_has_issue(report, "AST002", "Bad-ID", "accepted_for_concept"), "accepted_for_concept must be invalid in state and status.", failures)
 
+func _test_ast002_allows_only_exact_static_directional_banks(failures: Array[String]) -> void:
+	var allowed: Dictionary = _base_snapshot()
+	var bank: Dictionary = _valid_asset_row()
+	bank["asset_id"] = "character_xiaodong_grip_pistol_back"
+	bank["frames"] = "8"
+	bank["fps"] = "0"
+	bank["direction"] = "eight_way"
+	bank["sprite_layout"] = "horizontal_8x1"
+	allowed["assets"]["rows"] = [bank]
+	_assert_equal(
+		_issue_count(_validate(allowed, &"g0"), "AST002"),
+		0,
+		"An eight-direction static bank must allow eight frames at zero FPS.",
+		failures
+	)
+
+	for mutation: Dictionary in [
+		{"field": "frames", "value": "7"},
+		{"field": "direction", "value": "down_right"},
+		{"field": "sprite_layout", "value": "grid_8x1"},
+		{"field": "asset_id", "value": "unregistered_static_bank"},
+	]:
+		var rejected: Dictionary = _base_snapshot()
+		var invalid_bank: Dictionary = bank.duplicate(true)
+		invalid_bank[mutation["field"]] = mutation["value"]
+		rejected["assets"]["rows"] = [invalid_bank]
+		_assert_true(
+			_has_issue(_validate(rejected, &"g0"), "AST002", String(invalid_bank["asset_id"]), "FPS"),
+			"Zero-FPS multi-frame rows must match the exact static directional-bank shape.",
+			failures
+		)
+
 func _test_ast003_enforces_the_status_evidence_matrix(failures: Array[String]) -> void:
 	var snapshot: Dictionary = _base_snapshot()
 	var generated: Dictionary = _valid_asset_row()
@@ -645,26 +772,17 @@ func _test_ast004_requires_generated_prompt_constraints(failures: Array[String])
 	_assert_equal(_issue_count(report, "AST004"), 2, "AST004 must require prompt and negative constraints for generated-or-later assets.", failures)
 
 func _test_ast005_requires_the_xiaodong_a5_deliverable_set(failures: Array[String]) -> void:
-	var empty_report: Dictionary = _validate(_base_snapshot(), &"g0")
-	_assert_true(_has_issue(empty_report, "AST005", "xiaodong", "exactly"), "AST005 must reject a ready asset catalog with zero Xiaodong A5 rows.", failures)
-	var snapshot: Dictionary = _base_snapshot()
-	var states: Array[String] = ["idle", "walk", "hit", "death", "skill_breakin", "idle"]
-	var rows: Array[Dictionary] = []
-	for state_index: int in range(states.size()):
-		var row: Dictionary = _valid_asset_row()
-		row["asset_id"] = "xiaodong_%s_%d" % [states[state_index], state_index]
-		row["phase"] = "A5"
-		row["category"] = "character" if states[state_index] != "portrait" else "ui"
-		row["subject"] = "xiaodong"
-		row["state"] = states[state_index]
-		row["source_line"] = state_index + 2
-		rows.append(row)
-	snapshot["assets"]["rows"] = rows
-	var report: Dictionary = _validate(snapshot, &"g0")
-	_assert_true(_has_issue(report, "AST005", "xiaodong", "exactly"), "AST005 must reject duplicate/missing A5 Xiaodong deliverables.", failures)
-	rows[5]["state"] = "portrait"
-	var complete_report: Dictionary = _validate(snapshot, &"g0")
-	_assert_equal(_issue_count(complete_report, "AST005"), 0, "AST005 must accept exactly idle/walk/hit/death/skill_breakin/portrait.", failures)
+	var complete: Dictionary = _base_snapshot()
+	complete["assets"]["rows"] = _xiaodong_a5_rows()
+	_assert_equal(_issue_count(_validate(complete, &"g0"), "AST005"), 0, "The exact twelve-item Xiaodong A5 plan must pass.", failures)
+
+	var missing: Dictionary = complete.duplicate(true)
+	missing["assets"]["rows"].remove_at(0)
+	_assert_true(_has_issue(_validate(missing, &"g0"), "AST005", "xiaodong", "exact"), "One missing asset ID must fail AST005.", failures)
+
+	var wrong_contract: Dictionary = complete.duplicate(true)
+	wrong_contract["assets"]["rows"][0]["path"] = "assets/wrong.png"
+	_assert_true(_has_issue(_validate(wrong_contract, &"g0"), "AST005", "xiaodong", "contract"), "A matching ID with a wrong field must fail AST005.", failures)
 
 func _test_ast006_requires_three_way_xiaodong_reference_consistency(failures: Array[String]) -> void:
 	var binary_mismatch: Dictionary = _base_snapshot()
@@ -711,6 +829,19 @@ func _test_ast006_requires_three_way_xiaodong_reference_consistency(failures: Ar
 	_assert_true(
 		_has_issue(_validate(manifest_mismatch, &"g0"), "AST006", "xiaodong_reference", "integrity"),
 		"AST006 must reject Xiaodong A5 CSV path/SHA/R2 tuple mismatches.",
+		failures
+	)
+
+	var grip_reference_mismatch: Dictionary = _base_snapshot()
+	grip_reference_mismatch["assets"]["rows"] = _xiaodong_a5_rows()
+	for row_value: Variant in grip_reference_mismatch["assets"]["rows"]:
+		var grip_row: Dictionary = row_value
+		if grip_row.get("asset_id") == "character_xiaodong_grip_sniper_front":
+			grip_row["reference_rights_policy"] = "original"
+			break
+	_assert_true(
+		_has_issue(_validate(grip_reference_mismatch, &"g0"), "AST006", "xiaodong_reference", "R2"),
+		"AST006 must validate the fixed R2 tuple on grip rows too.",
 		failures
 	)
 
@@ -1190,20 +1321,26 @@ func _valid_xiaodong_governance() -> Dictionary:
 	}
 
 func _xiaodong_a5_rows() -> Array[Dictionary]:
-	var states: Array[String] = ["idle", "walk", "hit", "death", "skill_breakin", "portrait"]
 	var rows: Array[Dictionary] = []
-	for state_index: int in range(states.size()):
+	var asset_ids: Array[String] = []
+	for asset_id_value: Variant in XIAODONG_A5_DELIVERABLES.keys():
+		asset_ids.append(String(asset_id_value))
+	asset_ids.sort()
+	for asset_index: int in range(asset_ids.size()):
+		var asset_id: String = asset_ids[asset_index]
+		var expected: Dictionary = XIAODONG_A5_DELIVERABLES[asset_id]
 		var row: Dictionary = _valid_asset_row()
-		row["asset_id"] = "xiaodong_%s" % states[state_index]
+		row["asset_id"] = asset_id
 		row["phase"] = "A5"
-		row["category"] = "ui" if states[state_index] == "portrait" else "character"
 		row["subject"] = "xiaodong"
-		row["state"] = states[state_index]
+		for field_value: Variant in expected.keys():
+			var field: String = String(field_value)
+			row[field] = expected[field]
 		row["status"] = "planned"
 		row["reference_source"] = XIAODONG_REFERENCE_PATH
 		row["reference_sha256"] = XIAODONG_REFERENCE_SHA256
 		row["reference_rights_policy"] = "R2"
-		row["source_line"] = state_index + 2
+		row["source_line"] = asset_index + 2
 		rows.append(row)
 	return rows
 

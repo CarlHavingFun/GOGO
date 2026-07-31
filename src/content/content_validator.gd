@@ -31,7 +31,100 @@ const ASSET_CATEGORIES: Array[String] = [
 ]
 const ASSET_STATUSES: Array[String] = ["planned", "generated", "cleaned", "approved", "in_game", "rejected"]
 const GENERATED_OR_LATER: Array[String] = ["generated", "cleaned", "approved", "in_game", "rejected"]
-const XIAODONG_A5_STATES: Array[String] = ["idle", "walk", "hit", "death", "skill_breakin", "portrait"]
+const XIAODONG_A5_DELIVERABLES: Dictionary = {
+	"character_xiaodong_idle": {
+		"category": "character", "state": "idle",
+		"path": "assets/characters/xiaodong/character_xiaodong_idle.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "4", "fps": "5", "direction": "down_right",
+		"sprite_layout": "horizontal_4x1",
+	},
+	"character_xiaodong_walk": {
+		"category": "character", "state": "walk",
+		"path": "assets/characters/xiaodong/character_xiaodong_walk.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "64", "fps": "10", "direction": "eight_way",
+		"sprite_layout": "grid_8x8",
+	},
+	"character_xiaodong_hit": {
+		"category": "character", "state": "hit",
+		"path": "assets/characters/xiaodong/character_xiaodong_hit.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "2", "fps": "12", "direction": "down_right",
+		"sprite_layout": "horizontal_2x1",
+	},
+	"character_xiaodong_death": {
+		"category": "character", "state": "death",
+		"path": "assets/characters/xiaodong/character_xiaodong_death.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "6", "fps": "10", "direction": "down_right",
+		"sprite_layout": "horizontal_6x1",
+	},
+	"character_xiaodong_skill_breakin": {
+		"category": "character", "state": "skill_breakin",
+		"path": "assets/characters/xiaodong/character_xiaodong_skill_breakin.png",
+		"logical_canvas": "128x128", "pivot": "feet_center",
+		"frames": "6", "fps": "12", "direction": "down_right",
+		"sprite_layout": "horizontal_6x1",
+	},
+	"portrait_xiaodong": {
+		"category": "ui", "state": "portrait",
+		"path": "assets/ui/portraits/portrait_xiaodong.png",
+		"logical_canvas": "128x128", "pivot": "center",
+		"frames": "1", "fps": "0", "direction": "none",
+		"sprite_layout": "single",
+	},
+	"character_xiaodong_grip_pistol_back": {
+		"category": "character", "state": "grip_pistol_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_pistol_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_pistol_front": {
+		"category": "character", "state": "grip_pistol_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_pistol_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_rifle_back": {
+		"category": "character", "state": "grip_rifle_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_rifle_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_rifle_front": {
+		"category": "character", "state": "grip_rifle_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_rifle_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_sniper_back": {
+		"category": "character", "state": "grip_sniper_back",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_sniper_back.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+	"character_xiaodong_grip_sniper_front": {
+		"category": "character", "state": "grip_sniper_front",
+		"path": "assets/characters/xiaodong/grips/character_xiaodong_grip_sniper_front.png",
+		"logical_canvas": "128x128", "pivot": "shoulder_pivot",
+		"frames": "8", "fps": "0", "direction": "eight_way",
+		"sprite_layout": "horizontal_8x1",
+	},
+}
+const XIAODONG_STATIC_DIRECTIONAL_BANK_IDS: Array[String] = [
+	"character_xiaodong_grip_pistol_back",
+	"character_xiaodong_grip_pistol_front",
+	"character_xiaodong_grip_rifle_back",
+	"character_xiaodong_grip_rifle_front",
+	"character_xiaodong_grip_sniper_back",
+	"character_xiaodong_grip_sniper_front",
+]
 const XIAODONG_DESIGN_CARD_PATH: String = "assets/characters/xiaodong/character_xiaodong_design.md"
 const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
 const XIAODONG_REFERENCE_BYTES: int = 77554
@@ -233,7 +326,9 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 	if header != ASSET_HEADER:
 		issues.append(_issue("ERROR", "AST001", dataset_config["path"], 1, "asset_manifest", "Asset manifest must use the exact 28-column header.", ASSET_HEADER, header, target_gate))
 	var seen_ids: Dictionary = {}
-	var xiaodong_states: Array[String] = []
+	var xiaodong_rows: Dictionary = {}
+	var xiaodong_row_count: int = 0
+	var duplicate_xiaodong_ids: Array[String] = []
 	for row_value: Variant in rows:
 		if not row_value is Dictionary:
 			continue
@@ -247,14 +342,53 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 		_validate_asset_evidence(row, source_path, source_line, target_gate, issues)
 		_validate_asset_prompt(row, source_path, source_line, target_gate, issues)
 		if row.get("phase") == "A5" and row.get("subject") == "xiaodong":
-			xiaodong_states.append(row.get("state", ""))
-	var sorted_actual: Array[String] = xiaodong_states.duplicate()
-	var sorted_expected: Array[String] = XIAODONG_A5_STATES.duplicate()
-	sorted_actual.sort()
-	sorted_expected.sort()
-	var has_exact_xiaodong_rows: bool = sorted_actual == sorted_expected
+			xiaodong_row_count += 1
+			var xiaodong_asset_id: String = String(row.get("asset_id", ""))
+			if xiaodong_rows.has(xiaodong_asset_id):
+				duplicate_xiaodong_ids.append(xiaodong_asset_id)
+			xiaodong_rows[xiaodong_asset_id] = row
+
+	var expected_ids: Array[String] = []
+	for expected_id_value: Variant in XIAODONG_A5_DELIVERABLES.keys():
+		expected_ids.append(String(expected_id_value))
+	expected_ids.sort()
+	var actual_ids: Array[String] = []
+	for actual_id_value: Variant in xiaodong_rows.keys():
+		actual_ids.append(String(actual_id_value))
+	actual_ids.sort()
+
+	var contract_reasons: Array[String] = []
+	if xiaodong_row_count != 12:
+		contract_reasons.append("row count differs: expected=12 actual=%d" % xiaodong_row_count)
+	if not duplicate_xiaodong_ids.is_empty():
+		duplicate_xiaodong_ids.sort()
+		contract_reasons.append("duplicate asset IDs: %s" % duplicate_xiaodong_ids)
+	if actual_ids != expected_ids:
+		contract_reasons.append("asset IDs differ: expected=%s actual=%s" % [expected_ids, actual_ids])
+	for expected_id: String in expected_ids:
+		if not xiaodong_rows.has(expected_id):
+			continue
+		var expected: Dictionary = XIAODONG_A5_DELIVERABLES[expected_id]
+		var actual: Dictionary = xiaodong_rows[expected_id]
+		for field_value: Variant in expected.keys():
+			var field: String = String(field_value)
+			if actual.get(field) != expected[field]:
+				contract_reasons.append("%s %s differs: expected=%s actual=%s" % [
+					expected_id, field, expected[field], actual.get(field),
+				])
+	var has_exact_xiaodong_rows: bool = contract_reasons.is_empty()
 	if not has_exact_xiaodong_rows:
-		issues.append(_issue("ERROR", "AST005", dataset_config["path"], 0, "xiaodong", "A5 Xiaodong must have exactly idle/walk/hit/death/skill_breakin/portrait.", sorted_expected, sorted_actual, target_gate))
+		issues.append(_issue(
+			"ERROR",
+			"AST005",
+			dataset_config["path"],
+			0,
+			"xiaodong",
+			"A5 Xiaodong must match the exact twelve-item deliverable contract.",
+			XIAODONG_A5_DELIVERABLES,
+			contract_reasons,
+			target_gate
+		))
 	_validate_xiaodong_governance(
 		assets.get("governance", null),
 		rows,
@@ -301,12 +435,34 @@ static func _validate_asset_schema(
 	var fps: float = fps_text.to_float() if fps_text.is_valid_float() else -1.0
 	if frames < 1:
 		issues.append(_issue("ERROR", "AST002", source_path, source_line, asset_id, "Asset frames must be a positive integer.", ">= 1", row.get("frames"), target_gate))
-	if fps < 0.0 or (frames == 1 and not is_zero_approx(fps)) or (frames > 1 and fps <= 0.0):
-		issues.append(_issue("ERROR", "AST002", source_path, source_line, asset_id, "Asset FPS must be zero for one frame and positive for animation.", "0 iff frames=1", row.get("fps"), target_gate))
+	var valid_single_frame: bool = frames == 1 and is_zero_approx(fps)
+	var valid_animation: bool = frames > 1 and fps > 0.0
+	var valid_static_bank: bool = _is_static_directional_bank(row, frames, fps)
+	if fps < 0.0 or not (valid_single_frame or valid_animation or valid_static_bank):
+		issues.append(_issue(
+			"ERROR",
+			"AST002",
+			source_path,
+			source_line,
+			asset_id,
+			"Asset FPS must describe a single frame, animation, or exact eight-direction static bank.",
+			"1 frame/0 FPS, animation/>0 FPS, or 8-frame eight_way horizontal_8x1/0 FPS",
+			{"frames": row.get("frames"), "fps": row.get("fps")},
+			target_gate
+		))
 	for path_field: String in ["path", "source_output", "cleaned_output", "qa_record", "godot_evidence"]:
 		var path: String = row.get(path_field, "")
 		if not path.is_empty() and not _is_safe_relative_path(path):
 			issues.append(_issue("ERROR", "AST002", source_path, source_line, asset_id, "%s must be a safe project-relative path." % path_field, "safe relative path", path, target_gate))
+
+static func _is_static_directional_bank(row: Dictionary, frames: int, fps: float) -> bool:
+	return (
+		row.get("asset_id") in XIAODONG_STATIC_DIRECTIONAL_BANK_IDS
+		and frames == 8
+		and is_zero_approx(fps)
+		and row.get("direction") == "eight_way"
+		and row.get("sprite_layout") == "horizontal_8x1"
+	)
 
 static func _validate_asset_evidence(
 	row: Dictionary,
