@@ -1,0 +1,4 @@
+interface:
+  display_name: "GOGO Agent Sprite Forge"
+  short_description: "GOGO asset production wrapper for Agent Sprite Forge"
+  default_prompt: "Use the GOGO Agent Sprite Forge pipeline for this asset task."
