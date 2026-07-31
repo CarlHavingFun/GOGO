@@ -39,4 +39,4 @@ jobs:
         run: ./godot --headless --path . --editor --quit
 
       - name: Run headless GOGO tests
-        run: ./godot --headless --path . res://tests/test_runner.tscn
+        run: timeout 30s ./godot --headless --path . res://tests/test_runner.tscn
