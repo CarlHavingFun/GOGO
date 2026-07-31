@@ -1,8 +1,12 @@
 asset_id,asset_role,category,subject,rarity,atlas_path,atlas_rect,rarity_overlay,has_timer_badge,status,notes
-ui_rarity_common,ui_overlay,rarity,common,common,assets/ui/icons/rarity_ui_atlas.svg,"0,0,64,64",common,false,concept_ready,white circle code
-ui_rarity_rare,ui_overlay,rarity,rare,rare,assets/ui/icons/rarity_ui_atlas.svg,"64,0,64,64",rare,false,concept_ready,blue diamond code
-ui_rarity_epic,ui_overlay,rarity,epic,epic,assets/ui/icons/rarity_ui_atlas.svg,"128,0,64,64",epic,false,concept_ready,purple hex code
-ui_rarity_legendary,ui_overlay,rarity,legendary,legendary,assets/ui/icons/rarity_ui_atlas.svg,"192,0,64,64",legendary,false,concept_ready,gold star code
+ui_rarity_common_frame,ui_overlay,rarity,common_frame,common,assets/ui/icons/rarity_ui_atlas.svg,"0,0,64,64",common,false,concept_ready,white circle code
+ui_rarity_rare_frame,ui_overlay,rarity,rare_frame,rare,assets/ui/icons/rarity_ui_atlas.svg,"64,0,64,64",rare,false,concept_ready,blue diamond code
+ui_rarity_epic_frame,ui_overlay,rarity,epic_frame,epic,assets/ui/icons/rarity_ui_atlas.svg,"128,0,64,64",epic,false,concept_ready,purple hex code
+ui_rarity_legendary_frame,ui_overlay,rarity,legendary_frame,legendary,assets/ui/icons/rarity_ui_atlas.svg,"192,0,64,64",legendary,false,concept_ready,gold star code
+ui_timer_common,ui_overlay,timer,common_timer,common,assets/ui/icons/rarity_ui_atlas.svg,"0,64,64,64",common,true,concept_ready,optional timer overlay; compose separately
+ui_timer_rare,ui_overlay,timer,rare_timer,rare,assets/ui/icons/rarity_ui_atlas.svg,"64,64,64,64",rare,true,concept_ready,optional timer overlay; compose separately
+ui_timer_epic,ui_overlay,timer,epic_timer,epic,assets/ui/icons/rarity_ui_atlas.svg,"128,64,64,64",epic,true,concept_ready,optional timer overlay; compose separately
+ui_timer_legendary,ui_overlay,timer,legendary_timer,legendary,assets/ui/icons/rarity_ui_atlas.svg,"192,64,64,64",legendary,true,concept_ready,optional timer overlay; compose separately
 ui_weapon_usp,ui_icon,weapon,usp,common,assets/ui/icons/weapon_throwable_atlas.svg,"0,0,64,64",common,false,concept_ready,neutral icon; rarity overlay separate
 ui_weapon_deagle,ui_icon,weapon,deagle,rare,assets/ui/icons/weapon_throwable_atlas.svg,"64,0,64,64",rare,false,concept_ready,neutral icon; rarity overlay separate
 ui_weapon_ak,ui_icon,weapon,ak,rare,assets/ui/icons/weapon_throwable_atlas.svg,"128,0,64,64",rare,false,concept_ready,neutral icon; rarity overlay separate
