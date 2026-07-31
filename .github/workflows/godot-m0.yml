@@ -3,13 +3,14 @@ name: Godot CI
 on:
   push:
     branches:
-      - foundation/topdown-kit-evaluation
-      - docs/arena-spawn-design
+      - main
+      - codex/**
+      - foundation/**
+      - docs/**
+      - verification/**
   pull_request:
     branches:
       - main
-      - foundation/topdown-kit-evaluation
-      - docs/pixel-style-bible
   workflow_dispatch:
 
 permissions:
@@ -38,14 +39,30 @@ jobs:
       - name: Parse and import project
         run: ./godot --headless --path . --editor --quit
 
-      - name: Run headless GOGO tests
-        run: timeout 30s ./godot --headless --path . res://tests/test_runner.tscn
+      - name: Run M0 and infinite-world regression tests
+        run: timeout 60s ./godot --headless --audio-driver Dummy --path . --script res://tests/test_runner.gd
+
+      - name: Validate content G0 gate
+        run: |
+          set -euo pipefail
+          timeout 30s ./godot --headless --audio-driver Dummy --path . --script res://tools/validate_content.gd -- --profile=g0 --format=jsonl | tee content-g0.log
+          grep -F '"gate_status":"pass"' content-g0.log
+
+      - name: Confirm full catalog remains not ready
+        shell: bash
+        run: |
+          set +e
+          timeout 30s ./godot --headless --audio-driver Dummy --path . --script res://tools/validate_content.gd -- --profile=full --format=jsonl | tee content-full.log
+          status=${PIPESTATUS[0]}
+          set -e
+          test "$status" -eq 1
+          grep -F '"catalog_status":"not_ready"' content-full.log
 
       - name: Run infinite desert smoke
         shell: bash
         run: |
           set -euo pipefail
-          timeout 30s ./godot --headless --path . --quit-after 600 2>&1 | tee smoke.log
+          timeout 30s ./godot --headless --audio-driver Dummy --path . --quit-after 600 2>&1 | tee smoke.log
           if grep -E "SCRIPT ERROR|Parse Error|Invalid call|Failed loading resource" smoke.log; then
             exit 1
           fi
