@@ -14,7 +14,7 @@
   "asset_stage": "A5",
   "artifact_state": "generated",
   "decision": "accepted_for_concept",
-  "candidate_count": 2,
+  "candidate_count": 24,
   "reference": {
     "path": "assets/source/references/characters/xiaodong/reference_01.jpg",
     "bytes": 77554,
@@ -62,6 +62,19 @@ R2 不是最终发布所需肖像权或第三方授权的结论。M5 人工门�
 
 项目转译固定为紧凑 Q 版像素游戏角色、俯视 3/4、默认朝向右下、完整全身、双脚清晰、主体占画布约 72%～82%、左上光、深色像素外轮廓和有限色板。角色帧与头像逻辑画布均为 `128×128`。角色身体始终空手，武器为独立节点和独立资产。
 
+> **历史批次边界（2026-07-31 single-direction C0 batch contract）**：本卡中
+> “默认朝向右下”、四帧 `walk` 数量及面向右下的 walk QA，记录的是当日
+> 单方向 `se` 的全臂 pose guide 合同和历史证据，并非八方向生产完成声明。
+> `walk_001–004` 都是 `se` 全臂 pose guide；它们不计入后续 modular
+> 八方向工作的 32 个 body layer、48 个 arm layer、24 个 grip group、96 个
+> 合成 QA，也不进入之后的视觉门。
+>
+> 已批准的后续权威为
+> `docs/superpowers/specs/2026-07-31-gogo-xiaodong-eight-direction-grip-design.md`。
+> 该补充规格在其列明的方向、walk 数量与握持分层范围内优先于本历史合同；
+> 新的 modular 八方向 C0 另行生产与验收，不能把本批次的单方向图改写为其
+> 交付物。
+
 ## 3. 母版优先工作流
 
 ```text
@@ -81,6 +94,9 @@ Godot 实机验收
 第一轮只允许生成视觉母版；母版未通过，不继续生成头像或动作。第二轮以已通过概念审查的母版和原始参考图共同约束头像与动作关键姿势，并让每个动作单独生成。第三轮只针对已识别问题返工，不用无目标反复生成替代问题诊断。
 
 ### C0 数量
+
+以下数量是上述 2026-07-31 单方向批次的历史合同，不是后来八方向补充规格
+的当前生产计数。尤其 `walk` 的 4 张均为 `se` 全臂 pose guide。
 
 | C0 项目 | 数量 | 验证目标 |
 |---|---:|---|
@@ -148,9 +164,31 @@ R2 排除项不得追加 `no real-person portrait`。生成工具若支持负面
 | 候选 ID | 生成时间 | 生成工具 | 源文件相对路径 | 参考图 ID / SHA-256 | 目标动作 / 帧用途 | QA | 决定 / 理由 | 清理结果 / manifest |
 |---|---|---|---|---|---|---|---|---|
 | `xiaodong_c0_master_001` | `2026-07-31T02:40:53+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_001_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版 / 身份与项目转译 | 独立复核 `9/10`，QA5 失败 | `revise` / 朝向近正面偏左，不是右下 | `not_cleaned` / 无正式 manifest 条目 |
-| `xiaodong_c0_master_002` | `2026-07-31T02:54:02+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版定向修订 / 身份与项目转译 | 代理预检 `10/10`，独立 QA5 通过 | `accepted_for_concept` / 用户明确回复“批准002” | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_master_002` | `2026-07-31T02:54:02+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/master/xiaodong_c0_master_002_source.png` | `reference_01` / `fa61d571bc7a78a297703c0174ab4d435413def09d478223b1f5f7df06738d52` | 视觉母版定向修订 / 身份与项目转译 | 代理预检 `10/10`，独立 QA5 通过 | `accepted_for_concept` / 用户明确回复“批准002” | `assets/source/cleaned/c0/xiaodong/master/xiaodong_c0_master_002_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_portrait_001` | `2026-07-31T09:09:59+0800` | Codex built-in `image_gen`（模型名未暴露） | `assets/source/generated/c0/xiaodong/portrait/xiaodong_c0_portrait_001_source.png` | 同上 | 头像母版 / 小尺寸脸部识别 | mapped `10/10`，见 7.1；头像锚点与 128 可读性通过 | `accepted_for_concept` / 发型、脸部关系和气质稳定 | `assets/source/cleaned/c0/xiaodong/portrait/xiaodong_c0_portrait_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_idle_001` | `2026-07-31T09:12:17+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_001_source.png` | 同上 | `idle` / 中性呼吸起点 | `10/10`，动作与锚点通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_idle_002` | `2026-07-31T09:14:20+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_002_source.png` | 同上 | `idle` / 轻微吸气尝试 | 基础 `10/10`，足部叠帧失败 | `revise` / 前脚约漂移 2 个逻辑像素 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_idle_003` | `2026-07-31T09:20:16+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_003_source.png` | 同上 | `idle` / 足部定向修订 | 基础 `10/10`，足部叠帧仍失败 | `revise` / 漂移改善但未锁死 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_idle_004` | `2026-07-31T09:30:56+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_004_source.png` | 同上 | `idle` / 合成姿势引导后的吸气帧 | `10/10`，清理后下半身逐像素锁定 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/idle/xiaodong_c0_idle_004_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_001` | `2026-07-31T09:10:36+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_001_source.png` | 同上 | `walk` / 左脚前接触 | `10/10`，动作与叠帧通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_002_v01` | `2026-07-31T09:13:11+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_002_v01_source.png` | 同上 | `walk` / passing 初次尝试 | 基础 `10/10`，动作相位失败 | `revise` / 仍近似接触帧 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_002` | `2026-07-31T09:15:27+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_002_source.png` | 同上 | `walk` / 左脚承重 passing | `10/10`，动作与叠帧通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_002_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_003_v01` | `2026-07-31T09:17:30+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_v01_source.png` | 同上 | `walk` / 右脚前接触尝试 | 基础 `10/10`，交替失败 | `revise` / 与 001 同相 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_003_v02` | `2026-07-31T09:20:07+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_v02_source.png` | 同上 | `walk` / 反相定向修订 | 基础 `10/10`，交替仍失败 | `revise` / 前后脚侧未改变 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_003_v03` | `2026-07-31T09:23:15+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_v03_source.png` | 同上 | `walk` / 镜像 pose-guide 尝试 | 基础 `10/10`，交替仍失败 | `revise` / 模型忽略姿势指南 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_003_v04` | `2026-07-31T09:25:09+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_v04_source.png` | 同上 | `walk` / pose-guide edit-target 尝试 | 基础 `10/10`，交替仍失败 | `revise` / 模型恢复 001 同相 | `not_cleaned` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_003` | `2026-07-31T09:28:01+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_source.png` | 同上 | `walk` / 合成姿势 edit-target 的右脚前接触 | `10/10`，与 001 反相且右下方向保持 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_003_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_walk_004` | `2026-07-31T09:23:10+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_004_source.png` | 同上 | `walk` / 右脚承重 passing | `10/10`，动作与叠帧通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/walk/xiaodong_c0_walk_004_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_hit_001` | `2026-07-31T09:18:16+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/hit/xiaodong_c0_hit_001_source.png` | 同上 | `hit` / 短促受击 | `10/10`，非血腥受击语义通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/hit/xiaodong_c0_hit_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_hit_002` | `2026-07-31T09:21:16+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/hit/xiaodong_c0_hit_002_source.png` | 同上 | `hit` / 立即回正 | `10/10`，冲击—恢复连续 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/hit/xiaodong_c0_hit_002_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_death_001` | `2026-07-31T09:23:08+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/death/xiaodong_c0_death_001_source.png` | 同上 | `death` / 起倒 | `10/10`，失衡语义通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/death/xiaodong_c0_death_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_death_002` | `2026-07-31T09:25:08+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/death/xiaodong_c0_death_002_source.png` | 同上 | `death` / 倒伏中段 | `10/10`，路径与根部通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/death/xiaodong_c0_death_002_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_death_003` | `2026-07-31T09:26:56+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/death/xiaodong_c0_death_003_source.png` | 同上 | `death` / 完整横躺终态 | `10/10`，无血腥、无肢解 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/death/xiaodong_c0_death_003_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_skill_breakin_001` | `2026-07-31T09:09:01+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_001_source.png` | 同上 | `skill_breakin` / 蓄力 | `10/10`，动作与叠帧通过 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_001_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_skill_breakin_002` | `2026-07-31T09:10:40+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_002_source.png` | 同上 | `skill_breakin` / 爆发 | `10/10`，空手且无特效 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_002_cleaned.png` / 无正式 manifest 条目 |
+| `xiaodong_c0_skill_breakin_003` | `2026-07-31T09:13:34+0800` | 同上 | `assets/source/generated/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_003_source.png` | 同上 | `skill_breakin` / 回稳 | `10/10`，三段语义闭合 | `accepted_for_concept` | `assets/source/cleaned/c0/xiaodong/keyposes/skill_breakin/xiaodong_c0_skill_breakin_003_cleaned.png` / 无正式 manifest 条目 |
 
-当前候选记录数：`2`。
+当前候选记录数：`24`。
 
 ### 候选 `xiaodong_c0_master_001`
 
@@ -351,13 +389,69 @@ Constraints: modify only direction/three-quarter orientation; no redesign, no ne
 - 下一轮允许内容：只以候选 002 和原始参考共同约束一张头像母版与
   `idle/walk/hit/death/skill_breakin` 的批准数量关键姿势；每个动作独立
   生成，不混入武器、文字、UI、场景或技能特效；
-- cleaning result：`not_cleaned`；review preview 不是正式清理结果；
+- cleaning result：
+  `assets/source/cleaned/c0/xiaodong/master/xiaodong_c0_master_002_cleaned.png`，
+  `128×128` RGBA，`5,672` bytes，SHA-256
+  `d87c3a64fc69fa19cfe40618a16f4a4cf521645702f83575345755f384f1efd0`；
+  review preview 本身仍不是正式清理结果；
 - final manifest：无；六项 A5 正式素材继续保持 `planned`，不进入 Godot。
 
-## 7. C0 / A5 / Godot 边界
+## 7. 批准后 C0 批次、Prompt 与 QA 适用性
+
+完整逐候选 source/preview/cleaned 哈希、可重构实际完整 Prompt、输入顺序、
+R2 排除项、技术 QA、动作叠帧、revise 原因和下一步限制统一记录在：
+
+`assets/characters/xiaodong/xiaodong_c0_batch_2026-07-31.md`
+
+本卡第 6 节的 24 行候选表拥有候选 ID、动作、决定和清理结果；批次账本
+是这些行的证据附件，不另行拥有决定。两者合起来满足“每次生成后可追溯到
+参考图、完整 Prompt、QA、决定和清理结果”的记录契约。
+
+### 7.1 头像候选的 10 项适用性映射
+
+第 5 节的原始 10 项以全身动作帧为默认措辞，而第 3 节同时明确要求一张
+head-and-shoulders 头像母版。不能为了满足“全身”字面要求而给头像补出
+裤、鞋、手或脚底，也不能把未显示内容描述成直接可见证据。头像按以下
+映射评分，结果写为“5 项直接证据 + 5 项批准母版继承证据 = 10/10 mapped”：
+
+| 原 QA | `portrait_001` 证据类型 | 证据 |
+|---:|---|---|
+| 1 | 直接 | 棕色齐颌中短发、自然中分与两侧轮廓完整 |
+| 2 | 继承 + 直接 | master 002 的偏瘦身形已通过；头像颈肩比例未改变身份 |
+| 3 | 继承 + 直接 | 黑色短袖在肩胸直接可见；黑裤/黑鞋继承自同一批准母版，不伪造为可见 |
+| 4 | 直接 | 冷静克制、略疏离的脸部气质可读 |
+| 5 | 直接 | 脸、视线、鼻颏和肩轴均为右下 3/4 |
+| 6 | 资产类型映射 | 意图明确的 bust crop 内解剖完整；全身完整性由 master 002 提供 |
+| 7 | 直接 | 无 Logo、文字、赞助商和赛事元素 |
+| 8 | 继承 + 直接 | crop 内无手、武器或道具；空手身体关系继承自 master 002 |
+| 9 | 直接 | 128×128 清晰像素簇、深色轮廓和共享有限色板 |
+| 10 | 资产类型映射 | 使用 face center / shoulder midpoint；头像不使用脚底锚点 |
+
+因此头像的用途验收不是把严格全身向量假写为直接 `10/10`，而是明确的
+mapped `10/10`。后续若修改第 5 节为结构化 schema，应把 `asset_type`
+适用性写入 schema，避免再次依赖文字解释。
+
+### 7.2 横躺 death 的根部契约
+
+`death_002` 与 `death_003` 不再使用站立脚底；两张规范化 preview 的
+alpha bbox 中心均为 `(512,600)`，清理后中心约为 `(64,75)`。这就是
+横躺中段和终态的躯干/髋部 root。`death_003` 的 bbox bottom 比
+`death_002` 高，是横向终态更薄的自然结果，不表示角色上浮；若把终态
+强行下移到底边 `y=114`，反而会把 root 从约 `(64,75)` 移走并破坏连续性。
+
+### 7.3 skill_breakin 的统一序列缩放
+
+`skill_breakin` 三帧不再各自拉满 `819px`，而共同使用 frame 003 的原始
+主体高度 `948px → 819px` 缩放率。preview 高度为 `746→811→819px`，
+清理后 alpha top 为 `22→14→13` 且 bottom 都为 `114`，因此“压低重心—
+短距爆发—回稳”在固定脚底基线上可读；不靠武器、火焰、文字或特效表达。
+
+## 8. C0 / A5 / Godot 边界
 
 - C0 输出只是概念候选和动作依据，不登记为 A5 的 `generated`、`cleaned`、`approved` 或 `in_game`。
 - C0 的 `accepted_for_concept` 只表示概念审查结果，不替代正式 manifest 生命周期状态。
-- C0 决定永远不改变六项 A5 正式资产的 manifest 状态；在 M4 入口条件满足前，六项 A5 资产保持 `planned`。
+- 本历史批次发生时，A5 manifest 只有六项，且均为 `planned`。已批准补充规格
+  的当前目标是十二项（原六项加六张握持 layer）；该十二项计划状态将由 Task 4
+  落盘，不能回写成“本批次已有十二项”或提前改变任何 A5 状态。
 - C0 原始生成图不得直接进入 Godot，也不得伪装成正式 A5 Sprite Sheet。
 - 只有清理、正式验收、manifest 证据与文件位置一致的 A5 资产，才可按正式状态流继续。
