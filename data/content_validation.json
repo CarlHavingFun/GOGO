@@ -5,7 +5,17 @@
     "assets": {
       "state": "ready",
       "path": "res://assets/asset_manifest.csv",
-      "target_gate": "G0"
+      "target_gate": "G0",
+      "manifest_schema": {
+        "canonical_columns": 33,
+        "legacy_fixture_columns": 28,
+        "forge_modes": [
+          "generate2dsprite",
+          "generate2dmap",
+          "runtime_native",
+          "procedural_placeholder"
+        ]
+      }
     },
     "design_documents": {
       "state": "ready",

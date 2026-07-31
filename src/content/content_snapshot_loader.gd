@@ -6,6 +6,7 @@ const GAMEPLAY_DATASETS: Array[String] = [
 ]
 const ASSET_EVIDENCE_FIELDS: Array[String] = [
 	"path", "source_output", "cleaned_output", "qa_record", "godot_evidence",
+	"prompt_path", "pipeline_meta",
 ]
 const XIAODONG_DESIGN_CARD_PATH: String = "assets/characters/xiaodong/character_xiaodong_design.md"
 const XIAODONG_REFERENCE_PATH: String = "assets/source/references/characters/xiaodong/reference_01.jpg"
@@ -104,12 +105,7 @@ static func _load_design_documents(
 			load_issues.append(_issue("CFG001", manifest_path, 0, "design_documents", "Dataset declared not_implemented must be absent or empty."))
 		return
 	var design_directory: String = manifest_path.get_base_dir()
-	var actual_markdown_files: Array[String] = []
-	var directory: DirAccess = DirAccess.open(design_directory)
-	if directory != null:
-		for file_name: String in directory.get_files():
-			if file_name.get_extension().to_lower() == "md":
-				actual_markdown_files.append(design_directory.path_join(file_name))
+	var actual_markdown_files: Array[String] = _collect_markdown_files(design_directory)
 	actual_markdown_files.sort()
 	snapshot["design_documents"]["actual_markdown_files"] = actual_markdown_files
 	if not FileAccess.file_exists(manifest_path):
@@ -153,6 +149,20 @@ static func _load_design_documents(
 			load_issues.append(_issue("DOC001", manifest_path, 0, "manifest", "Manifest file path is missing or unsafe."))
 		records.append(record)
 	snapshot["design_documents"]["records"] = records
+
+static func _collect_markdown_files(directory_path: String) -> Array[String]:
+	var markdown_files: Array[String] = []
+	var directory: DirAccess = DirAccess.open(directory_path)
+	if directory == null:
+		return markdown_files
+	for file_name: String in directory.get_files():
+		if file_name.get_extension().to_lower() == "md":
+			markdown_files.append(directory_path.path_join(file_name))
+	for child_name: String in directory.get_directories():
+		if child_name in [".", ".."]:
+			continue
+		markdown_files.append_array(_collect_markdown_files(directory_path.path_join(child_name)))
+	return markdown_files
 
 static func _canonical_markdown_bytes(path: String) -> PackedByteArray:
 	var markdown: String = FileAccess.get_file_as_string(path)
@@ -199,10 +209,13 @@ static func _load_assets(
 		source_line += 1
 		if values.size() == 1 and values[0].is_empty() and csv_file.eof_reached():
 			break
+		var row_column_count: int = values.size()
+		if header.size() >= 33:
+			row_column_count = maxi(row_column_count, header.size())
 		var row: Dictionary = {
 			"source_path": csv_path,
 			"source_line": source_line,
-			"_column_count": values.size(),
+			"_column_count": row_column_count,
 		}
 		for column_index: int in range(header.size()):
 			row[header[column_index]] = values[column_index] if column_index < values.size() else ""

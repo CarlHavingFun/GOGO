@@ -161,6 +161,7 @@ func run() -> Array[String]:
 	_test_ast002_checks_ids_enums_dimensions_timing_and_paths(failures)
 	_test_ast002_allows_only_exact_static_directional_banks(failures)
 	_test_ast003_enforces_the_status_evidence_matrix(failures)
+	_test_ast003_enforces_the_forge_evidence_contract(failures)
 	_test_ast004_requires_generated_prompt_constraints(failures)
 	_test_ast005_requires_the_xiaodong_a5_deliverable_set(failures)
 	_test_ast006_requires_three_way_xiaodong_reference_consistency(failures)
@@ -770,6 +771,50 @@ func _test_ast004_requires_generated_prompt_constraints(failures: Array[String])
 	snapshot["assets"]["rows"] = [row]
 	var report: Dictionary = _validate(snapshot, &"g0")
 	_assert_equal(_issue_count(report, "AST004"), 2, "AST004 must require prompt and negative constraints for generated-or-later assets.", failures)
+
+func _test_ast003_enforces_the_forge_evidence_contract(failures: Array[String]) -> void:
+	var generated: Dictionary = _valid_asset_row()
+	generated["asset_id"] = "generated_forge_fixture"
+	generated["status"] = "generated"
+	generated["prompt_section"] = "fixture prompt"
+	generated["negative_constraints"] = "no edge touch"
+	generated["forge_mode"] = "generate2dsprite"
+	generated["raw_layout"] = "2x2"
+	generated["prompt_path"] = "evidence/prompt.txt"
+	generated["_prompt_path_exists"] = true
+	generated["source_output"] = "evidence/raw.png"
+	generated["_source_output_exists"] = true
+	var snapshot: Dictionary = _base_snapshot()
+	snapshot["assets"]["rows"] = [generated]
+	var valid_report: Dictionary = _validate(snapshot, &"g0")
+	_assert_equal(_issue_count(valid_report, "AST003"), 0, "A generated Forge row with required evidence must pass the new contract.", failures)
+
+	var invalid_mode: Dictionary = generated.duplicate(true)
+	invalid_mode["asset_id"] = "generated_invalid_forge_mode"
+	invalid_mode["forge_mode"] = "unknown_mode"
+	snapshot["assets"]["rows"] = [invalid_mode]
+	_assert_true(_has_issue(_validate(snapshot, &"g0"), "AST002", "generated_invalid_forge_mode", "forge_mode"), "Unsupported forge modes must fail AST002.", failures)
+
+	var cleaned: Dictionary = generated.duplicate(true)
+	cleaned["asset_id"] = "cleaned_forge_fixture"
+	cleaned["status"] = "cleaned"
+	cleaned["cleaned_output"] = "evidence/clean.png"
+	cleaned["_cleaned_output_exists"] = true
+	cleaned["path"] = "assets/fixture/clean.png"
+	cleaned["_path_exists"] = true
+	cleaned["pipeline_meta"] = "evidence/pipeline.json"
+	cleaned["_pipeline_meta_exists"] = true
+	snapshot["assets"]["rows"] = [cleaned]
+	_assert_equal(_issue_count(_validate(snapshot, &"g0"), "AST003"), 0, "A cleaned Forge row must carry pipeline metadata and cleaned output.", failures)
+
+	var character: Dictionary = generated.duplicate(true)
+	character["asset_id"] = "generated_multi_action_character"
+	character["category"] = "character"
+	character["state"] = "walk"
+	character["frames"] = "4"
+	character["scale_profile"] = ""
+	snapshot["assets"]["rows"] = [character]
+	_assert_true(_has_issue(_validate(snapshot, &"g0"), "AST003", "generated_multi_action_character", "scale_profile"), "Multi-action characters must declare a shared scale profile.", failures)
 
 func _test_ast005_requires_the_xiaodong_a5_deliverable_set(failures: Array[String]) -> void:
 	var complete: Dictionary = _base_snapshot()
@@ -1384,6 +1429,11 @@ func _valid_asset_row() -> Dictionary:
 		"reference_sha256": "",
 		"reference_rights_policy": "original",
 		"sprite_layout": "single",
+		"forge_mode": "",
+		"raw_layout": "",
+		"prompt_path": "",
+		"pipeline_meta": "",
+		"scale_profile": "",
 		"source_output": "",
 		"cleaned_output": "",
 		"qa_record": "",
@@ -1396,6 +1446,8 @@ func _valid_asset_row() -> Dictionary:
 		"_cleaned_output_exists": false,
 		"_qa_record_exists": false,
 		"_godot_evidence_exists": false,
+		"_prompt_path_exists": false,
+		"_pipeline_meta_exists": false,
 	}
 
 func _document_record(file_name: String, bytes: int, sha256: String, actual_bytes: int, actual_sha256: String, exists: bool) -> Dictionary:

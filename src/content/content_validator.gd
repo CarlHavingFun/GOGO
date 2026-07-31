@@ -22,15 +22,26 @@ const ASSET_HEADER: PackedStringArray = [
 	"generation_canvas", "direction", "collision_reference", "palette",
 	"negative_constraints", "godot_import", "reviewer", "reference_source",
 	"reference_sha256", "reference_rights_policy", "sprite_layout",
+	"forge_mode", "raw_layout", "prompt_path", "pipeline_meta", "scale_profile",
 	"source_output", "cleaned_output", "qa_record", "godot_evidence",
 ]
-const ASSET_PHASES: Array[String] = ["A1", "A2", "A3", "A4", "A5"]
+const LEGACY_ASSET_HEADER: PackedStringArray = [
+	"asset_id", "phase", "category", "subject", "state", "path", "logical_canvas",
+	"pivot", "frames", "fps", "prompt_section", "status", "notes",
+	"generation_canvas", "direction", "collision_reference", "palette",
+	"negative_constraints", "godot_import", "reviewer", "reference_source",
+	"reference_sha256", "reference_rights_policy", "sprite_layout",
+	"source_output", "cleaned_output", "qa_record", "godot_evidence",
+]
+const ASSET_PHASES: Array[String] = ["A0", "A1", "A2", "A3", "A4", "A5"]
 const ASSET_CATEGORIES: Array[String] = [
 	"arena", "boss", "character", "effect", "enemy", "pickup", "projectile",
-	"throwable", "ui", "weapon",
+	"reference", "throwable", "ui", "weapon",
 ]
 const ASSET_STATUSES: Array[String] = ["planned", "generated", "cleaned", "approved", "in_game", "rejected"]
 const GENERATED_OR_LATER: Array[String] = ["generated", "cleaned", "approved", "in_game", "rejected"]
+const FORGE_MODES: Array[String] = ["generate2dsprite", "generate2dmap", "runtime_native", "procedural_placeholder"]
+const ASSET_MANIFEST_SCHEMA_FIELDS: Array[String] = ["canonical_columns", "legacy_fixture_columns", "forge_modes"]
 const XIAODONG_A5_DELIVERABLES: Dictionary = {
 	"character_xiaodong_idle": {
 		"category": "character", "state": "idle",
@@ -238,8 +249,10 @@ static func _validate_config(
 			continue
 		var dataset_config: Dictionary = dataset_config_value
 		var required_fields: Array[String] = _required_dataset_fields(dataset_name)
-		if not _has_exact_keys(dataset_config, required_fields):
+		if not _has_required_keys_with_optional(dataset_config, required_fields, ["manifest_schema"] if dataset_name == "assets" else []):
 			issues.append(_issue("ERROR", "CFG001", "data/content_validation.json", 0, dataset_name, "Dataset must use the exact fields %s." % "/".join(required_fields), required_fields, dataset_config.keys(), "G0"))
+		if dataset_name == "assets" and dataset_config.has("manifest_schema"):
+			_validate_asset_manifest_schema(dataset_config["manifest_schema"], issues)
 		var state_value: Variant = dataset_config.get("state", null)
 		var path_value: Variant = dataset_config.get("path", null)
 		var target_gate_value: Variant = dataset_config.get("target_gate", null)
@@ -313,9 +326,12 @@ static func _validate_design_documents(documents: Dictionary, dataset_config: Di
 			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown byte count does not match manifest.", record.get("bytes"), record.get("actual_bytes"), dataset_config["target_gate"]))
 		if record.get("sha256") != record.get("actual_sha256"):
 			issues.append(_issue("ERROR", "DOC003", path, record.get("source_line", 0), file_name, "Markdown SHA-256 does not match manifest.", record.get("sha256"), record.get("actual_sha256"), dataset_config["target_gate"]))
+	var design_root: String = String(dataset_config["path"]).get_base_dir()
+	if not records.is_empty():
+		design_root = String((records[0] as Dictionary).get("source_path", design_root)).get_base_dir()
 	for actual_file_value: Variant in actual_files:
 		var actual_file: String = String(actual_file_value)
-		var file_name: String = actual_file.get_file()
+		var file_name: String = actual_file.trim_prefix(design_root + "/")
 		if not registered_files.has(file_name):
 			issues.append(_issue("ERROR", "DOC002", actual_file, 0, file_name, "Markdown file is not registered in the manifest.", "registered", "unregistered", dataset_config["target_gate"]))
 
@@ -323,8 +339,9 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 	var header: PackedStringArray = assets.get("header", PackedStringArray())
 	var rows: Array = assets.get("rows", [])
 	var target_gate: String = dataset_config["target_gate"]
-	if header != ASSET_HEADER:
-		issues.append(_issue("ERROR", "AST001", dataset_config["path"], 1, "asset_manifest", "Asset manifest must use the exact 28-column header.", ASSET_HEADER, header, target_gate))
+	var is_legacy_header: bool = header == LEGACY_ASSET_HEADER
+	if header != ASSET_HEADER and not is_legacy_header:
+		issues.append(_issue("ERROR", "AST001", dataset_config["path"], 1, "asset_manifest", "Asset manifest must use the canonical 33-column header or the supported legacy 28-column fixture header.", ASSET_HEADER, header, target_gate))
 	var seen_ids: Dictionary = {}
 	var xiaodong_rows: Dictionary = {}
 	var xiaodong_row_count: int = 0
@@ -336,11 +353,13 @@ static func _validate_assets(assets: Dictionary, dataset_config: Dictionary, iss
 		var asset_id: String = row.get("asset_id", "")
 		var source_path: String = row.get("source_path", dataset_config["path"])
 		var source_line: int = row.get("source_line", 0)
-		if row.get("_column_count", ASSET_HEADER.size()) != ASSET_HEADER.size():
-			issues.append(_issue("ERROR", "AST001", source_path, source_line, asset_id, "Asset row must contain exactly 28 columns.", 28, row.get("_column_count"), target_gate))
+		var expected_column_count: int = LEGACY_ASSET_HEADER.size() if is_legacy_header else ASSET_HEADER.size()
+		if row.get("_column_count", expected_column_count) != expected_column_count:
+			issues.append(_issue("ERROR", "AST001", source_path, source_line, asset_id, "Asset row must contain exactly %d columns." % expected_column_count, expected_column_count, row.get("_column_count"), target_gate))
 		_validate_asset_schema(row, seen_ids, source_path, source_line, target_gate, issues)
 		_validate_asset_evidence(row, source_path, source_line, target_gate, issues)
 		_validate_asset_prompt(row, source_path, source_line, target_gate, issues)
+		_validate_asset_forge_contract(row, source_path, source_line, target_gate, issues)
 		if row.get("phase") == "A5" and row.get("subject") == "xiaodong":
 			xiaodong_row_count += 1
 			var xiaodong_asset_id: String = String(row.get("asset_id", ""))
@@ -450,7 +469,7 @@ static func _validate_asset_schema(
 			{"frames": row.get("frames"), "fps": row.get("fps")},
 			target_gate
 		))
-	for path_field: String in ["path", "source_output", "cleaned_output", "qa_record", "godot_evidence"]:
+	for path_field: String in ["path", "source_output", "cleaned_output", "qa_record", "godot_evidence", "prompt_path", "pipeline_meta"]:
 		var path: String = row.get(path_field, "")
 		if not path.is_empty() and not _is_safe_relative_path(path):
 			issues.append(_issue("ERROR", "AST002", source_path, source_line, asset_id, "%s must be a safe project-relative path." % path_field, "safe relative path", path, target_gate))
@@ -474,7 +493,7 @@ static func _validate_asset_evidence(
 	var asset_id: String = row.get("asset_id", "")
 	var status: String = row.get("status", "")
 	if status == "planned":
-		for evidence_field: String in ["source_output", "cleaned_output", "qa_record", "godot_evidence"]:
+		for evidence_field: String in ["source_output", "cleaned_output", "qa_record", "godot_evidence", "prompt_path", "pipeline_meta"]:
 			if not String(row.get(evidence_field, "")).is_empty():
 				issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Planned assets must leave %s empty." % evidence_field, "", row.get(evidence_field), target_gate))
 		return
@@ -485,16 +504,16 @@ static func _validate_asset_evidence(
 		_require_existing_asset_path(row, "path", source_path, source_line, target_gate, issues)
 	if status in ["approved", "in_game"]:
 		_require_existing_asset_path(row, "qa_record", source_path, source_line, target_gate, issues)
+		_require_existing_asset_path(row, "godot_evidence", source_path, source_line, target_gate, issues)
 		if String(row.get("reviewer", "")).strip_edges().is_empty():
 			issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Approved-or-later assets require a reviewer.", "nonempty reviewer", row.get("reviewer"), target_gate))
 	if status == "in_game":
-		_require_existing_asset_path(row, "godot_evidence", source_path, source_line, target_gate, issues)
 		if String(row.get("godot_import", "")).strip_edges().is_empty():
 			issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "In-game assets require godot_import.", "nonempty godot_import", row.get("godot_import"), target_gate))
 	if status == "rejected":
 		_require_existing_asset_path(row, "qa_record", source_path, source_line, target_gate, issues)
-		if row.get("_path_exists", false):
-			issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Rejected assets must not have a stable path artifact.", false, true, target_gate))
+		if not String(row.get("path", "")).strip_edges().is_empty() or row.get("_path_exists", false):
+			issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Rejected assets must not have a stable runtime path.", "empty path", row.get("path"), target_gate))
 
 static func _require_existing_asset_path(
 	row: Dictionary,
@@ -520,6 +539,37 @@ static func _validate_asset_prompt(
 	for field: String in ["prompt_section", "negative_constraints"]:
 		if String(row.get(field, "")).strip_edges().is_empty():
 			issues.append(_issue("ERROR", "AST004", source_path, source_line, row.get("asset_id", ""), "Generated-or-later assets require nonempty %s." % field, "nonempty", row.get(field), target_gate))
+
+static func _validate_asset_forge_contract(
+	row: Dictionary,
+	source_path: String,
+	source_line: int,
+	target_gate: String,
+	issues: Array[Dictionary]
+) -> void:
+	var status: String = String(row.get("status", ""))
+	var asset_id: String = String(row.get("asset_id", ""))
+	if status == "planned":
+		return
+	if status in ["generated", "cleaned", "approved", "in_game"]:
+		for field: String in ["forge_mode", "raw_layout", "prompt_path", "source_output"]:
+			if String(row.get(field, "")).strip_edges().is_empty():
+				issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Generated-or-later assets require %s." % field, "nonempty", row.get(field), target_gate))
+		for evidence_field: String in ["prompt_path"]:
+			_require_existing_asset_path(row, evidence_field, source_path, source_line, target_gate, issues)
+		var forge_mode: String = String(row.get("forge_mode", ""))
+		if not forge_mode.is_empty() and forge_mode not in FORGE_MODES:
+			issues.append(_issue("ERROR", "AST002", source_path, source_line, asset_id, "forge_mode is not a supported generation mode.", FORGE_MODES, forge_mode, target_gate))
+	if status in ["cleaned", "approved", "in_game"] and String(row.get("pipeline_meta", "")).strip_edges().is_empty():
+		issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Cleaned-or-later assets require pipeline_meta.", "nonempty", row.get("pipeline_meta"), target_gate))
+	if status in ["cleaned", "approved", "in_game"]:
+		_require_existing_asset_path(row, "pipeline_meta", source_path, source_line, target_gate, issues)
+	if status in ["approved", "in_game"] and String(row.get("godot_evidence", "")).strip_edges().is_empty():
+		issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Approved-or-later assets require Godot evidence.", "nonempty", row.get("godot_evidence"), target_gate))
+	var frames_text: String = String(row.get("frames", ""))
+	var is_multi_frame_character: bool = row.get("category") == "character" and frames_text.is_valid_int() and frames_text.to_int() > 1 and row.get("state") not in ["portrait", "grip_pistol_back", "grip_pistol_front", "grip_rifle_back", "grip_rifle_front", "grip_sniper_back", "grip_sniper_front"]
+	if status in ["generated", "cleaned", "approved", "in_game"] and is_multi_frame_character and String(row.get("scale_profile", "")).strip_edges().is_empty():
+		issues.append(_issue("ERROR", "AST003", source_path, source_line, asset_id, "Multi-action character assets require a shared scale_profile.", "nonempty", row.get("scale_profile"), target_gate))
 
 static func _validate_xiaodong_governance(
 	governance_value: Variant,
@@ -1242,6 +1292,49 @@ static func _has_exact_keys(dictionary: Dictionary, expected_keys: Array[String]
 	sorted_expected.sort()
 	return actual_keys == sorted_expected
 
+static func _has_required_keys_with_optional(
+	dictionary: Dictionary,
+	required_keys: Array,
+	optional_keys: Array
+) -> bool:
+	var allowed_keys: Array[String] = required_keys.duplicate()
+	for optional_key: String in optional_keys:
+		if not allowed_keys.has(optional_key):
+			allowed_keys.append(optional_key)
+	var actual_keys: Array[String] = []
+	for key: Variant in dictionary:
+		actual_keys.append(String(key))
+	actual_keys.sort()
+	allowed_keys.sort()
+	for actual_key: String in actual_keys:
+		if not allowed_keys.has(actual_key):
+			return false
+	for required_key: String in required_keys:
+		if not dictionary.has(required_key):
+			return false
+	return true
+
+static func _validate_asset_manifest_schema(value: Variant, issues: Array[Dictionary]) -> void:
+	if not _asset_manifest_schema_is_valid(value):
+		issues.append(_issue(
+			"ERROR", "CFG001", "data/content_validation.json", 0, "assets.manifest_schema",
+			"Asset manifest schema must declare canonical/legacy column counts and legal Forge modes.",
+			{"canonical_columns": 33, "legacy_fixture_columns": 28, "forge_modes": FORGE_MODES},
+			value, "G0"
+		))
+
+static func _asset_manifest_schema_is_valid(value: Variant) -> bool:
+	if not value is Dictionary:
+		return false
+	var schema: Dictionary = value
+	if not _has_exact_keys(schema, ASSET_MANIFEST_SCHEMA_FIELDS):
+		return false
+	if not _is_integral_number(schema.get("canonical_columns")) or int(schema["canonical_columns"]) != ASSET_HEADER.size():
+		return false
+	if not _is_integral_number(schema.get("legacy_fixture_columns")) or int(schema["legacy_fixture_columns"]) != LEGACY_ASSET_HEADER.size():
+		return false
+	return schema.get("forge_modes") == FORGE_MODES
+
 static func _is_integral_number(value: Variant) -> bool:
 	if value is int:
 		return true
@@ -1280,7 +1373,7 @@ static func _dataset_config_is_runtime_safe(dataset_name: String, value: Variant
 	if not value is Dictionary:
 		return false
 	var dataset_config: Dictionary = value
-	if not _has_exact_keys(dataset_config, _required_dataset_fields(dataset_name)):
+	if not _has_required_keys_with_optional(dataset_config, _required_dataset_fields(dataset_name), ["manifest_schema"] if dataset_name == "assets" else []):
 		return false
 	if not dataset_config["state"] is String or String(dataset_config["state"]) not in DATASET_STATES:
 		return false
@@ -1304,6 +1397,8 @@ static func _dataset_config_is_runtime_safe(dataset_name: String, value: Variant
 			return false
 		if not _is_integral_number(range_value[0]) or not _is_integral_number(range_value[1]) or int(range_value[0]) > int(range_value[1]):
 			return false
+	if dataset_name == "assets" and dataset_config.has("manifest_schema") and not _asset_manifest_schema_is_valid(dataset_config["manifest_schema"]):
+		return false
 	return true
 
 static func _readiness_rule(dataset_name: String) -> String:
