@@ -1,27 +1,21 @@
 {
   "schema_version": 2,
   "project": "GOGO",
-  "design_version": "0.3",
-  "date": "2026-07-30",
+  "design_version": "0.4",
+  "date": "2026-07-31",
   "coverage": {
     "root": "docs/design",
     "include": [
-      "*.md"
+      "**/*.md"
     ],
     "exclude": []
   },
   "documents": [
     {
-      "file": "README_设计文档索引.md",
-      "role": "authoritative",
-      "bytes": 7742,
-      "sha256": "33b3182fe06c52dea51dc1e33557878c87d3b6db061d39412617aa8988b2a873"
-    },
-    {
       "file": "00_产品宪法.md",
       "role": "authoritative",
-      "bytes": 15352,
-      "sha256": "7b2127998ec32433d2b80fe0fe50394a47a1ad7d56d152ca27259c94230234ca"
+      "bytes": 15643,
+      "sha256": "e1dfecfb2e3f63894e598ded6d0f70eab23cc2bb4dac21f6a95c928d3fd253b6"
     },
     {
       "file": "01_核心循环与20波流程.md",
@@ -74,8 +68,8 @@
     {
       "file": "09_Godot技术架构.md",
       "role": "authoritative",
-      "bytes": 20723,
-      "sha256": "346bfec6e75080e7dc60f96dce94325e139938d1abcbdbfeed5de8a67d91555e"
+      "bytes": 20627,
+      "sha256": "9d501bcccc5105c82999f7c7c65d59dbfe6af300d3bf365c28871c08d42efe0d"
     },
     {
       "file": "10_平衡测试规范.md",
@@ -86,8 +80,14 @@
     {
       "file": "11_开发里程碑.md",
       "role": "authoritative",
-      "bytes": 19796,
-      "sha256": "8badd4218b8ef11726cd706d16962e1f13502f933848237e789d5565a75a21de"
+      "bytes": 20001,
+      "sha256": "e4e3967e42a83cd93768b74bf8c8aa22dd7fec81f6f8e7debc80ae1ca802967a"
+    },
+    {
+      "file": "11A_M0小洞大人动画与阶段推进.md",
+      "role": "authoritative",
+      "bytes": 9935,
+      "sha256": "60230fbf934ad2b9646b854d09e48f68253ec75f9b2a8aae90bf5e8450bf52f5"
     },
     {
       "file": "12_游戏性与素材Review.md",
@@ -98,20 +98,80 @@
     {
       "file": "13_素材生产管线与提示词.md",
       "role": "authoritative",
-      "bytes": 31491,
-      "sha256": "424d192a626fabec2e6e9af7afc0d8bf35a46fa81d38ad95eb289cf949bb8490"
+      "bytes": 6636,
+      "sha256": "3b7c576ad4074d1b67295235760bb9dd44cb58bde1a7d4e4415637a9b25d5261"
     },
     {
-      "file": "兼容性要求规范.md",
+      "file": "14_像素美术Style_Bible.md",
+      "role": "authoritative",
+      "bytes": 14376,
+      "sha256": "c276f522181e2e320444afd28596be52b5ff0f9efa3ce96b13a8d075aa1082a4"
+    },
+    {
+      "file": "15_武器道具与升级图标资产设计.md",
+      "role": "authoritative",
+      "bytes": 17195,
+      "sha256": "7d4dc73fb505d405e7aa610b69d3fc62a25ad59b2b46613e1aa93c2053e892d4"
+    },
+    {
+      "file": "15_竞技场与刷怪空间系统.md",
+      "role": "authoritative",
+      "bytes": 19961,
+      "sha256": "5fb26fc4b3e6926516d6224a8af70a9a7ec51876b0e3f17b7b887137721bb271"
+    },
+    {
+      "file": "16_M0小洞大人素材规范.md",
+      "role": "authoritative",
+      "bytes": 20142,
+      "sha256": "1b3dbd58f80b460ec3343a0fac0634e16d04a68ec6a374597b8053157913fe41"
+    },
+    {
+      "file": "16_无尽双尘荒原与程序化模块系统.md",
+      "role": "authoritative",
+      "bytes": 12025,
+      "sha256": "066618d709fd159e92cf9058e1b6ec3cde2efbfd37daa377f49cf275d81e1086"
+    },
+    {
+      "file": "arenas/15A_双尘旧城.md",
       "role": "auxiliary",
-      "bytes": 425,
-      "sha256": "0efb7a02092dd12e76a1abb07c29b2009f850e52558daf376b2069c47637af01"
+      "bytes": 5978,
+      "sha256": "477c2dc783ec37aa0524555db8629ce2b706f5b2bb342a2ee2c2614581818fdc"
+    },
+    {
+      "file": "arenas/15B_赤瓦小镇.md",
+      "role": "auxiliary",
+      "bytes": 5679,
+      "sha256": "be1847c270e7e8ef4cbd906ce8cf237dc7b95dfcde796519a13c7eb5843b6ffa"
+    },
+    {
+      "file": "arenas/15C_货运枢纽.md",
+      "role": "auxiliary",
+      "bytes": 6068,
+      "sha256": "8917a13c613739a8a34e637525f28ff5439b31b0a2daaeb58296536e119b72f5"
+    },
+    {
+      "file": "arenas/README_竞技场索引.md",
+      "role": "auxiliary",
+      "bytes": 1224,
+      "sha256": "cc26bb23e6229070d52b8517e7ede77344a73e897a2bba0ea9c03fb1fa18920d"
     },
     {
       "file": "GOGO_完整设计文档合集_v0.1.md",
       "role": "historical",
       "bytes": 201645,
       "sha256": "50210c784c1d89bbda74d07ee74d842ae90d5fc3012e090449a8cca9b18d3cc6"
+    },
+    {
+      "file": "README_设计文档索引.md",
+      "role": "authoritative",
+      "bytes": 3278,
+      "sha256": "6ada0957613b30a7c45f1ade4199b3a98e2a5b6fb9fa13318e9c91a444f96510"
+    },
+    {
+      "file": "兼容性要求规范.md",
+      "role": "auxiliary",
+      "bytes": 425,
+      "sha256": "0efb7a02092dd12e76a1abb07c29b2009f850e52558daf376b2069c47637af01"
     }
   ],
   "catalog_targets": {

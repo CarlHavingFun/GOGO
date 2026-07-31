@@ -1,364 +1,73 @@
 # CODEX_START｜GOGO 开发执行入口
 
-> 本文件是 Codex、其他代码 Agent 与新开发者进入仓库后的第一阅读入口。
->
-> 当前仓库以设计基线为主。不要从“把全部设计一次实现”开始；必须按可玩闭环、可验证结果和阶段门槛推进。
->
-> 当前权威路线为 G0～M5。获批决策见 `docs/superpowers/specs/2026-07-30-gogo-vnext-xiaodong-c0-design.md`；其中 R2 仅是用户指定职业选手参考图角色的窄范围视觉例外。
+这是 Codex 或新开发者进入仓库后的第一份文件。当前主线已经确定为“按 Chunk 流式延伸的无尽双尘荒原”，不要把固定竞技场重新设为默认入口。
 
----
+## 先读什么
 
-## 1. 项目一句话
+1. [设计文档索引](docs/design/README_设计文档索引.md)
+2. [产品宪法](docs/design/00_产品宪法.md)
+3. [无尽世界规格](docs/design/16_无尽双尘荒原与程序化模块系统.md)
+4. [Godot 技术架构](docs/design/09_Godot技术架构.md)
+5. [素材生产管线](docs/design/13_素材生产管线与提示词.md)
+6. [资产登记规则](assets/README.md)
+7. [主线整合记录](docs/progress/2026-07-31-mainline-integration.md)
 
-《GOGO》是一款 Godot 4.x 制作的俯视角手动瞄准动作肉鸽：玩家选择一名拥有正负天赋的原创电竞角色，携带一把主武器和两个投掷物槽，在固定竞技场中完成 20 波生存，通过枪械操作、敌人职责、受控随机升级和角色怪癖形成每局不同的构筑。
-
-## 2. 最高优先级
-
-开发取舍顺序固定为：
-
-1. 操作可读性；
-2. 射击手感与命中反馈；
-3. 构筑选择质量；
-4. 角色正负天赋的可玩性；
-5. 公平且可解释的失败；
-6. 性能与可维护性；
-7. 内容数量；
-8. 电竞梗还原程度。
-
-任何新增功能如果不能服务前六项之一，应暂缓实现。
-
----
-
-## 3. 唯一设计真相来源
-
-权威设计目录为：
+如果任务涉及角色、武器、特效、地图或动画素材，还必须读取：
 
 ```text
-docs/design/
+skills/gogo-agent-sprite-forge/SKILL.md
+skills/generate2dsprite/SKILL.md
+skills/generate2dmap/SKILL.md
 ```
 
-阅读顺序：
+## 权威关系
 
-1. `README_设计文档索引.md`
-2. `00_产品宪法.md`
-3. 当前任务对应的专项文档
-4. `09_Godot技术架构.md`
-5. `10_平衡测试规范.md`
-6. `11_开发里程碑.md`
-7. `12_游戏性与素材Review.md`
-8. `13_素材生产管线与提示词.md`
+- `docs/design/` 是唯一当前设计权威；`00_产品宪法.md` 优先级最高。
+- `docs/superpowers/specs/` 是已批准专项规格；`docs/superpowers/plans/` 是实施计划。
+- `docs/progress/` 只记录事实证据、阶段状态和整合决策。
+- `docs/design/GOGO_完整设计文档合集_v0.1.md`、兼容性资料和旧分支记录是 historical/auxiliary，不覆盖当前专项规格。
+- `assets/asset_manifest.csv` 是资产源数据；`data/content_validation.json` 是内容门禁配置。
 
-发生冲突时：
+## 当前运行时契约
 
-- `00_产品宪法.md` 优先；
-- 专项文档中的明确规则优先于概述；
-- 已记录版本的平衡调整优先于旧初始值；
-- 临时代码行为不自动成为设计规则。
+默认入口：`res://scenes/run/infinite_desert_prototype.tscn`。
 
-禁止重新创建另一套平行 GDD、`docs/00_*.md` 或内容重复的总结文档。
-
----
-
-## 4. 技术边界
-
-- 引擎：Godot 4.x 稳定版；
-- 首发平台：Windows；
-- 类型：2D 俯视角单人 PvE；
-- 输入：WASD 移动、鼠标瞄准、左键射击；
-- 武器：单主武器制；
-- 弹药：无限备弹，保留弹匣和换弹节奏；
-- 判定：优先使用射线命中与可见曳光；
-- 地图：单个固定竞技场，不做多房间探索；
-- 数据：角色、武器、升级、敌人、波次应数据驱动；
-- 随机：使用可注入种子和独立随机子流；
-- 资产：角色、武器、投掷物、子弹、特效、UI 必须独立组合。
-
-第一版不做：多人、PvP、随机迷宫、皮肤交易、复杂背包、多主武器自动攻击、真实队伍素材。角色外观默认原创；仅用户指定参考图的职业选手角色适用 `00_产品宪法.md` 的 R2，且发布选择留到 M5 人工门。
-
-### 4.1 `ContentValidator` 双 profile 契约
-
-G0 只接受以下并列结果：
+M0 回归入口：`res://scenes/run/m0_ak_lab.tscn`。
 
 ```text
-G0 gate: PASS
-Full catalog: NOT_READY
+src/world/       ChunkStreamPlanner、DesertChunkLayout、InfiniteChunkManager
+src/spawn/       SpawnRingSampler、InfiniteSpawnDirector
+src/arena/       InfiniteDesertChunk 及地形碰撞
+src/actors/      PlayerController、TrainingDummy、PrototypeChaser
+src/combat/      WeaponDefinition、WeaponRuntime、SpreadSampler、WeaponController
+src/run/         InfiniteDesertRunRoot
+src/ui/          CombatHUD、CombatCrosshair
+src/presentation CombatFeedback、AudioFeedback、PlayerWeaponView
 ```
 
-`ContentValidator --profile=g0` 只校验当前 G0 必需的文档、manifest、稳定参考、设计卡和状态契约，成功时退出 0 并报告 `gate_status=pass`。
+Chunk 契约必须保持：
 
-`ContentValidator --profile=full` 校验 47 升级、五角色、五武器、1～20 波和解锁图；真实生产数据落地前必须退出 1 并报告 `catalog_status=not_ready`。G0 中“ContentValidator 全部通过”只能表示 `g0` profile 通过，绝不表示完整目录已就绪。
+- `ChunkStreamPlanner.world_to_chunk()`、`desired_coords()`、`build_load_queue()`、`coords_to_unload()`；
+- `DesertChunkLayout.configure()`、`chunk_seed()`、`describe()`；
+- `InfiniteChunkManager.force_refresh()`、`get_active_chunk_count()`、`get_active_coords()`；
+- `SpawnRingSampler.configure()`、`sample()`；
+- `InfiniteSpawnDirector.active_enemy_count()`、`pooled_enemy_count()`。
 
----
+M0 契约必须保持：
 
-## 5. 推荐仓库结构
+- `WeaponDefinition` 保存静态数据并可 `validate()`；
+- `WeaponRuntime` 是无场景/无输入的纯运行时状态；
+- `SpreadSampler` 使用可注入 Seed 的独立随机流；
+- 玩家、武器控制、目标、反馈和 HUD 分层；
+- 命中、命中反馈、换弹和固定 Seed 散布有自动测试。
 
-首次初始化 Godot 项目时采用：
+## 验证命令
 
-```text
-GOGO/
-├── project.godot
-├── README.md
-├── CODEX_START.md
-├── docs/
-│   └── design/
-├── assets/
-│   ├── characters/
-│   ├── weapons/
-│   ├── throwables/
-│   ├── enemies/
-│   ├── projectiles/
-│   ├── effects/
-│   ├── arena/
-│   ├── ui/
-│   └── audio/
-├── data/
-│   ├── characters/
-│   ├── weapons/
-│   ├── upgrades/
-│   ├── enemies/
-│   └── waves/
-├── scenes/
-│   ├── boot/
-│   ├── run/
-│   ├── actors/
-│   ├── combat/
-│   └── ui/
-├── src/
-│   ├── core/
-│   ├── run/
-│   ├── combat/
-│   ├── actors/
-│   ├── rewards/
-│   ├── ui/
-│   └── telemetry/
-└── tests/
-    ├── unit/
-    ├── integration/
-    └── golden_seeds/
+```powershell
+& $godot --headless --audio-driver Dummy --path . -s res://tests/test_runner.gd
+& $godot --headless --audio-driver Dummy --path . --quit-after 600
+& $godot --headless --audio-driver Dummy --path . --script res://tools/validate_content.gd -- --profile=g0
+& $godot --headless --audio-driver Dummy --path . --script res://tools/validate_content.gd -- --profile=full
 ```
 
-不要为了“看起来整洁”提前创建大量空目录。目录在第一个真实文件落地时创建。
-
----
-
-## 6. 开发原则
-
-### 6.1 一次只实现一个闭环
-
-每个任务必须同时具备：
-
-- 玩家可观察的结果；
-- 明确允许修改的目录；
-- 明确不改的范围；
-- 可重复执行的验收步骤；
-- 失败日志或调试信息；
-- 对应设计章节引用。
-
-禁止任务：
-
-> “实现完整游戏。”
-
-合格任务：
-
-> “实现 AK 灰盒射击闭环：移动、鼠标瞄准、按住射击、后坐力、弹匣、换弹、命中假人、伤害反馈，并提供固定测试场景。”
-
-### 6.2 数据与逻辑分离
-
-运行时内容 ID 使用小写命名空间（`char_*`、`wpn_*`、`throw_*`、`upgrade_*`、`enemy_*`），显示名独立；旧大写升级代号只供 v0.1 设计追溯。不要新建平行生产玩法目录。
-
-状态所有权固定为：`RunConfig` 只读 seed/难度/角色/武器/起始投掷物；`RunState` 管阶段、波次、时间、RNG 流、事件序号和子状态引用；`EconomyState` 管钱包/经验/等级/待选升级；`UpgradeState` 管升级/合同/叠层。不得复制可变字段。
-
-应数据化：
-
-- 武器基础数值；
-- 角色属性与标签；
-- 升级定义、稀有度、前置和冲突；
-- 敌人预算、职责和基础属性；
-- 波次预算、编队与事件；
-- 素材路径和导入元数据。
-
-应保留在代码中：
-
-- 状态机；
-- 伤害结算顺序；
-- 射击与后坐力算法；
-- 奖励池过滤算法；
-- 生成安全规则；
-- 存档迁移；
-- 遥测采集。
-
-### 6.3 先灰盒，后正式素材
-
-在玩法通过前：
-
-- 允许使用几何图形和临时音效；
-- 不允许因为等待正式素材而阻塞射击、升级、波次验证；
-- 正式素材必须遵守 `13_素材生产管线与提示词.md`；
-- 不把 AI 输出原图直接当最终 Sprite 使用，必须经过清理、裁切、像素检查和 Godot 导入验收。
-
----
-
-## 7. 里程碑执行顺序
-
-### G0｜设计治理
-
-统一权威文档、R2、canonical ID、状态所有权、设计/素材 manifest 与 `ContentValidator` 门禁。G0 不实现 M1 敌人、升级、商店或 C0 生图。
-
-### M0｜射击玩具
-
-只实现：
-
-- 玩家移动；
-- 鼠标瞄准；
-- AK 射击；
-- 后坐力与准星恢复；
-- 弹匣与换弹；
-- 一个静止假人；
-- 命中、击杀、枪口火焰、音效占位；
-- FPS、当前种子、武器状态调试面板。
-
-M0 验收：
-
-- 连续游玩 10 分钟无错误；
-- 60 FPS 目标机器稳定；
-- 玩家仅凭反馈能判断射击、命中、空仓和换弹；
-- AK 的短点射与长扫射手感明显不同；
-- 相同输入和种子能重现散布序列。
-
-M0 不做：敌人 AI、升级、商店、角色天赋、20 波、正式美术。
-
-### M1｜五波闭环
-
-M1 分为三个不可混写的子门：
-
-- **M1A｜三敌三波**：近战追击怪、快速怪、远程预警怪与 Wave 1～3；
-- **M1B｜赏金/升级/商店五波**：赏金拾取、等级、三选一、商店与 Wave 1～5；
-- **M1C｜重开/遥测/复现**：死亡、结算、重新开始、本地遥测与固定种子复现。
-
-完整 M1 增加：
-
-- 近战追击怪、快速怪、远程预警怪；
-- Wave 1～5；
-- 赏金拾取；
-- 等级与三选一；
-- 12～15 个基础升级；
-- 死亡、结算、重新开始；
-- 本地遥测。
-
-M1 门槛：新玩家完成一次后，能够说明死亡原因，并愿意主动再开一局测试另一条构筑。
-
-### M2｜角色与战术
-
-增加：
-
-- 尼尼；
-- 大表哥；
-- Deagle 或 AWP；
-- 烟雾弹；
-- 背身诱导怪；
-- 烟雾区域和远程锁定延迟；
-- 至少 20 个升级。
-
-M2 只验证两件事：
-
-1. 角色负面天赋是否可预警、可规避、可缓解、可反转；
-2. 烟雾在俯视角中是否既有战术价值又不破坏可读性。
-
-### M3｜十波垂直切片
-
-增加完整战斗骨架、商店、第二投掷物槽、小 Boss、固定种子回归、首轮正式素材。
-
-### M4｜二十波 Alpha
-
-扩展到五角色、五枪、四投掷物、47 个升级、完整敌人职责和 20 波。
-
-### M5｜平衡与 Windows 发布
-
-执行盲测、难度曲线、性能预算、存档迁移、输入与显示设置、崩溃恢复、Windows 导出和发布检查；Beta、RC、1.0 都是 M5 内部子门，不再作为独立里程碑编号。
-
-只有 Windows 1.0 通过后，才根据数据评估 Web、Android、iOS 与扩展内容。
-
----
-
-## 8. 第一个 Codex `/goal` 提示词
-
-```text
-/goal
-在当前 GOGO 仓库中完成 M0「AK 射击玩具」。
-
-开始前：
-1. 阅读 CODEX_START.md；
-2. 阅读 docs/design/00_产品宪法.md；
-3. 阅读 docs/design/02_战斗与枪械系统.md；
-4. 阅读 docs/design/09_Godot技术架构.md；
-5. 阅读 docs/design/11_开发里程碑.md 中的 M0。
-
-目标：
-创建可运行的 Godot 4.x 灰盒场景，包含玩家移动、鼠标瞄准、AK 按住射击、后坐力、准星恢复、弹匣、换弹、静止假人、命中反馈和调试面板。
-
-约束：
-- 不实现敌人 AI、升级、商店、角色系统和正式美术；
-- 武器参数使用 Resource 数据定义；
-- 射击使用可测试的独立随机子流；
-- 代码必须有类型标注；
-- 不引入第三方插件；
-- 不修改产品设计文档中的规则。
-
-验收：
-- 给出启动步骤；
-- 给出手动验收清单；
-- 提供至少一个自动化测试验证弹匣、换弹或固定种子散布；
-- 运行项目和测试，修复发现的问题；
-- 最终汇报修改文件、验证结果、未完成项和已知风险。
-```
-
----
-
-## 9. 每个任务的完成定义
-
-Codex 在声称完成前必须：
-
-1. 运行项目或对应无头测试；
-2. 记录实际执行命令与结果；
-3. 检查解析错误、运行错误和新增警告；
-4. 完成手动可观察验收；
-5. 检查是否误改无关文件；
-6. 更新相关数据或文档；
-7. 汇报仍未验证的部分，不得用推测替代证据。
-
-仅“代码已写完”不算完成。
-
----
-
-## 10. 素材任务的完成定义
-
-每个正式素材必须同时具备：
-
-- 唯一 `asset_id`；
-- 目标路径；
-- 类别与用途；
-- 逻辑尺寸和画布尺寸；
-- 锚点与朝向；
-- 动画帧数与 FPS；
-- 透明背景要求；
-- Prompt 与负面约束；
-- 原始生成文件；
-- 清理后的最终 PNG；
-- Godot 导入截图或验收记录；
-- 资产状态：`planned/generated/cleaned/approved/in_game/rejected`。
-
-人物、枪械、投掷物、特效禁止画死在同一张最终资产中。
-
----
-
-## 11. 当前立即动作
-
-仓库下一步不是一次性实现五名角色和 20 波，而是：
-
-1. 完成 G0 设计治理；
-2. 保持已落地的 M0 AK 射击玩具可回归；
-3. 通过 M0 手感与证据门槛；
-4. 再按 M1A、M1B、M1C 进入五波闭环；
-5. 同步按素材清单只生产当前里程碑所需资产。
-
-在 M0 射击手感未通过前，不应大批量生成正式角色与怪物动画。
+完成声明必须附带真实命令输出。`g0` 通过不代表完整内容目录 ready；`full` 当前必须诚实报告 `NOT_READY`。

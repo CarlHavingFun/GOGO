@@ -120,6 +120,8 @@ Bug 报告保存：
 
 ## 3. 推荐目录
 
+> 当前仓库采用单一 `src/` 生产代码布局。`entities/`、`systems/`、`run/`、`ui/` 和 `arenas/` 不再作为第二套运行时代码目录；固定竞技场只作为场景内容与未来模式资料保留。
+
 ```text
 res://
 ├─ app/
@@ -142,36 +144,20 @@ res://
 │  ├─ waves/
 │  ├─ difficulties/
 │  └─ profiles/
-├─ run/
-│  ├─ run_root.tscn
-│  ├─ run_controller.gd
-│  ├─ run_state.gd
-│  └─ rng_streams.gd
-├─ systems/
-│  ├─ wave/
-│  ├─ spawn/
+├─ src/
+│  ├─ actors/
+│  ├─ arena/
 │  ├─ combat/
-│  ├─ status/
-│  ├─ rewards/
-│  ├─ economy/
-│  ├─ area_effects/
-│  ├─ pooling/
-│  └─ performance/
-├─ entities/
-│  ├─ player/
-│  ├─ enemies/
-│  ├─ projectiles/
-│  ├─ pickups/
-│  └─ shared_components/
-├─ ui/
-│  ├─ hud/
-│  ├─ upgrade_screen/
-│  ├─ shop/
-│  ├─ pause/
-│  └─ results/
-├─ audio/
-├─ vfx/
-├─ arenas/
+│  ├─ content/
+│  ├─ presentation/
+│  ├─ run/
+│  ├─ spawn/
+│  ├─ ui/
+│  └─ world/
+├─ scenes/
+│  ├─ run/infinite_desert_prototype.tscn
+│  └─ run/m0_ak_lab.tscn
+├─ assets/
 ├─ debug/
 │  ├─ balance_lab/
 │  ├─ wave_preview/

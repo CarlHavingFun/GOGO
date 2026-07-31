@@ -1,62 +1,63 @@
 # GOGO
 
-一款使用 Godot 4.x 开发的俯视角手动瞄准动作肉鸽。
+GOGO 是使用 Godot 4.7.1 开发的俯视角单人 PvE 原型。当前主线是固定 Seed、按 Chunk 流式延伸的无尽双尘荒原；固定竞技场只保留为 M0 射击回归场景和未来模式设计参考。
 
-核心组合：
+## 默认入口
 
-- 固定 Seed 可复现、按 Chunk 流式延伸的无尽黄沙旧城战场；
-- 手动瞄准、后坐力、弹匣和换弹；
-- 单主武器 + 两个投掷物槽；
-- 五名拥有正负天赋的原创电竞角色；
-- 受控随机升级、商店、经济与角色专属构筑；
-- 模块化像素素材与 AI 辅助生产管线。
+```text
+res://scenes/run/infinite_desert_prototype.tscn
+```
 
-## 从这里开始
+M0 回归场景永久保留：
 
-开发者与 Codex：阅读 [`CODEX_START.md`](CODEX_START.md)。
+```text
+res://scenes/run/m0_ak_lab.tscn
+```
 
-完整设计索引：阅读 [`docs/design/README_设计文档索引.md`](docs/design/README_设计文档索引.md)。
+默认场景验证 Chunk 加载/卸载、确定性模块布局、屏幕外环形刷怪、对象池回收和 AK 射击契约；M0 场景独立验证弹匣、换弹、后坐力、散布和命中反馈。
 
-地图与刷怪空间：
+## 入口文档
 
-- [`docs/design/15_竞技场与刷怪空间系统.md`](docs/design/15_竞技场与刷怪空间系统.md)
-- [`docs/design/16_无尽双尘荒原与程序化模块系统.md`](docs/design/16_无尽双尘荒原与程序化模块系统.md)
-- [`docs/design/arenas/README_竞技场索引.md`](docs/design/arenas/README_竞技场索引.md)
+- [CODEX_START.md](CODEX_START.md)：Agent 执行入口和验证命令。
+- [设计文档索引](docs/design/README_设计文档索引.md)：唯一权威设计关系。
+- [主线整合记录](docs/progress/2026-07-31-mainline-integration.md)：分支来源、冲突决策和验证证据。
+- [素材生产管线](docs/design/13_素材生产管线与提示词.md)：Agent Sprite Forge 的 GOGO 生产契约。
+- [assets/README.md](assets/README.md)：资产登记、证据和 Godot 交付规则。
+- [Agent Sprite Forge wrapper](skills/gogo-agent-sprite-forge/SKILL.md)：GOGO 素材任务的强制执行入口。
 
-素材生产：
+文档权威关系：`docs/design/` 是当前设计权威；`docs/superpowers/specs/` 是已批准规格；`docs/superpowers/plans/` 是实施计划；`docs/progress/` 和 `docs/status/` 只记录事实证据与阶段状态；旧合集、兼容性资料和历史分支快照不得覆盖当前路线。
 
-- [`docs/design/13_素材生产管线与提示词.md`](docs/design/13_素材生产管线与提示词.md)
-- [`docs/design/14_像素美术Style_Bible.md`](docs/design/14_像素美术Style_Bible.md)
-- [`assets/asset_manifest.csv`](assets/asset_manifest.csv)
-- [`assets/README.md`](assets/README.md)
+## 运行时结构
 
-## 当前状态
+```text
+src/
+├─ actors/       玩家、训练假人、追击敌人
+├─ arena/        Chunk 地形和碰撞组件
+├─ combat/       WeaponDefinition、WeaponRuntime、SpreadSampler、射击控制
+├─ content/      内容快照、ContentValidator 和 CLI
+├─ presentation/命中反馈、音效占位、武器视图
+├─ run/          无尽世界 RunRoot
+├─ spawn/        环形采样、刷怪导演和对象池
+├─ ui/           HUD、准星
+└─ world/        Chunk 规划、确定性布局、流式管理
+```
 
-M0「AK 射击玩具」仍作为射击回归场景保留。当前分支已经增加可运行的“无尽双尘荒原”灰盒原型：
+生产代码只使用 `src/`；旧的 `entities/`、`systems/`、`run/`、`ui/`、`vfx/` 根目录实现已收敛为历史来源，不再与主线并存。
 
-- 玩家附近 `5×5` Chunk 流式加载，远处 Chunk 回收；
-- 相同世界 Seed 与 Chunk 坐标生成相同模块；
-- 六种人工设计的战斗模块和一个稀疏废弃补给站 POI；
-- 玩家屏幕外环形刷怪；
-- 追击灰盒敌人、活动数量上限和对象池回收；
-- Godot 4.7.1 无头解析、自动测试和 600 帧运行时 smoke。
+## 验证
 
-下一步是在 Windows 上完成十分钟连续移动、射击和性能人工验收，再把无限地图底座接入五波成长闭环。
+```text
+Godot 4.7.1 --headless --audio-driver Dummy --path . -s res://tests/test_runner.gd
+Godot 4.7.1 --headless --audio-driver Dummy --path . --quit-after 600
+```
 
-## 产品边界
+内容门禁保持兼容：
 
-第一版：
+```text
+Godot 4.7.1 --headless --path . --script res://tools/validate_content.gd -- --profile=g0
+Godot 4.7.1 --headless --path . --script res://tools/validate_content.gd -- --profile=full
+```
 
-- Windows 单人 PvE；
-- Godot 4.x；
-- 2D 俯视角；
-- 一个正式世界主题：无尽双尘荒原；
-- 固定 Seed、Chunk 流送、人工战斗模块与稀疏 POI；
-- 五把原型枪械；
-- 四种投掷物；
-- 五名原创角色；
-- 20 波与最终 Boss。
+`--profile=g0` 应得到 `G0 gate: PASS`；`--profile=full` 在完整 catalog 落地前应明确报告 `Full catalog: NOT_READY`。
 
-赤瓦小镇和货运枢纽当前只保留设计，不进入第一版开发承诺。固定竞技场文档继续作为空间、安全生成与未来模式的设计参考，但不再是当前默认启动玩法。
-
-暂不包含多人、PvP、随机迷宫、复杂背包、皮肤交易、完整城镇、地下迷宫、永久世界存档和真实职业选手肖像或队伍素材。
+正式素材不得把生图 raw 文件直接当作运行时 Sprite，必须经过清理、切帧、对齐、严格 QC、确定性 delivery 组装和 Godot 导入证据。
