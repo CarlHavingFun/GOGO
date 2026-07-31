@@ -48,6 +48,6 @@ Task 1 的独立 per-image 视觉审核已批准身份、解剖、R2 排除及�
 
 ### 补充后的独立边界审核
 
-Fresh independent review verdict: PASS. Commit `e347760b846d7fb6ead1e54259b5e973bceb563c` consistently classifies `walk_001–004` as useful historical single-direction `se` full-arm pose evidence only. They count toward none of the later 32 arm-less `walk_body`, 48 arm layers, 96 derived/composited QA outputs, or the user visual gate; they do not establish A5, M0, or eight-direction completion. Preserve the minor technical note: Pillow bbox coordinates use the half-open interval `[x0,y0,x1,y1)`.
+Fresh independent review verdict: PASS. Commit `e347760b846d7fb6ead1e54259b5e973bceb563c` consistently classifies `walk_001–004` as useful historical single-direction `se` full-arm pose evidence only. They count toward none of the later 32 arm-less `walk_body`, 48 arm layers, 24 grip groups, 96 derived/composited QA outputs, or the user visual gate; they do not establish A5, M0, or eight-direction completion. Preserve the minor technical note: Pillow bbox coordinates use the half-open interval `[x0,y0,x1,y1)`.
 
 审核测量备注：Pillow bbox 采用半开区间 `[x0,y0,x1,y1)`。
